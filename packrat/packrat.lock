@@ -4,6 +4,17 @@ RVersion: 3.3.0
 Repos: CRAN=https://cran.rstudio.com/,
     CRANextra=http://www.stats.ox.ac.uk/pub/RWin
 
+Package: gdata
+Source: CRAN
+Version: 2.17.0
+Hash: e7d520c2a9597b303f54499e3bd90644
+Requires: gtools
+
+Package: gtools
+Source: CRAN
+Version: 3.5.0
+Hash: 471b2e2452dfb30fdc1dd6f1b567925a
+
 Package: packrat
 Source: CRAN
 Version: 0.4.8-1

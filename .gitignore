@@ -26,3 +26,5 @@ vignettes/*.pdf
 # Packrat library folders
 packrat/lib*/
 packrat/src/
+# Raw data
+/inst/extdata/split*
