@@ -31,3 +31,4 @@ packrat/src/
 .Rproj.user
 # Data
 /data
+inst/doc

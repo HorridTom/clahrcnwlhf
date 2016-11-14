@@ -1,0 +1,92 @@
+---
+title: "Data Cleaning for CLAHRC NWL Heart Failure Care Bundle Analysis"
+author: "Dr. Thomas Woodcock"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data Cleaning for CLAHRC NWL Heart Failure Care Bundle Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This vignette covers the data cleaning process from the raw data provided by
+North West London Hospitals to a clean dataset ready for analysis.
+
+## Input
+The raw data is contained in the file `/data/admission_data.rda`. This file
+contains a single dataframe, admission_data, which is created from the original
+raw data files in `/data-raw` by the script `/data-raw/load-raw-data.R` which
+simply stitches the separate files together.
+
+The functions required for cleaning the data are all contained within the
+`data_cleaning.R` script.
+
+
+
+## Missing Data
+As part of the data extract and pseudonymisation process, missing data has been
+represented as both `"NULL"` and `"#N/A"` in the raw data. The `clean_data`
+function resolves both of these to `NA`, resulting in the following distribution
+of missing data across columns.
+
+```{r, echo=FALSE, results='asis'}
+admission_data_clean <- clahrcnwlhf::clean_data(clahrcnwlhf::admission_data)
+nac <- clahrcnwlhf::na_count(admission_data_clean)
+library(knitr)
+kable(nac)
+```
+
+For some fields, it is not important that there is a significant amount of
+missing data; e.g. the fact that many of the secondary diagnosis fields are
+missing may be entirely natural - not all episodes of care involve nine
+different diagnoses!
+
+## Vignette text example
+
+Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+
+- Never uses retina figures
+- Has a smaller default figure size
+- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+
+## Vignette Info
+
+Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+
+## Styles
+
+The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+
+    output: 
+      rmarkdown::html_vignette:
+        css: mystyles.css
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither."
+([via](https://twitter.com/hadleywickham/status/504368538874703872))
