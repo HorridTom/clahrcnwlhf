@@ -27,4 +27,7 @@ vignettes/*.pdf
 packrat/lib*/
 packrat/src/
 # Raw data
-/inst/extdata/split*
+/data-raw/*.xls*
+.Rproj.user
+# Data
+/data
