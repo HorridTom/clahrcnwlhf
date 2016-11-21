@@ -19,5 +19,8 @@ This function cleans the raw data by performing the following steps:
   \item Replace any instances of "NULL" or "#N/A" in character fields with NA
   \item Convert the following columns to factors: AgeBand, EthnicGroup, Sex,
   AdmissionMethodCode, AdmissionType, CSPLastWard}
+  \item Convert the following columns from character to Date format:
+  the following columns of the raw data:
+  AdmissionDate, DischargeDate, EpisodeStartDate, EpisodeEndDate
 }
 

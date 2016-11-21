@@ -31,15 +31,25 @@ of missing data across columns.
 
 ```{r, echo=FALSE, results='asis'}
 admission_data_clean <- clahrcnwlhf::clean_data(clahrcnwlhf::admission_data)
-nac <- clahrcnwlhf::na_count(admission_data_clean)
 library(knitr)
-kable(nac)
+library(scales)
+nac <- clahrcnwlhf::na_count(admission_data_clean)
+n <- nrow(admission_data_clean)
+nact <- data.frame(nac,nac/n*100)
+colnames(nact) <- c("Number_of_NAs", "Percent_NAs")
+knitr::kable(nact[order(nact[,2]),])
 ```
 
 For some fields, it is not important that there is a significant amount of
 missing data; e.g. the fact that many of the secondary diagnosis fields are
 missing may be entirely natural - not all episodes of care involve nine
 different diagnoses!
+
+## Date formatting
+All dates in the raw data are expressed as character strings starting
+yyyy-mm-dd. We therefore use the regex `"^[0-9]{4}-[0-9]{2}-[0-9]{2}"`
+to extract the date part of strings in the following columns of the raw data:
+`AdmissionDate`, `DischargeDate`, `EpisodeStartDate`, `EpisodeEndDate`.
 
 ## Vignette text example
 
