@@ -21,7 +21,11 @@ simply stitches the separate files together.
 The functions required for cleaning the data are all contained within the
 `data_cleaning.R` script.
 
-
+## Date formatting
+All dates in the raw data are expressed as character strings starting
+yyyy-mm-dd. We therefore use the regex `"^[0-9]{4}-[0-9]{2}-[0-9]{2}"`
+to extract the date part of strings in the following columns of the raw data:
+`AdmissionDate`, `DischargeDate`, `EpisodeStartDate`, `EpisodeEndDate`.
 
 ## Missing Data
 As part of the data extract and pseudonymisation process, missing data has been
@@ -45,11 +49,51 @@ missing data; e.g. the fact that many of the secondary diagnosis fields are
 missing may be entirely natural - not all episodes of care involve nine
 different diagnoses!
 
-## Date formatting
-All dates in the raw data are expressed as character strings starting
-yyyy-mm-dd. We therefore use the regex `"^[0-9]{4}-[0-9]{2}-[0-9]{2}"`
-to extract the date part of strings in the following columns of the raw data:
-`AdmissionDate`, `DischargeDate`, `EpisodeStartDate`, `EpisodeEndDate`.
+To check for any patterns in missing data over time, let's look at this by year.
+
+```{r, echo=FALSE, results='asis'}
+admission_data_clean <- clahrcnwlhf::clean_data(clahrcnwlhf::admission_data)
+library(knitr)
+library(scales)
+md <- clahrcnwlhf::missing_data_table(admission_data_clean)
+knitr::kable(t(md))
+```
+
+The percentage of missing data for the following fields looks higher for 2016
+compared with previous years: `CSPAdmissionTime`, `CSPDischargeTime`,
+`CSPLastWard`, `PrimaryDiagnosis`. Let's look at these percentages at a more
+granular timescale.
+
+```{r, fig.height=5, fig.width=7}
+admission_data_clean <- clahrcnwlhf::clean_data(clahrcnwlhf::admission_data)
+p <- clahrcnwlhf::missing_data_table(admission_data_clean, split_by = '%Y-%m',
+                                     result = 'percent_no_total')
+pmd_monthly <- p[,colnames(p) %in% c("CSPAdmissionTime","CSPDischargeTime",
+                                     "PrimaryDiagnosis","CSPLastWard")]
+matplot(pmd_monthly, type = c("b"),pch=1:4,col = 1:4, xaxt="n")
+axis(side=1,at=1:nrow(pmd_monthly),labels=rownames(pmd_monthly))
+legend("topleft", legend = colnames(pmd_monthly), col=1:4, pch=1:4)
+```
+
+This shows two things:
+
+1. The proportion of missing data in the `PrimaryDiagnosis` field goes up dramatically for episodes with DischargeDate in the last two months of data (October and November 2016)
+2. The proportions of missing data in the fields `CSPAdmissionTime`, `CSPDischargeTime`, `CSPLastWard`, go up by an order of magnitude for episodes with DischargeDate in the last seven months of data (May - November 2016).
+
+The increase in missing `PrimaryDiagnosis` values in the last two months (1) is
+likely to be a result of the usual delay in coding. Therefore these months
+will not be used in the analysis.
+
+The missing data in the fields `CSPAdmissionTime`, `CSPDischargeTime`,
+`CSPLastWard` is not so easily explained, and Steve Hiles from North West
+London Hospitals is investigating this at present (25th November 2016).
+
+---
+
+
+
+
+
 
 ## Vignette text example
 

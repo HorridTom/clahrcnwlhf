@@ -2,5 +2,7 @@
 
 export(clean_data)
 export(convert_to_date)
+export(convert_to_datetime)
 export(make_factors)
+export(missing_data_table)
 export(na_count)

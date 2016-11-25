@@ -3,12 +3,12 @@
 #' This function cleans the raw data by performing the following steps:
 #' \enumerate{
 #'   \item Remove leading and trailing whitespace from any character fields
-#'   \item Replace any instances of "NULL" or "#N/A" in character fields with NA
+#'   \item Replace any instances of NULL or #N/A in character fields with NA
 #'   \item Convert the following columns to factors: AgeBand, EthnicGroup, Sex,
-#'   AdmissionMethodCode, AdmissionType, CSPLastWard}
+#'   AdmissionMethodCode, AdmissionType, CSPLastWard
 #'   \item Convert the following columns from character to Date format:
 #'   the following columns of the raw data:
-#'   AdmissionDate, DischargeDate, EpisodeStartDate, EpisodeEndDate
+#'   AdmissionDate, DischargeDate, EpisodeStartDate, EpisodeEndDate}
 #'
 #'
 #' @param df the data frame containing the episode data to be cleaned
@@ -40,6 +40,26 @@ clean_data <-function(df) {
                    "EpisodeEndDate")
   date_columns <- colnames(df) %in% d_cols_list
   df[,date_columns] <- lapply(df[,date_columns], convert_to_date)
+
+  # Convert the following columns to datetime format:
+  dt_cols_list <- list()
+  dt_cols_list[[1]] <- c("AdmissionDate","CSPAdmissionTime")
+  dt_cols_list[[2]] <- c("DischargeDate","CSPDischargeTime")
+  dt_cols_list[[3]] <- c("EpisodeStartDate","EpisodeStartTime")
+  dt_cols_list[[4]] <- c("EpisodeEndDate","EpisodeEndTime")
+  t_cols_list <- sapply(dt_cols_list, function(x) {x[2]})
+  time_columns <- colnames(df) %in% t_cols_list
+
+  # First pad all the time columns with zeros
+  df[,time_columns] <- lapply(dt_cols_list, function(x){
+    stringr::str_pad(df[[x[2]]], 4, pad = "0")
+  })
+
+  # Convert to datetimes
+  df[,time_columns] <- lapply(dt_cols_list, function(x){
+    convert_to_datetime(dv = df[[x[1]]], tv = df[[x[2]]])
+  })
+
 
   df
 
@@ -95,4 +115,47 @@ convert_to_date <- function(v, match_reg = "^[0-9]{4}-[0-9]{2}-[0-9]{2}",
   pos <- regexpr(match_reg, v, perl=TRUE)
   dt <- regmatches(v, pos)
   as.Date(dt, date_form)
+}
+
+#' convert_to_datetime
+#'
+#' @param dv a vector of dates or characters representing dates
+#' @param tv a vector of times or characters representing times
+#' @param dt_form the concatenated format of dv and tv
+#'
+#' @return A POSIXlt vector combining dv and tv.
+#' @export
+#'
+#'
+convert_to_datetime <- function(dv, tv, dt_form = "%Y-%m-%d %H%M") {
+  dt_char <- paste(dv, tv)
+  strptime(dt_char, dt_form)
+}
+
+
+#' missing_data_table
+#'
+#' @param df the admissions data frame to be analysed for missing data
+#'
+#' @return a matrix showing missing data for each field by year
+#' @export
+#'
+#'
+missing_data_table <- function(df, split_by = '%Y', result = 'both') {
+  df$splitby <- factor(format(df$DischargeDate, split_by))
+  adm_data_y <- split.data.frame(df, df$splitby)
+  m <- do.call(rbind, sapply(adm_data_y, clahrcnwlhf::na_count))
+  n <- sapply(adm_data_y, nrow)
+  rownames(m) <- gsub("\\..*$", "", rownames(m))
+  colnames(m) <- colnames(df)
+  p <- m/n
+  m_table <- do.call(rbind,list(m,colSums(m)))
+  rownames(m_table)[length(rownames(m_table))] <- "Total"
+  n[length(n)+1] <- sum(n)
+  names(n)[length(n)] <- "Total"
+  p_table <- m_table/n
+  md_table<-matrix(paste(m_table," (",round(100*p_table,1),"%)",sep=""),
+                   nrow=nrow(m_table), dimnames=dimnames(m_table))
+  switch(result, both = md_table, count_no_total = m, count = m_table,
+         percent_no_total = p, percent = p_table)
 }
