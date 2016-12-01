@@ -1,0 +1,90 @@
+---
+title: "Descriptive Analysis for CLAHRC NWL Heart Failure Care Bundle"
+author: "Dr. Thomas Woodcock"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This vignette covers the descriptive data analysis for the evaluation of the
+CLAHRC NWL Heart Failure Care Bundle project at North West London Hospitals.
+
+This assumes the `clahrcnwlhf::admission_data` data has been cleaned using `clahrcnwlhf::clean_and_save`. As of 1st December 2016 this includes all
+discharges after 1st January 2012 and 30th September 2016 inclusive.
+
+## Dataset
+
+This part of the analysis will focus on emergency admissions data; in other
+words those episodes for which
+'admission_data_clean$AdmissionType = "Emergency"'. Let us first restrict the
+dataset to only these episodes
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+emergency_adms <- clahrcnwlhf::admission_data_clean[
+  which(clahrcnwlhf::admission_data_clean[,"AdmissionType"] == "Emergency"),]
+
+```
+
+This leaves us with `r nrow(emergency_adms)` emergency episodes with discharge
+date between 1st January 2012 and 30th September 2016 inclusive. Let us now
+restrict attention to only the first episode of each spell.
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+emergency_spells <- emergency_adms[
+  which(emergency_adms[,"EpisodeNumber"] == 1),]
+
+```
+
+This gives `r nrow(emergency_spells)` discharges between 1st January 2012 and
+30th September 2016 inclusive. Let us see how these vary by month over this
+period.
+
+
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+
+n_disch <- clahrcnwlhf::disch_time_table(emergency_spells)
+#n_disch <- n_disch[-length(n_disch)]
+
+matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500))
+axis(side=1,at=1:length(n_disch),labels=names(n_disch))
+```
+Next let's look at this for those spells with primary diagnosis code
+heart failure.
+
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+emergency_spells <- clahrcnwlhf::make_diag_flag(emergency_spells,
+                                   code_regex="I110|I255|I420|I429|I500|I501|I509",
+                                   new_colname = "Heart.Failure.Admission")
+n_disch <- clahrcnwlhf::disch_time_table(emergency_spells[
+  which(emergency_spells[,"Heart.Failure.Admission"] == TRUE),])
+#n_disch <- n_disch[-length(n_disch)]
+
+matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,100))
+axis(side=1,at=1:length(n_disch),labels=names(n_disch))
+```
+
+There are a total of `r sum(n_disch)` spells with primary diagnosis code
+heart failure for the period. 
+
+For comparison, the number of heart failure ***episodes***:
+
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
+                                   code_regex="I110|I255|I420|I429|I500|I501|I509",
+                                   new_colname = "Heart.Failure.Admission")
+n_disch <- clahrcnwlhf::disch_time_table(emergency_adms[
+  which(emergency_adms[,"Heart.Failure.Admission"] == TRUE),])
+#n_disch <- n_disch[-length(n_disch)]
+
+matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,300))
+axis(side=1,at=1:length(n_disch),labels=names(n_disch))
+```
+
+
+
+
+
+
