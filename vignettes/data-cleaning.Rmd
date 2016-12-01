@@ -33,8 +33,9 @@ represented as both `"NULL"` and `"#N/A"` in the raw data. The `clean_data`
 function resolves both of these to `NA`, resulting in the following distribution
 of missing data across columns.
 
-```{r, echo=FALSE, results='asis'}
-admission_data_clean <- clahrcnwlhf::clean_data(clahrcnwlhf::admission_data)
+```{r, echo=FALSE, results='asis', cache=TRUE}
+admission_data_clean <- clahrcnwlhf::clean_data(clahrcnwlhf::admission_data,
+                                                restrict_disch_date = FALSE)
 library(knitr)
 library(scales)
 nac <- clahrcnwlhf::na_count(admission_data_clean)
@@ -51,8 +52,9 @@ different diagnoses!
 
 To check for any patterns in missing data over time, let's look at this by year.
 
-```{r, echo=FALSE, results='asis'}
-admission_data_clean <- clahrcnwlhf::clean_data(clahrcnwlhf::admission_data)
+```{r, echo=FALSE, results='asis', cache=TRUE}
+#admission_data_clean <- clahrcnwlhf::clean_data(clahrcnwlhf::admission_data,
+#                                                restrict_disch_date = FALSE)
 library(knitr)
 library(scales)
 md <- clahrcnwlhf::missing_data_table(admission_data_clean)
@@ -64,8 +66,9 @@ compared with previous years: `CSPAdmissionTime`, `CSPDischargeTime`,
 `CSPLastWard`, `PrimaryDiagnosis`. Let's look at these percentages at a more
 granular timescale.
 
-```{r, fig.height=5, fig.width=7}
-admission_data_clean <- clahrcnwlhf::clean_data(clahrcnwlhf::admission_data)
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+#admission_data_clean <- clahrcnwlhf::clean_data(clahrcnwlhf::admission_data,
+#                                                restrict_disch_date = FALSE)
 p <- clahrcnwlhf::missing_data_table(admission_data_clean, split_by = '%Y-%m',
                                      result = 'percent_no_total')
 pmd_monthly <- p[,colnames(p) %in% c("CSPAdmissionTime","CSPDischargeTime",
@@ -87,6 +90,23 @@ will not be used in the analysis.
 The missing data in the fields `CSPAdmissionTime`, `CSPDischargeTime`,
 `CSPLastWard` is not so easily explained, and Steve Hiles from North West
 London Hospitals is investigating this at present (25th November 2016).
+
+For now, let's look at the new missing data summary excluding those last two
+months:
+
+
+```{r, echo=FALSE, results='asis',cache=TRUE}
+#admission_data_clean <- clahrcnwlhf::clean_data(clahrcnwlhf::admission_data,
+#                                                restrict_disch_date = TRUE)
+library(knitr)
+library(scales)
+nac <- clahrcnwlhf::na_count(admission_data_clean)
+n <- nrow(admission_data_clean)
+nact <- data.frame(nac,nac/n*100)
+colnames(nact) <- c("Number_of_NAs", "Percent_NAs")
+knitr::kable(nact[order(nact[,2]),])
+```
+
 
 ---
 

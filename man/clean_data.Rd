@@ -4,7 +4,7 @@
 \alias{clean_data}
 \title{clean_data}
 \usage{
-clean_data(df)
+clean_data(df, restrict_disch_date = TRUE)
 }
 \arguments{
 \item{df}{the data frame containing the episode data to be cleaned}

@@ -16,7 +16,7 @@
 #' @return A data frame containing the cleaned data
 #' @export
 #'
-clean_data <-function(df) {
+clean_data <-function(df, restrict_disch_date = TRUE) {
 
   # Remove leading and trailing whitespace from any character fields
   char_cols <- sapply(df, is.character)
@@ -60,10 +60,33 @@ clean_data <-function(df) {
     convert_to_datetime(dv = df[[x[1]]], tv = df[[x[2]]])
   })
 
+  if (restrict_disch_date) {
+    df <- clahrcnwlhf::subset_by_date(df,
+                                      start_date=as.Date("2012-01-01"),
+                                      end_date=as.Date("2016-09-30"))
+  }
 
   df
 
 }
+
+#' clean_and_save
+#'
+#' Runs clean_data on admission_data and saves the result as
+#' admission_data_clean, overwriting any previous version.
+#'
+#'
+#' @return NULL
+#' @export
+#'
+#'
+clean_and_save <- function() {
+  admission_data_clean <- clean_data(clahrcnwlhf::admission_data,
+                                      restrict_disch_date = TRUE)
+  devtools::use_data(admission_data_clean, overwrite = TRUE)
+}
+
+
 
 #' make_factors
 #'
@@ -130,6 +153,23 @@ convert_to_date <- function(v, match_reg = "^[0-9]{4}-[0-9]{2}-[0-9]{2}",
 convert_to_datetime <- function(dv, tv, dt_form = "%Y-%m-%d %H%M") {
   dt_char <- paste(dv, tv)
   strptime(dt_char, dt_form)
+}
+
+#' subset_by_date
+#'
+#' @param df the dataframe to be subsetted
+#' @param col_name the date column to be subsetted on
+#' @param start_date the start date for the subsetting
+#' @param end_date the end date for the subsetting
+#'
+#' @return a row subset of df, including all rows where col_name is between
+#' start_date and end_date (inclusive).
+#' @export
+#'
+#'
+subset_by_date <- function(df, col_name = "DischargeDate", start_date, end_date) {
+  df[which(df[,col_name] >= start_date
+                             & df[,col_name] <= end_date),]
 }
 
 
