@@ -29,8 +29,20 @@ emergency_adms <- clahrcnwlhf::admission_data_clean[
 ```
 
 This leaves us with `r nrow(emergency_adms)` emergency episodes with discharge
-date between 1st January 2012 and 30th September 2016 inclusive. Let us now
-restrict attention to only the first episode of each spell.
+date between 1st January 2012 and 30th September 2016 inclusive. We will need to
+identify those episodes and spells with a primary diagnosis of heart failure, so
+let us add a flag column to indicate such episodes.
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
+                                   code_regex="I110|I255|I420|I429|I500|I501|I509",
+                                   new_colname = "Heart.Failure.Episode")
+
+```
+
+## Number of Discharges by Month
+
+Let us first restrict attention to only the first episode of each spell.
 
 ```{r, echo=TRUE, results='asis', cache=TRUE}
 emergency_spells <- emergency_adms[
@@ -51,15 +63,17 @@ n_disch <- clahrcnwlhf::disch_time_table(emergency_spells)
 matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500))
 axis(side=1,at=1:length(n_disch),labels=names(n_disch))
 ```
+Without a field for which hospital the episode was located at, I cannot split
+this down by hospital at this point. This will be done on revisiting
+Northwick Park. (2016-12-02)
+
 Next let's look at this for those spells with primary diagnosis code
 heart failure.
 
 ```{r, fig.height=5, fig.width=7, cache=TRUE}
-emergency_spells <- clahrcnwlhf::make_diag_flag(emergency_spells,
-                                   code_regex="I110|I255|I420|I429|I500|I501|I509",
-                                   new_colname = "Heart.Failure.Admission")
+
 n_disch <- clahrcnwlhf::disch_time_table(emergency_spells[
-  which(emergency_spells[,"Heart.Failure.Admission"] == TRUE),])
+  which(emergency_spells[,"Heart.Failure.Episode"] == TRUE),])
 #n_disch <- n_disch[-length(n_disch)]
 
 matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,100))
@@ -74,14 +88,15 @@ For comparison, the number of heart failure ***episodes***:
 ```{r, fig.height=5, fig.width=7, cache=TRUE}
 emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
                                    code_regex="I110|I255|I420|I429|I500|I501|I509",
-                                   new_colname = "Heart.Failure.Admission")
+                                   new_colname = "Heart.Failure.Episode")
 n_disch <- clahrcnwlhf::disch_time_table(emergency_adms[
-  which(emergency_adms[,"Heart.Failure.Admission"] == TRUE),])
-#n_disch <- n_disch[-length(n_disch)]
+  which(emergency_adms[,"Heart.Failure.Episode"] == TRUE),])
 
 matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,300))
 axis(side=1,at=1:length(n_disch),labels=names(n_disch))
 ```
+
+## Readmissions
 
 
 

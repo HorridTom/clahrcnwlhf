@@ -1,0 +1,20 @@
+---
+title: "CLAHRC NWL Heart Failure Care Bundle Data Analysis - To Do List"
+author: "Dr Thomas Woodcock"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## To Do
+ 
+ 1. Additional columns required in extract
+  + Hospital site
+  + Date of death in hospital
+  + Discharge destination
+ 2. Missing data in `CSP...` columns over final six months of dataset
+ 3. Discrepancies between number of heart failure admissions in my analysis vs
+ those in the presentation
