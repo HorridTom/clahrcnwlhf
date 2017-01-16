@@ -1,12 +1,13 @@
 #' make_emergency_adms_dataset
 #'
-#' @param adc the cleaned admissions data
+#' @param sv if TRUE, saves the result to the package
+#' @param rt if TRUE, returns the results as a datframe
 #'
 #' @return the emergency admissions dataset with additional columns for analysis
 #' @export
 #'
 #'
-make_emergency_adms_dataset <- function(adc) {
+make_emergency_adms_dataset <- function(sv = TRUE, rt = FALSE) {
 
   # Restrict to only those episodes whose AdmissionType is Emergency
   emergency_adms <- clahrcnwlhf::admission_data_clean[
@@ -14,17 +15,22 @@ make_emergency_adms_dataset <- function(adc) {
 
   # Add a column indicating if the episode primary diagnosis is heart failure
   emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
-                                                code_regex="I110|I255|I420|I429|
-                                                I500|I501|I509",
-                                                new_colname =
-                                                  "Heart.Failure.Episode")
+                                                code_regex="I110|I255|I420|I429|I500|I501|I509",
+                                                new_colname = "Heart.Failure.Episode")
   # Add new patient and new spell flag columns
   emergency_adms <- clahrcnwlhf::new.pat(emergency_adms, id = "PseudoID",
                                          adt = "CSPAdmissionTime")
   emergency_adms <- clahrcnwlhf::new_spell(emergency_adms)
 
+  emergency_adms <- clahrcnwlhf::make.spellnumber.2(emergency_adms)
+
+  # Save the dataset if specified
+  if (sv) {
+    devtools::use_data(emergency_adms, overwrite = TRUE)
+  }
   # Return the dataset with the additional columns added
-  emergency_adms
+  if (rt) {emergency_adms}
+    else {TRUE}
 
 }
 
@@ -316,6 +322,25 @@ make_diag_flag <- function(dataframe, colname = "PrimaryDiagnosis", code_regex,
   dataframe[,new_colname] <- grepl(code_regex, dataframe[,colname], perl=TRUE)
   dataframe
 
+}
+
+#' make_diag_flags
+#'
+#' @param dataframe
+#' @param colnames
+#' @param new_colname_suffix
+#' @param code_regex
+#'
+#' @return
+#' @export
+#'
+#'
+make_diag_flags <- function(dataframe, col_names, new_colname_suffix, code_regex) {
+  for (x in col_names) {
+    dataframe <- make_diag_flag(dataframe = dataframe, colname = x, code_regex = code_regex,
+                   new_colname = paste(x, new_colname_suffix, sep = "_"))
+  }
+  dataframe
 }
 
 

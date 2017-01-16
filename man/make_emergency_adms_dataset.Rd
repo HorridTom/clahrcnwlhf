@@ -4,10 +4,12 @@
 \alias{make_emergency_adms_dataset}
 \title{make_emergency_adms_dataset}
 \usage{
-make_emergency_adms_dataset(adc)
+make_emergency_adms_dataset(sv = TRUE, rt = FALSE)
 }
 \arguments{
-\item{adc}{the cleaned admissions data}
+\item{sv}{if TRUE, saves the result to the package}
+
+\item{rt}{if TRUE, returns the results as a datframe}
 }
 \value{
 the emergency admissions dataset with additional columns for analysis
