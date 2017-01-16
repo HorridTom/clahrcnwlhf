@@ -66,6 +66,8 @@ clean_data <-function(df, restrict_disch_date = TRUE) {
                                       end_date=as.Date("2016-09-30"))
   }
 
+  df <- clahrcnwlhf::remove_dupes(df)
+
   df
 
 }
@@ -198,4 +200,22 @@ missing_data_table <- function(df, split_by = '%Y', result = 'both') {
                    nrow=nrow(m_table), dimnames=dimnames(m_table))
   switch(result, both = md_table, count_no_total = m, count = m_table,
          percent_no_total = p, percent = p_table)
+}
+
+#' remove_dupes
+#'
+#' @param df an episode dataframe to be de-duped
+#'
+#' @return the de-duped df
+#' @export
+#'
+remove_dupes <- function(df, dupe_cols = c("PseudoID","AdmissionDate",
+                                           "CSPAdmissionTime","DischargeDate",
+                                           "CSPDischargeTime",
+                                           "PrimaryDiagnosis",
+                                           "SecondaryDiagnosis1",
+                                           "SecondaryDiagnosis2",
+                                           "EpisodeNumber")) {
+  df <- df[!duplicated(df[dupe_cols]),]
+  df
 }
