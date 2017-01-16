@@ -40,6 +40,27 @@ emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
 
 ```
 
+We will need a spell number variable, to identify which episodes are part of the
+same spell. The following code creates this column, along with some helper
+columns.
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+#emergency_adms <- clahrcnwlhf::new.pat(emergency_adms, id = "PseudoID",
+#                                         adt = "CSPAdmissionTime")
+#emergency_adms <- clahrcnwlhf::new_spell(emergency_adms)
+
+#emergency_adms <- clahrcnwlhf::make.spellnumber.2(emergency_adms)
+
+#The function make.spellnumber.2 takes some time to run. To save time, load this
+#dataset in directly. All previous operations in this vignette have been
+#performed on this saved dataset by clahrcnwlhf::make_emergency_adms_dataset
+emergency_adms <- clahrcnwlhf::emergency_adms
+
+```
+
+This results in `r max(emergency_adms$spell_number)` emergency spells with
+discharge date between 1st January 2012 and 30th September 2016 inclusive.
+
 ## Number of Discharges by Month
 
 Let us first restrict attention to only the first episode of each spell.
