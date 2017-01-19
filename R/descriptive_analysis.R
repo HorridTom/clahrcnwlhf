@@ -17,6 +17,11 @@ make_emergency_adms_dataset <- function(sv = TRUE, rt = FALSE) {
   emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
                                                 code_regex="I110|I255|I420|I429|I500|I501|I509",
                                                 new_colname = "Heart.Failure.Episode")
+  # Add a column indicating if any episode diagnosis is heart failure
+  emergency_adms <- clahrcnwlhf::make_anydiag_flag(emergency_adms,
+                                                   "Diagnosis", "HF.any.code",
+                                                   "I110|I255|I420|I429|I500|I501|I509")
+
   # Add new patient and new spell flag columns
   emergency_adms <- clahrcnwlhf::new.pat(emergency_adms, id = "PseudoID",
                                          adt = "CSPAdmissionTime")
@@ -343,6 +348,27 @@ make_diag_flags <- function(dataframe, col_names, new_colname_suffix, code_regex
   dataframe
 }
 
+#' make_anydiag_flag
+#'
+#' @param dataframe the episode data
+#' @param col_regex regex to match diagnosis column names
+#' @param new_colname the name for the new flag column
+#' @param code_regex the regex to match the diagnosis codes
+#'
+#' @return dataframe with a new column appended, indicating presence of a
+#' diagnosis code matching code_regex in any of the columns whose names match
+#' col_regex.
+#' @export
+#'
+make_anydiag_flag <- function(dataframe, col_regex, new_colname, code_regex) {
+  col_list <- colnames(dataframe)[grepl(col_regex, colnames(dataframe))]
+  df <- make_diag_flags(dataframe, col_names = col_list,
+                        new_colname_suffix = "mkanydiagflag",
+                        code_regex = code_regex)
+  col_list <- colnames(df)[grepl("mkanydiagflag", colnames(df))]
+  dataframe[,new_colname] <- as.logical(apply(df[,which(colnames(df) %in% col_list)], 1, max))
+  dataframe
+}
 
 
 #' disch_time_table

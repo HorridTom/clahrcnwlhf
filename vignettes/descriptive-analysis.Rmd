@@ -30,13 +30,15 @@ emergency_adms <- clahrcnwlhf::admission_data_clean[
 
 This leaves us with `r nrow(emergency_adms)` emergency episodes with discharge
 date between 1st January 2012 and 30th September 2016 inclusive. We will need to
-identify those episodes and spells with a primary diagnosis of heart failure, so
-let us add a flag column to indicate such episodes.
+identify those episodes and spells with a primary diagnosis of heart failure,
+and with any diagnosis of heart failure so let us add flag columns to indicate
+such episodes.
 
 ```{r, echo=TRUE, results='asis', cache=TRUE}
 emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
                                    code_regex="I110|I255|I420|I429|I500|I501|I509",
                                    new_colname = "Heart.Failure.Episode")
+emergency_adms <- clahrcnwlhf::make_anydiag_flag(emergency_adms, "Diagnosis", "HF.any.code", "I110|I255|I420|I429|I500|I501|I509")
 
 ```
 
@@ -116,6 +118,22 @@ n_disch <- clahrcnwlhf::disch_time_table(emergency_adms[
 matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,300))
 axis(side=1,at=1:length(n_disch),labels=names(n_disch))
 ```
+
+## Other diagnosis positions
+
+We will now look at admission numbers for patients with a diagnosis code in positions
+other than Primary Diagnosis.
+
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+
+n_disch <- clahrcnwlhf::disch_time_table(emergency_spells[
+  which(emergency_spells[,"HF.any.code"] == TRUE),])
+#n_disch <- n_disch[-length(n_disch)]
+
+matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,800))
+axis(side=1,at=1:length(n_disch),labels=names(n_disch))
+```
+
 
 ## Readmissions
 
