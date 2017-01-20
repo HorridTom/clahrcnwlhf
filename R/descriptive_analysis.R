@@ -391,3 +391,13 @@ disch_time_table <- function(df, split_by = '%Y-%m') {
   m
 
 }
+
+los_time_table <- function(df, split_by = '%Y-%m') {
+  df$splitby <- factor(format(df$DischargeDate, split_by))
+  df_splt <- split.data.frame(df, df$splitby)
+
+  m <- sapply(df_splt, function(x){mean(x[,"los"], na.rm = TRUE)})
+
+  m
+
+}
