@@ -63,7 +63,7 @@ clean_data <-function(df, restrict_disch_date = TRUE) {
   if (restrict_disch_date) {
     df <- clahrcnwlhf::subset_by_date(df,
                                       start_date=as.Date("2012-01-01"),
-                                      end_date=as.Date("2016-09-30"))
+                                      end_date=as.Date("2016-10-31"))
   }
 
   df <- clahrcnwlhf::remove_dupes(df)
