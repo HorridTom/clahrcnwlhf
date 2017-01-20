@@ -74,7 +74,7 @@ p <- clahrcnwlhf::missing_data_table(admission_data_clean, split_by = '%Y-%m',
 pmd_monthly <- p[,colnames(p) %in% c("CSPAdmissionTime","CSPDischargeTime",
                                      "PrimaryDiagnosis","CSPLastWard")]
 matplot(pmd_monthly, type = c("b"),pch=1:4,col = 1:4, xaxt="n")
-axis(side=1,at=1:nrow(pmd_monthly),labels=rownames(pmd_monthly))
+axis(side=1,at=1:nrow(pmd_monthly),labels=rownames(pmd_monthly), las = 2, cex.axis =0.6)
 legend("topleft", legend = colnames(pmd_monthly), col=1:4, pch=1:4)
 ```
 

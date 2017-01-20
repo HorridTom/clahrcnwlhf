@@ -35,10 +35,10 @@ and with any diagnosis of heart failure so let us add flag columns to indicate
 such episodes.
 
 ```{r, echo=TRUE, results='asis', cache=TRUE}
-emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
-                                   code_regex="I110|I255|I420|I429|I500|I501|I509",
-                                   new_colname = "Heart.Failure.Episode")
-emergency_adms <- clahrcnwlhf::make_anydiag_flag(emergency_adms, "Diagnosis", "HF.any.code", "I110|I255|I420|I429|I500|I501|I509")
+#emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
+#                                   code_regex="I110|I255|I420|I429|I500|I501|I509",
+#                                   new_colname = "Heart.Failure.Episode")
+#emergency_adms <- clahrcnwlhf::make_anydiag_flag(emergency_adms, "Diagnosis", "HF.any.code", #"I110|I255|I420|I429|I500|I501|I509")
 
 ```
 
@@ -60,8 +60,7 @@ emergency_adms <- clahrcnwlhf::emergency_adms
 
 ```
 
-This results in `r max(emergency_adms$spell_number)` emergency spells with
-discharge date between 1st January 2012 and 30th September 2016 inclusive.
+
 
 ## Number of Discharges by Month
 
@@ -77,6 +76,7 @@ This gives `r nrow(emergency_spells)` discharges between 1st January 2012 and
 30th September 2016 inclusive. Let us see how these vary by month over this
 period.
 
+First we look at all discharges from the three sites combined.
 
 ```{r, fig.height=5, fig.width=7, cache=TRUE}
 
@@ -86,9 +86,45 @@ n_disch <- clahrcnwlhf::disch_time_table(emergency_spells)
 matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500))
 axis(side=1,at=1:length(n_disch),labels=names(n_disch))
 ```
-Without a field for which hospital the episode was located at, I cannot split
-this down by hospital at this point. This will be done on revisiting
-Northwick Park. (2016-12-02)
+
+Now let us examine the monthly number of discharges by site.
+
+```{r, echo=TRUE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+em_sp_site <- split(emergency_spells, emergency_spells$StartWardSite)
+ndisch_site <- lapply(em_sp_site, clahrcnwlhf::disch_time_table)
+site_names <- names(ndisch_site)
+X <- cbind(ndisch_site[[1]], ndisch_site[[2]][match(labels(ndisch_site[[1]]), labels(ndisch_site[[2]]))])
+site_disch <- cbind(X, ndisch_site[[3]][match(row.names(X), labels(ndisch_site[[3]]))])
+colnames(site_disch) <- site_names
+matplot(site_disch[,1], type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500))
+matplot(site_disch[,2], type = c("b"), pch=19, col = 1, xaxt="n", ylim=c(0,6500), add=TRUE)
+matplot(site_disch[,3], type = c("b"), pch=18, col = 1, xaxt="n", ylim=c(0,6500), add=TRUE)
+axis(side=1,at=1:nrow(site_disch),labels=row.names(site_disch), las = 2, cex.axis =0.6)
+legend("topright", inset=.05, legend=site_names, pch=c(20,19,18), col = 1, horiz=TRUE)
+```
+
+
+We restrict attention to spells commencing on the Northwick Park site only.
+```{r, echo=TRUE, results='asis', cache=TRUE}
+emergency_adms <- emergency_adms[which(emergency_adms[,"StartWardSite"] == "NPH"),]
+emergency_spells <- emergency_adms[
+  which(emergency_adms[,"EpisodeNumber"] == 1),]
+
+```
+
+This results in `r max(emergency_adms$spell_number)` emergency spells with
+discharge date between 1st January 2012 and 30th September 2016 inclusive.
+
+
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+
+n_disch <- clahrcnwlhf::disch_time_table(emergency_spells)
+#n_disch <- n_disch[-length(n_disch)]
+
+matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500))
+axis(side=1,at=1:length(n_disch),labels=names(n_disch))
+```
+
 
 Next let's look at this for those spells with primary diagnosis code
 heart failure.
@@ -135,7 +171,6 @@ axis(side=1,at=1:length(n_disch),labels=names(n_disch))
 ```
 
 
-## Readmissions
 
 
 
