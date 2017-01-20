@@ -29,6 +29,10 @@ make_emergency_adms_dataset <- function(sv = TRUE, rt = FALSE) {
 
   emergency_adms <- clahrcnwlhf::make.spellnumber.2(emergency_adms)
 
+  #Add length of stay column
+  emergency_adms$los <- difftime(emergency_adms[,"CSPDischargeTime"],
+                                 emergency_adms[,"CSPAdmissionTime"])
+
   # Save the dataset if specified
   if (sv) {
     devtools::use_data(emergency_adms, overwrite = TRUE)

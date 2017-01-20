@@ -84,7 +84,7 @@ n_disch <- clahrcnwlhf::disch_time_table(emergency_spells)
 #n_disch <- n_disch[-length(n_disch)]
 
 matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500))
-axis(side=1,at=1:length(n_disch),labels=names(n_disch))
+axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
 ```
 
 Now let us examine the monthly number of discharges by site.
@@ -122,7 +122,7 @@ n_disch <- clahrcnwlhf::disch_time_table(emergency_spells)
 #n_disch <- n_disch[-length(n_disch)]
 
 matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500))
-axis(side=1,at=1:length(n_disch),labels=names(n_disch))
+axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
 ```
 
 
@@ -136,24 +136,11 @@ n_disch <- clahrcnwlhf::disch_time_table(emergency_spells[
 #n_disch <- n_disch[-length(n_disch)]
 
 matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,100))
-axis(side=1,at=1:length(n_disch),labels=names(n_disch))
+axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
 ```
 
 There are a total of `r sum(n_disch)` spells with primary diagnosis code
 heart failure for the period. 
-
-For comparison, the number of heart failure ***episodes***:
-
-```{r, fig.height=5, fig.width=7, cache=TRUE}
-emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
-                                   code_regex="I110|I255|I420|I429|I500|I501|I509",
-                                   new_colname = "Heart.Failure.Episode")
-n_disch <- clahrcnwlhf::disch_time_table(emergency_adms[
-  which(emergency_adms[,"Heart.Failure.Episode"] == TRUE),])
-
-matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,300))
-axis(side=1,at=1:length(n_disch),labels=names(n_disch))
-```
 
 ## Other diagnosis positions
 
@@ -166,8 +153,8 @@ n_disch <- clahrcnwlhf::disch_time_table(emergency_spells[
   which(emergency_spells[,"HF.any.code"] == TRUE),])
 #n_disch <- n_disch[-length(n_disch)]
 
-matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,800))
-axis(side=1,at=1:length(n_disch),labels=names(n_disch))
+matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,400))
+axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
 ```
 
 
