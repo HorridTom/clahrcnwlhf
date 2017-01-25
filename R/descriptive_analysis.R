@@ -386,8 +386,10 @@ make_anydiag_flag <- function(dataframe, col_regex, new_colname, code_regex) {
 #' @return a vector of row counts for each time period
 #' @export
 #'
-disch_time_table <- function(df, split_by = '%Y-%m') {
-  df$splitby <- factor(format(df$DischargeDate, split_by))
+disch_time_table <- function(df, split_by = '%Y-%m', discharge = TRUE) {
+  if (discharge) {col_split = "DischargeDate"}
+  else {col_split = "AdmissionDate"}
+  df$splitby <- factor(format(df[,col_split], split_by))
   df_splt <- split.data.frame(df, df$splitby)
 
   m <- sapply(df_splt, nrow)

@@ -4,7 +4,7 @@
 \alias{disch_time_table}
 \title{disch_time_table}
 \usage{
-disch_time_table(df, split_by = "\%Y-\%m")
+disch_time_table(df, split_by = "\%Y-\%m", discharge = TRUE)
 }
 \arguments{
 \item{df}{dataframe in question}
