@@ -131,16 +131,27 @@ heart failure.
 
 ```{r, fig.height=5, fig.width=7, cache=TRUE}
 
-n_disch <- clahrcnwlhf::disch_time_table(emergency_spells[
+n_disch_hf <- clahrcnwlhf::disch_time_table(emergency_spells[
   which(emergency_spells[,"Heart.Failure.Episode"] == TRUE),])
 #n_disch <- n_disch[-length(n_disch)]
 
-matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,100))
+matplot(n_disch_hf, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,100))
 axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
 ```
 
 There are a total of `r sum(n_disch)` spells with primary diagnosis code
 heart failure for the period. 
+
+Now let us look at the proportion of discharges with primary diagnosis heart failure.
+
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+
+p_disch_hf <- n_disch_hf / n_disch
+#n_disch <- n_disch[-length(n_disch)]
+
+matplot(p_disch_hf, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,0.04))
+axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
+```
 
 ## Other diagnosis positions
 
