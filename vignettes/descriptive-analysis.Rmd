@@ -12,15 +12,14 @@ vignette: >
 This vignette covers the descriptive data analysis for the evaluation of the
 CLAHRC NWL Heart Failure Care Bundle project at North West London Hospitals.
 
-This assumes the `clahrcnwlhf::admission_data` data has been cleaned using `clahrcnwlhf::clean_and_save`. As of 1st December 2016 this includes all
-discharges after 1st January 2012 and 30th September 2016 inclusive.
+This assumes the `clahrcnwlhf::admission_data` data has been cleaned using `clahrcnwlhf::clean_and_save`. As of 18th December 2016 this includes all
+discharges from 1st January 2012 to 31st October 2016 inclusive.
 
 ## Dataset
 
-This part of the analysis will focus on emergency admissions data; in other
-words those episodes for which
-'admission_data_clean$AdmissionType = "Emergency"'. Let us first restrict the
-dataset to only these episodes
+We will focus on emergency admissions data; in other words those episodes
+for which 'admission_data_clean$AdmissionType = "Emergency"'. Let us first
+restrict the dataset to only these episodes.
 
 ```{r, echo=TRUE, results='asis', cache=TRUE}
 emergency_adms <- clahrcnwlhf::admission_data_clean[
@@ -29,22 +28,11 @@ emergency_adms <- clahrcnwlhf::admission_data_clean[
 ```
 
 This leaves us with `r nrow(emergency_adms)` emergency episodes with discharge
-date between 1st January 2012 and 30th September 2016 inclusive. We will need to
-identify those episodes and spells with a primary diagnosis of heart failure,
-and with any diagnosis of heart failure so let us add flag columns to indicate
-such episodes.
-
-```{r, echo=TRUE, results='asis', cache=TRUE}
-#emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
-#                                   code_regex="I110|I255|I420|I429|I500|I501|I509",
-#                                   new_colname = "Heart.Failure.Episode")
-#emergency_adms <- clahrcnwlhf::make_anydiag_flag(emergency_adms, "Diagnosis", "HF.any.code", #"I110|I255|I420|I429|I500|I501|I509")
-
-```
-
-We will need a spell number variable, to identify which episodes are part of the
-same spell. The following code creates this column, along with some helper
-columns.
+date between 1st January 2012 and 30th September 2016 inclusive. Flag columns
+have been added to identify those episodes and spells with a primary diagnosis
+of heart failure, and with any diagnosis of heart failure. A spell number
+variable has also been added, to identify which episodes are part of the same
+spell. 
 
 ```{r, echo=TRUE, results='asis', cache=TRUE}
 #emergency_adms <- clahrcnwlhf::new.pat(emergency_adms, id = "PseudoID",
@@ -73,7 +61,7 @@ emergency_spells <- emergency_adms[
 ```
 
 This gives `r nrow(emergency_spells)` discharges between 1st January 2012 and
-30th September 2016 inclusive. Let us see how these vary by month over this
+31st October 2016 inclusive. Let us see how these vary by month over this
 period.
 
 First we look at all discharges from the three sites combined.
@@ -83,7 +71,8 @@ First we look at all discharges from the three sites combined.
 n_disch <- clahrcnwlhf::disch_time_table(emergency_spells)
 #n_disch <- n_disch[-length(n_disch)]
 
-matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500))
+matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500),
+        main="Total emergency discharges from NWLH by month")
 axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
 ```
 
@@ -96,7 +85,8 @@ site_names <- names(ndisch_site)
 X <- cbind(ndisch_site[[1]], ndisch_site[[2]][match(labels(ndisch_site[[1]]), labels(ndisch_site[[2]]))])
 site_disch <- cbind(X, ndisch_site[[3]][match(row.names(X), labels(ndisch_site[[3]]))])
 colnames(site_disch) <- site_names
-matplot(site_disch[,1], type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500))
+matplot(site_disch[,1], type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500),
+        main="Total emergency discharges from NWLH by month and site")
 matplot(site_disch[,2], type = c("b"), pch=19, col = 1, xaxt="n", ylim=c(0,6500), add=TRUE)
 matplot(site_disch[,3], type = c("b"), pch=18, col = 1, xaxt="n", ylim=c(0,6500), add=TRUE)
 axis(side=1,at=1:nrow(site_disch),labels=row.names(site_disch), las = 2, cex.axis =0.6)
@@ -104,7 +94,7 @@ legend("topright", inset=.05, legend=site_names, pch=c(20,19,18), col = 1, horiz
 ```
 
 
-We restrict attention to spells commencing on the Northwick Park site only.
+We now restrict attention to spells commencing on the Northwick Park site only.
 ```{r, echo=TRUE, results='asis', cache=TRUE}
 emergency_adms <- emergency_adms[which(emergency_adms[,"StartWardSite"] == "NPH"),]
 emergency_spells <- emergency_adms[
@@ -112,8 +102,8 @@ emergency_spells <- emergency_adms[
 
 ```
 
-This results in `r max(emergency_adms$spell_number)` emergency spells with
-discharge date between 1st January 2012 and 30th September 2016 inclusive.
+This results in `r max(emergency_adms$spell_number)` emergency spells at NPH
+with discharge date between 1st January 2012 and 30th September 2016 inclusive.
 
 
 ```{r, fig.height=5, fig.width=7, cache=TRUE}
@@ -121,7 +111,8 @@ discharge date between 1st January 2012 and 30th September 2016 inclusive.
 n_disch <- clahrcnwlhf::disch_time_table(emergency_spells)
 #n_disch <- n_disch[-length(n_disch)]
 
-matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500))
+matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500),
+        main="Total emergency discharges from Northwick Park Hospital by month")
 axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
 ```
 
@@ -135,28 +126,46 @@ n_disch_hf <- clahrcnwlhf::disch_time_table(emergency_spells[
   which(emergency_spells[,"Heart.Failure.Episode"] == TRUE),])
 #n_disch <- n_disch[-length(n_disch)]
 
-matplot(n_disch_hf, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,100))
+matplot(n_disch_hf, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,100),
+        main="Monthly discharges primary diagnosis Heart Failure, NPH")
 axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
 ```
 
 There are a total of `r sum(n_disch)` spells with primary diagnosis code
 heart failure for the period. 
 
-Now let us look at the proportion of discharges with primary diagnosis heart failure.
+Now let us look at the *proportion* of discharges with primary diagnosis heart failure.
 
 ```{r, fig.height=5, fig.width=7, cache=TRUE}
 
 p_disch_hf <- n_disch_hf / n_disch
 #n_disch <- n_disch[-length(n_disch)]
 
-matplot(p_disch_hf, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,0.04))
+hf_proportion_data <- cbind(n_disch, n_disch_hf, p_disch_hf)
+#knitr::kable(hf_proportion_data)
+
+matplot(p_disch_hf, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,0.04),
+        main="Primary diag. HF discharges as proportion of all emergency discharges, NPH")
 axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
 ```
 
+We can examine this data for evidence of change after the date the project commenced, namely 1st April 2014, using a p-chart.
+
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+library(qcc)
+pcc1 <- qcc(data = hf_proportion_data[1:match("2014-03",rownames(hf_proportion_data)),"n_disch_hf"], sizes = hf_proportion_data[1:match("2014-03",rownames(hf_proportion_data)),"n_disch"], plot = FALSE, type = "p", newdata = hf_proportion_data[match("2014-04",rownames(hf_proportion_data)):nrow(hf_proportion_data),"n_disch_hf"], newsizes = hf_proportion_data[match("2014-04",rownames(hf_proportion_data)):nrow(hf_proportion_data),"n_disch"], chart.all = TRUE, data.name = "period before project start")
+pcc1$newdata.name <- "period after project start"
+plot(pcc1, title = "Proportion of emergency admissions discharged with primary diag. heart failure", xlab = "Month", ylab = "Proportion of heart failure discharges", yaxt="n")
+axis(2, at=pretty(c(pcc1$statistics,pcc1$newstats)), lab = paste(pretty(c(pcc1$statistics,pcc1$newstats)) * 100, "%"), las=TRUE)
+
+
+```
+
+
 ## Other diagnosis positions
 
-We will now look at admission numbers for patients with a diagnosis code in positions
-other than Primary Diagnosis.
+We will now look at discharge numbers for patients with a diagnosis code in
+positions other than Primary Diagnosis.
 
 ```{r, fig.height=5, fig.width=7, cache=TRUE}
 
@@ -164,7 +173,8 @@ n_disch <- clahrcnwlhf::disch_time_table(emergency_spells[
   which(emergency_spells[,"HF.any.code"] == TRUE),])
 #n_disch <- n_disch[-length(n_disch)]
 
-matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,400))
+matplot(n_disch, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,400),
+        main="Monthly discharges any diagnosis HF, NPH")
 axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
 ```
 
