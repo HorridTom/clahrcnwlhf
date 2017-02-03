@@ -36,7 +36,7 @@ merge_data_files <- function(frame_list) {
 }
 
 # Load in separate files from NWLH data warehouse and join together.
-fileNames <- Sys.glob("data-raw/*.xlsx")
+fileNames <- Sys.glob("data-raw/split*.xlsx")
 data_frames <- load_data_files(fileNames)
 admission_data <- merge_data_files(data_frames)
 
