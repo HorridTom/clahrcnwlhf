@@ -11,10 +11,10 @@ vignette: >
 
 ## To Do
  
- 1. Additional columns required in extract
-  + Hospital site
-  + Date of death in hospital
-  + Discharge destination
- 2. Missing data in `CSP...` columns over final six months of dataset
- 3. Discrepancies between number of heart failure admissions in my analysis vs
+ 1. [x] Additional columns required in extract
+  + [x] Hospital site
+  + [x] Date of death in hospital
+  + [x] Discharge destination
+ 2. [ ] Missing data in `CSP...` columns over final six months of dataset
+ 3. [x] Discrepancies between number of heart failure admissions in my analysis vs
  those in the presentation
