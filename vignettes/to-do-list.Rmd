@@ -20,9 +20,9 @@ vignette: >
  those in the presentation
  4. Control chart analysis for admissions (absolute and proportions)
  5. Link in
-  + the care bundle data
-  + national audit data
- 6. Examine for changes in demographics over the period
+  + $\Box$ the care bundle data
+  + $\Box$ national audit data
+ 6. $\Box$ Examine for changes in demographics over the period
  7. Analyse outcomes:
  
 ```{r xtable, echo=FALSE, results='asis', cache=TRUE}
