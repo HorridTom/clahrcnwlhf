@@ -11,10 +11,29 @@ vignette: >
 
 ## To Do
  
- 1. [x] Additional columns required in extract
-  + [x] Hospital site
-  + [x] Date of death in hospital
-  + [x] Discharge destination
- 2. [ ] Missing data in `CSP...` columns over final six months of dataset
- 3. [x] Discrepancies between number of heart failure admissions in my analysis vs
+ 1. $\checkmark$ Additional columns required in extract
+  + $\checkmark$ Hospital site
+  + $\checkmark$ Date of death in hospital
+  + $\checkmark$ Discharge destination
+ 2. $\checkmark$ Missing data in `CSP...` columns over final six months of dataset
+ 3. $\checkmark$ Discrepancies between number of heart failure admissions in my analysis vs
  those in the presentation
+ 4. Control chart analysis for admissions (absolute and proportions)
+ 5. Link in the care bundle data
+ 6. Examine for changes in demographics over the period
+ 7. Analyse outcomes:
+ 
+```{r xtable, echo=FALSE, results='asis', cache=TRUE}
+  library(xtable)
+  tcn <- c('Before-After Raw', 'Before-After Adjusted', 'Bundle Intervention Raw', 'Bundle Intervention Adjusted')
+  trn <- c('LOS','Bed Days','Mortality','Readmissions')
+r1 <- c('$\\Box$','$\\Box$','$\\Box$','$\\Box$')
+r2 <- c('$\\Box$','$\\Box$','$\\Box$','$\\Box$')
+r3 <- c('$\\Box$','$\\Box$','$\\Box$','$\\Box$')
+r4 <- c('$\\Box$','$\\Box$','$\\Box$','$\\Box$')
+tab1 <- matrix(c(r1,r2,r3,r4),nrow=4, ncol=4, byrow=TRUE)
+rownames(tab1) <- trn
+colnames(tab1) <- tcn
+print(xtable(tab1, align="lcccc"), type="html")
+```
+
