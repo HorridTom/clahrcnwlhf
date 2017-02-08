@@ -24,6 +24,11 @@ Source: CRAN
 Version: 0.1
 Hash: 0afb92b59b02593c70ff8046700ba9d3
 
+Package: backports
+Source: CRAN
+Version: 1.0.5
+Hash: 8b835bdc5447f2c76fda198e17d6bda4
+
 Package: base64enc
 Source: CRAN
 Version: 0.1-3
@@ -192,6 +197,11 @@ Version: 1.8.4
 Hash: 75ca080b10a9314a9b293964331e5df7
 Requires: Rcpp
 
+Package: qcc
+Source: CRAN
+Version: 2.6
+Hash: b188a1799c20d647f50d086a3a9cd198
+
 Package: reshape2
 Source: CRAN
 Version: 1.4.2
@@ -200,16 +210,22 @@ Requires: Rcpp, plyr, stringr
 
 Package: rmarkdown
 Source: CRAN
-Version: 1.1
-Hash: d0e9f583d85019c99a171b094979fcb3
+Version: 1.3
+Hash: d8f0cf248116dbdfc23f35991d0ed3f7
 Requires: base64enc, caTools, evaluate, htmltools, jsonlite, knitr,
-    tibble, yaml
+    rprojroot, yaml
 
 Package: roxygen2
 Source: CRAN
 Version: 5.0.1
 Hash: 77e2e933d3709300a251c7ef9cef82fc
 Requires: Rcpp, brew, digest, stringi, stringr
+
+Package: rprojroot
+Source: CRAN
+Version: 1.2
+Hash: fdcac51a7f47decd60556ceefc3c26b1
+Requires: backports
 
 Package: rstudioapi
 Source: CRAN
@@ -248,6 +264,11 @@ Package: withr
 Source: CRAN
 Version: 1.0.2
 Hash: 774eb7be9087cdc24b53b74e5359cfac
+
+Package: xtable
+Source: CRAN
+Version: 1.8-2
+Hash: 7293235cfcc14cdff1ce7fd1a0212031
 
 Package: yaml
 Source: CRAN
