@@ -19,7 +19,9 @@ vignette: >
  3. $\checkmark$ Discrepancies between number of heart failure admissions in my analysis vs
  those in the presentation
  4. Control chart analysis for admissions (absolute and proportions)
- 5. Link in the care bundle data
+ 5. Link in
+  + the care bundle data
+  + national audit data
  6. Examine for changes in demographics over the period
  7. Analyse outcomes:
  
