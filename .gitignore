@@ -29,6 +29,7 @@ packrat/lib*/
 packrat/src/
 # Raw data
 /data-raw/*.xls*
+/data-raw/*.csv
 .Rproj.user
 # Data
 /data
