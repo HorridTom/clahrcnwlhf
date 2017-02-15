@@ -10,6 +10,7 @@ plot_age_dist <- function(df) {
   plot(df$AgeBand)
 
 }
+<<<<<<< HEAD
 
 #ACTUAL ANALYSIS (Trying out commands) - STARTING WITH PLOTS. The function plot is limiting so I am now using barplot as this is more flexible and enables me to do alot more.
 
@@ -69,3 +70,5 @@ plot(new_patinet$AgeBand[new_patinet$Heart.Failure.Episode=='TRUE'], ylab = 'Fre
 #BASIC DESCRIPTIVE - eye-balling the variables
 describe() #generates n, frequency and proportion . For a more detailed version,
 stat.desc() #generates
+=======
+>>>>>>> Created new fucntion to plot graph
