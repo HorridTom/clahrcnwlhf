@@ -13,14 +13,22 @@ vignette: >
 This vignette covers the descriptive data analysis of demographics for the
 evaluation of the CLAHRC NWL Heart Failure Care Bundle project at North West London Hospitals.
 
+<<<<<<< HEAD
 ## Ethnicity - all NPH discharges
 
 ```{r, echo=TRUE, results='asis', cache=TRUE}
 library(knitr)
+=======
+## Ethnicity
+
+```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
+library(ggplot2, reshape2)
+>>>>>>> Began work on ethnicity analysis, adding necessary files first helper function.
 emergency_adms <- clahrcnwlhf::emergency_adms
 emergency_spells <- emergency_adms[
   which(emergency_adms[,"EpisodeNumber"] == 1),]
 emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
+<<<<<<< HEAD
 knitr::kable(t(as.data.frame.table(table(emergency_spells_nph$EthnicGroup))))
 ```
 
@@ -48,6 +56,10 @@ First let us examine the number of discharges each month by ethnic group.
 library(ggplot2, reshape2)
 
 X <- clahrcnwlhf::ethn_time_table(emergency_spells_nph, ethn_col = 'EthnicGroupComp')
+=======
+
+X <- clahrcnwlhf::ethn_time_table(emergency_spells_nph)
+>>>>>>> Began work on ethnicity analysis, adding necessary files first helper function.
 Y <- as.data.frame.matrix(t(X))
 Y$timepoint <- c(1:58)
 Y.melted <- reshape2::melt(Y, id = "timepoint")
@@ -55,6 +67,7 @@ ggplot(data = Y.melted, aes(x = timepoint, y = value, color = variable)) + geom_
 
 
 ```
+<<<<<<< HEAD
 
 Next, we consider this data as a proportion of all discharges.
 
@@ -140,3 +153,5 @@ This simplistic analysis does not take into account the "hierarchical" nature of
  2. Use a hierarchical event history model to examine the impact of i) ethnicity ii) time period on frequency of admission. This may be the approach we ultimately take to examine the research question of interest regarding (re-)admissions before and after the intervention.
 
 
+=======
+>>>>>>> Began work on ethnicity analysis, adding necessary files first helper function.
