@@ -1,5 +1,5 @@
 ---
-title: "Descriptive Analysis for CLAHRC NWL Heart Failure Care Bundle"
+title: "Descriptive Analysis for CLAHRC NWL Heart Failure Care Bundle: 1 - Admissions"
 author: "Dr. Thomas Woodcock"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This vignette covers the descriptive data analysis for the evaluation of the
+This vignette covers the descriptive data analysis of admission numbers for the evaluation of the
 CLAHRC NWL Heart Failure Care Bundle project at North West London Hospitals.
 
 This assumes the `clahrcnwlhf::admission_data` data has been cleaned using `clahrcnwlhf::clean_and_save`. As of 18th December 2016 this includes all
