@@ -15,6 +15,8 @@ evaluation of the CLAHRC NWL Heart Failure Care Bundle project at North West Lon
 
 ## Ethnicity
 
+First let us examine the number of discharges each month by ethnic group.
+
 ```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
 library(ggplot2, reshape2)
 emergency_adms <- clahrcnwlhf::emergency_adms
@@ -28,5 +30,19 @@ Y$timepoint <- c(1:58)
 Y.melted <- reshape2::melt(Y, id = "timepoint")
 ggplot(data = Y.melted, aes(x = timepoint, y = value, color = variable)) + geom_point() + geom_line()
 
+
+```
+
+Next, we consider this data as a proportion of all discharges.
+
+```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
+Y <- as.data.frame.matrix(t(X))
+n <- ncol(Y)
+Y$total <- rowSums(Y)
+Y[,1:n] <- Y[,1:n] / Y[,n+1]
+Y$total <- NULL
+Y$timepoint <- c(1:58)
+Y.melted <- reshape2::melt(Y, id = "timepoint")
+ggplot(data = Y.melted, aes(x = timepoint, y = value, color = variable)) + geom_point() + geom_line()
 
 ```
