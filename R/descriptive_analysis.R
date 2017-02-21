@@ -374,6 +374,23 @@ make_anydiag_flag <- function(dataframe, col_regex, new_colname, code_regex) {
   dataframe
 }
 
+#' group_by_date
+#'
+#' @param df the dataframe
+#' @param date_col a date column in df
+#' @param cutoff_dates vector of dates
+#' @param new_col name for new column
+#' @param period_labels vector of character labels
+#'
+#' @return df with a new column added for the period date_col falls into for
+#' that row. Periods are defined by cutoff_dates and labelled by period_labels.
+#' @export
+#'
+group_by_date <- function(df, date_col = "DischargeDate", cutoff_dates, new_col, period_labels) {
+  df[,new_col] <- cut(df[,date_col], breaks = cutoff_dates, labels = period_labels)
+  df
+}
+
 
 #' disch_time_table
 #'
@@ -410,18 +427,21 @@ los_time_table <- function(df, split_by = '%Y-%m') {
 
 #' ethn_time_table
 #'
-#' @param df a data frame of spells with column "EthnicGroup"
+#' @param df a data frame of spells with column "EthnicGroup" or other specified
+#' containing data on ethnic group for each spell
 #' @param split_by date format to split by
 #'
 #' @return table of counts of ethnic groups by discharge time period
 #' @export
 #'
-ethn_time_table <- function(df, split_by = '%Y-%m') {
+ethn_time_table <- function(df, split_by = '%Y-%m', ethn_col = 'EthnicGroup') {
   df$splitby <- factor(format(df$DischargeDate, split_by))
   #df_splt <- split.data.frame(df, df$splitby)
 
-  m <- table(df$EthnicGroup,df$splitby)
+  m <- table(df[,ethn_col],df$splitby)
 
   m
 
 }
+
+
