@@ -13,18 +13,41 @@ vignette: >
 This vignette covers the descriptive data analysis of demographics for the
 evaluation of the CLAHRC NWL Heart Failure Care Bundle project at North West London Hospitals.
 
-## Ethnicity
+## Ethnicity - all NPH discharges
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+library(knitr)
+emergency_adms <- clahrcnwlhf::emergency_adms
+emergency_spells <- emergency_adms[
+  which(emergency_adms[,"EpisodeNumber"] == 1),]
+emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
+knitr::kable(t(as.data.frame.table(table(emergency_spells_nph$EthnicGroup))))
+```
+
+The overall proportions in each ethnic group show that the groups within the
+category "Mixed" (D - G) account for a very small proportion of spells. Thus it
+makes sense to combine them into a single new group, X. Group K (Bangladeshi)
+also represents a very small proportion of spells, and will be merged with Group
+L (Any other Asian background) to form a new group I. Codes M, N, P  will be
+treated as their category, Black or Black British, labelled U. Chinese (R) is a
+small group and will be merged with the other group in its category
+(S, any other ethnic group) to form group V.
+
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+emergency_spells_nph$EthnicGroupComp <- sub('D|E|F|G','T',emergency_spells_nph$EthnicGroup)
+emergency_spells_nph$EthnicGroupComp <- sub('K|L','I',emergency_spells_nph$EthnicGroupComp)
+emergency_spells_nph$EthnicGroupComp <- sub('M|N|P','U',emergency_spells_nph$EthnicGroupComp)
+emergency_spells_nph$EthnicGroupComp <- sub('R|S','V',emergency_spells_nph$EthnicGroupComp)
+knitr::kable(t(as.data.frame.table(table(emergency_spells_nph$EthnicGroupComp))))
+```
 
 First let us examine the number of discharges each month by ethnic group.
 
 ```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
 library(ggplot2, reshape2)
-emergency_adms <- clahrcnwlhf::emergency_adms
-emergency_spells <- emergency_adms[
-  which(emergency_adms[,"EpisodeNumber"] == 1),]
-emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
 
-X <- clahrcnwlhf::ethn_time_table(emergency_spells_nph)
+X <- clahrcnwlhf::ethn_time_table(emergency_spells_nph, ethn_col = 'EthnicGroupComp')
 Y <- as.data.frame.matrix(t(X))
 Y$timepoint <- c(1:58)
 Y.melted <- reshape2::melt(Y, id = "timepoint")
@@ -40,9 +63,73 @@ Y <- as.data.frame.matrix(t(X))
 n <- ncol(Y)
 Y$total <- rowSums(Y)
 Y[,1:n] <- Y[,1:n] / Y[,n+1]
+Z <- Y
 Y$total <- NULL
 Y$timepoint <- c(1:58)
 Y.melted <- reshape2::melt(Y, id = "timepoint")
 ggplot(data = Y.melted, aes(x = timepoint, y = value, color = variable)) + geom_point() + geom_line()
 
 ```
+
+We now consider the distribution of ethnicity between the two time periods.
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+library(pander, descr)
+emergency_spells_nph <- clahrcnwlhf::group_by_date(emergency_spells_nph, cutoff_dates = c(as.Date("31/12/2011", "%d/%m/%Y"),as.Date("31/03/2014", "%d/%m/%Y"),as.Date("30/11/2016", "%d/%m/%Y")), period_labels = c('Before', 'After'), new_col = 'period')
+Table1 <- descr::CrossTable(emergency_spells_nph$EthnicGroupComp, emergency_spells_nph$period, expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
+Table1$RowData <- 'Ethnicity Group'
+Table1$ColData <- 'Period'
+pander(Table1)
+pander(Table1$CST)
+```
+
+This shows that there is a statistically significant difference between the ethnicity distributions of all NPH spells across the two periods. 
+
+## Ethnicity - primary diagnosis heart failure
+
+Now let us repeat the above for only those spells with primary diagnosis heart failure.
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+knitr::kable(t(as.data.frame.table(table(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,]$EthnicGroupComp))))
+```
+
+Let us examine the number of primary coded heart failure discharges each month by ethnic group.
+
+```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
+
+X <- clahrcnwlhf::ethn_time_table(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,], ethn_col = 'EthnicGroupComp')
+Y <- as.data.frame.matrix(t(X))
+Y$timepoint <- c(1:nrow(Y))
+Y.melted <- reshape2::melt(Y, id = "timepoint")
+ggplot(data = Y.melted, aes(x = timepoint, y = value, color = variable)) + geom_point() + geom_line()
+
+
+```
+
+Next, we consider this data as a proportion of all primary coded heart failure discharges.
+
+```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
+Y <- as.data.frame.matrix(t(X))
+n <- ncol(Y)
+Y$total <- rowSums(Y)
+Y[,1:n] <- Y[,1:n] / Y[,n+1]
+Z <- Y
+Y$total <- NULL
+Y$timepoint <- c(1:nrow(Y))
+Y.melted <- reshape2::melt(Y, id = "timepoint")
+ggplot(data = Y.melted, aes(x = timepoint, y = value, color = variable)) + geom_point() + geom_line()
+
+```
+
+We now consider the distribution of ethnicity between the two time periods.
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+library(pander, descr)
+Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"EthnicGroupComp"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
+Table1$RowData <- 'Ethnicity Group'
+Table1$ColData <- 'Period'
+pander(Table1)
+pander(Table1$CST)
+```
+
+This shows that there is a statistically significant difference between the ethnicity distributions of spells primary coded heart failure, across the two periods. 
