@@ -50,7 +50,7 @@ HearFailure_Spell <- table(EA$Heart.Failure.Episode,EA$new_spell) # to then do a
 chisq.test(HearFailure_Spell)
 
 #PLOTS - STACKED
-plot(EA$AgeBand, EA$Sex) #aSK TOM <- sTILL STRUGGLING WITH ORDERING AGEBAND
+#aSK TOM <- sTILL STRUGGLING WITH ORDERING AGEBAND
 
 
 #DEFINING A VARIABLE
@@ -69,3 +69,7 @@ new_patient_trial <- EA[EA$new.pat == TRUE, ] #return all columns
 
 #Within the new created subset called new_patient, I created a dataframe of only new.patients and then to plot ageband by those with true HF episode code
 plot(new_patinet$AgeBand[new_patinet$Heart.Failure.Episode=='TRUE'], ylab = 'Frequency', main = 'Barplot of Emergency_Adms for all patients with Heart failure as the primary Diagnosis')
+
+#BASIC DESCRIPTIVE - eye-balling the variables
+describe() #generates n, frequency and proportion . For a more detailed version,
+stat.desc() #generates
