@@ -33,6 +33,15 @@ make_emergency_adms_dataset <- function(sv = TRUE, rt = FALSE) {
   emergency_adms$los <- difftime(emergency_adms[,"CSPDischargeTime"],
                                  emergency_adms[,"CSPAdmissionTime"])
 
+  #Add new column indicating if the period date was before or after teh care bundle
+  c_date_str <- c('2011-01-01', '2014-03-31', '2020-05-04')
+  labs <- c('A', 'B')
+  emergency_adms <- clahrcnwlhf::make_period_col(emergency_adms,
+                                                 colname = "DischargeDate",
+                                                 split_dates = c_date_str,
+                                                 period_labels = labs,
+                                                 new_colname = "period.date")
+
   # Save the dataset if specified
   if (sv) {
     devtools::use_data(emergency_adms, overwrite = TRUE)
@@ -406,4 +415,23 @@ los_time_table <- function(df, split_by = '%Y-%m') {
 
   m
 
+}
+
+#' make_period_col
+#'
+#' @param df data frame to which we want to add a period column
+#' @param colname column in df containing all the dates on which the period established
+#' @param split_dates vector of strings representing the date cut-offs of the periods.
+#' Note the first entry must a date before the earliest date in colname
+#' and the last date must be a date after the final date in colname
+#' @param period_labels labels for periods split by split_dates
+#' @param new_colname name of new column created containing the period into which the date falls
+#'
+#' @return df with an extra column of periods
+#' @export
+#'
+make_period_col <- function(df, colname, split_dates, period_labels, new_colname) {
+  bins<- as.Date(split_dates)
+  df[,new_colname] <- cut(df[,colname], breaks = bins, labels = period_labels)
+  df
 }
