@@ -458,6 +458,7 @@ make_period_col <- function(df, colname, split_dates, period_labels, new_colname
 }
 
 
+
 #' ethn_time_table
 #'
 #' @param df a data frame of spells with column "EthnicGroup"
@@ -498,4 +499,3 @@ recode_ethnicity <- function(df, ethn_col = "EthnicGroup") {
   df$EthnicGroupComp <- sub('R|S','V',df$EthnicGroupComp)
   df
 }
-
