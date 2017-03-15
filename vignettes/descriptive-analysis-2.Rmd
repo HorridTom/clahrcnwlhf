@@ -132,4 +132,11 @@ pander(Table1)
 pander(Table1$CST)
 ```
 
-This shows that there is a statistically significant difference between the ethnicity distributions of spells primary coded heart failure, across the two periods. 
+This shows that there is a statistically significant difference between the ethnicity distributions of spells primary coded heart failure, across the two periods.
+
+This simplistic analysis does not take into account the "hierarchical" nature of the data, in the sense that each patient in the dataset may have one or more admission spells during the time period covered. Some approaches that may be of value here are:
+
+ 1. For each patient in the dataset, label the first spell as the "index" spell for that patient. Run the above hypothesis test for changes in distribution of ethnicity across index spells commencing in the two periods.
+ 2. Use a hierarchical event history model to examine the impact of i) ethnicity ii) time period on frequency of admission. This may be the approach we ultimately take to examine the research question of interest regarding (re-)admissions before and after the intervention.
+
+
