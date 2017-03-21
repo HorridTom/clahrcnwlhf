@@ -1,3 +1,4 @@
+
 #' plot_age_dist
 #'
 #' @param df data frame containing the data to be plotted
@@ -12,7 +13,7 @@ plot_age_dist <- function(df) {
 }
 
 #ACTUAL ANALYSIS (Trying out commands) - STARTING WITH PLOTS. The function plot is limiting so I am now using barplot as this is more flexible and enables me to do alot more.
-
+mables_sand_box <- function (EA) {
 # 1. Basic descriptive of the data (I.e. statistics and frequencies)
 summary(EA)
 
@@ -69,3 +70,7 @@ plot(new_patinet$AgeBand[new_patinet$Heart.Failure.Episode=='TRUE'], ylab = 'Fre
 #BASIC DESCRIPTIVE - eye-balling the variables
 describe() #generates n, frequency and proportion . For a more detailed version,
 stat.desc() #generates
+#generating botplots e.g if i wanted to generate a boxplot for number of episodes for new vs old patients
+boxplot(EA_ageband$EpisodeNumber~EA_ageband$new.pat, ylab='Episode Number', main='Episode number of new patients vs. old patients')
+
+}

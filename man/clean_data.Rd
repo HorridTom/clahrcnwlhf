@@ -15,7 +15,7 @@ A data frame containing the cleaned data
 \description{
 This function cleans the raw data by performing the following steps:
 \enumerate{
-  \item Remove leading and trailing whitespace from any character fields
+  \item Remove leading and trailing whitespace from any character fields!
   \item Replace any instances of NULL or #N/A in character fields with NA
   \item Convert the following columns to factors: AgeBand, EthnicGroup, Sex,
   AdmissionMethodCode, AdmissionType, CSPLastWard
@@ -23,4 +23,3 @@ This function cleans the raw data by performing the following steps:
   the following columns of the raw data:
   AdmissionDate, DischargeDate, EpisodeStartDate, EpisodeEndDate}
 }
-
