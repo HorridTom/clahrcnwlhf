@@ -22,4 +22,3 @@ start_date and end_date (inclusive).
 \description{
 subset_by_date
 }
-

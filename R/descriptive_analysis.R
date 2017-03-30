@@ -435,29 +435,7 @@ los_time_table <- function(df, split_by = '%Y-%m') {
 }
 
 
-<<<<<<< HEAD
-#' ethn_time_table
-#'
-#' @param df a data frame of spells with column "EthnicGroup" or other specified
-#' containing data on ethnic group for each spell
-#' @param split_by date format to split by
-#'
-#' @return table of counts of ethnic groups by discharge time period
-#' @export
-#'
-ethn_time_table <- function(df, split_by = '%Y-%m', ethn_col = 'EthnicGroup') {
-  df$splitby <- factor(format(df$DischargeDate, split_by))
-  #df_splt <- split.data.frame(df, df$splitby)
 
-  m <- table(df[,ethn_col],df$splitby)
-
-  m
-
-}
-
-
-=======
->>>>>>> Began work on ethnicity analysis, adding necessary files first helper function.
 #' make_period_col
 #'
 #' @param df data frame to which we want to add a period column
@@ -477,23 +455,22 @@ make_period_col <- function(df, colname, split_dates, period_labels, new_colname
   df
 }
 
-<<<<<<< HEAD
-=======
+
 #' ethn_time_table
 #'
 #' @param df a data frame of spells with column "EthnicGroup"
 #' @param split_by date format to split by
+#' @param ethn_col the name of the column containing the ethnicity group
 #'
 #' @return table of counts of ethnic groups by discharge time period
 #' @export
 #'
-ethn_time_table <- function(df, split_by = '%Y-%m') {
+ethn_time_table <- function(df, split_by = '%Y-%m', ethn_col = "EthnicGroupComp") {
   df$splitby <- factor(format(df$DischargeDate, split_by))
   #df_splt <- split.data.frame(df, df$splitby)
 
-  m <- table(df$EthnicGroup,df$splitby)
+  m <- table(df[,ethn_col],df$splitby)
 
   m
 
 }
->>>>>>> Began work on ethnicity analysis, adding necessary files first helper function.

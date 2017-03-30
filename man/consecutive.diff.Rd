@@ -23,4 +23,3 @@ entry in that row of c2] - [the entry in c1 from the row above]
 \description{
 consecutive diff
 }
-
