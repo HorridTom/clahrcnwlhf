@@ -435,7 +435,6 @@ los_time_table <- function(df, split_by = '%Y-%m') {
 }
 
 
-
 #' make_period_col
 #'
 #' @param df data frame to which we want to add a period column
