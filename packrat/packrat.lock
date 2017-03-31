@@ -135,6 +135,12 @@ Source: CRAN
 Version: 1.1.3
 Hash: 655a5e67f86adfd1b5b3e601084b852f
 
+Package: descr
+Source: CRAN
+Version: 1.1.3
+Hash: 655a5e67f86adfd1b5b3e601084b852f
+Requires: xtable
+
 Package: devtools
 Source: CRAN
 Version: 1.13.2
@@ -324,6 +330,12 @@ Package: pbkrtest
 Source: CRAN
 Version: 0.4-7
 Hash: f195c3a0f527f69c491569c5cbaaf1db
+
+Package: pander
+Source: CRAN
+Version: 0.6.0
+Hash: 616991d56add9a1784dfe6c58877c590
+Requires: Rcpp, digest
 
 Package: plyr
 Source: CRAN
