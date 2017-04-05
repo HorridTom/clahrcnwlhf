@@ -3,74 +3,40 @@
 #'
 #' @param df data frame containing the data to be plotted
 #'
-#' @return plot of age distribution
+#' @return plot of age distribution. Flipped because of the age ranges
 #' @export
 #'
-plot_age_dist <- function(df) {
+  plot_age_dist <- function(df) {
 
-  plot(df$AgeBand)
+    #dataframe restricted to only rows where 'new.spell' = TRUE
+    emergency_spells <- clahrcnwlhf::emergency_adms[which(clahrcnwlhf::emergency_adms$new_spell == TRUE),]
 
-}
+    #ensure result is age band in ascending order
+    df$AgeBand <- factor(df$AgeBand,
+                               levels = c('0', '1 to 4', '5 to 9', '10 to 14', '15 to 19', '20 to 24', '25 to 29', '30 to 34', '35 to 39', '40 to 44', '45 to 49', '50 to 54', '55 to 59', '60 to 64', '65 to 69', '70 to 74', '75 to 79', '80 to 84', '85 to 89', '90 to 94', '95 to 99', '100 to 104', '105 to 109', '106 to 109', '107 to 109', '108 to 109', '109 to 109'))
 
-#ACTUAL ANALYSIS (Trying out commands) - STARTING WITH PLOTS. The function plot is limiting so I am now using barplot as this is more flexible and enables me to do alot more.
-mables_sand_box <- function (EA) {
-# 1. Basic descriptive of the data (I.e. statistics and frequencies)
-summary(EA)
-
-# 1. Plot Ageband of HF where primary diagnosis is HF, I use the function below
-plot(EA$AgeBand[EA$Heart.Failure.Episode=='TRUE'], ylab = 'Frequency', main = 'Barplot of Emergency_Adms for all patients with Heart failure as the primary Diagnosis')
-
-# 2. To then switch to barplot, first I start with a table so:
-AgeBand <- table (EA$AgeBand)
-
-#then to view it simply type 'AgeBand'. Plot barplot of AgeBand, sorting it by 'order'
-barplot(AgeBand[order(AgeBand, decreasing = TRUE)])
-
-#customise the plot. plot horrizontol with decreasing (the decreasing refers to the bars not the actual data)
-barplot(AgeBand[order(AgeBand, decreasing = TRUE)], horiz = TRUE, las = 1)
-
-#plot boxplot of Episode Number by Sex (you do this by the over '~' command)
-boxplot(EA$EpisodeNumber~EA$Sex, ylab = 'Episode Number', main = 'Boxplot distribution of Episode Number by Sex')
-
-#categorical data: frequencies/crosstabs
-table(EA$AgeBand) # for only one categorical variable
-AgeBandSex <- table(EA$AgeBand, EA$Sex) # is for two-way tables
-AgeBandSex # generate and visulaise table
-addmargins(AgeBandSex) # Adds row/col margins
-
-#ISSUES TO BE DISCUSSED WITH TOM - reorder a string. Reduce variable to be able to doa fisher's test
-
-#Test-analysis to see if I can hypotehsis test categorical variable.
-#if I take the example of heartfailure episode vs spell. This is a goood example as I have a two variable which is the only way I can conduct a fisher. Both are T, F so;
-table(EA$Heart.Failure.Episode) #then
-table(EA$new_spell) #and finally combine both
-HearFailure_Spell <- table(EA$Heart.Failure.Episode,EA$new_spell) # to then do a Pearson Chi-square's simply run;
-chisq.test(HearFailure_Spell)
-
-#PLOTS - STACKED
-#aSK TOM <- sTILL STRUGGLING WITH ORDERING AGEBAND
-
-#DEFINING A VARIABLE
-#e.g. lets deifine teh variable EA$Sex
-EA$Sex <- factor(EA$Sex, levels = c("F", "M", "U", "NA's"), labels = c("female", "male", "unknown", "missing"))
-
-# if we were then to plot this as a boxplot of e.g spell number by Sex , that would be
-boxplot(EA$spell_number~EA$Sex, ylab = 'Spell_number', main = 'Boxplot distribution of Spell Number by Sex')
-
-# 1. Plot Ageband of New Patient where New Patient is TRUE, I use the function below
-plot(EA$AgeBand[EA$new.pat=='TRUE'], ylab = 'Frequency', main = 'Barplot of EA for all new patients where New Spell is TRUE')
-
-#Subsetting
-new_patinet <- subset(EA, new.pat == TRUE) #OR
-new_patient_trial <- EA[EA$new.pat == TRUE, ] #return all columns
-
-#Within the new created subset called new_patient, I created a dataframe of only new.patients and then to plot ageband by those with true HF episode code
-plot(new_patinet$AgeBand[new_patinet$Heart.Failure.Episode=='TRUE'], ylab = 'Frequency', main = 'Barplot of Emergency_Adms for all patients with Heart failure as the primary Diagnosis')
-
-#BASIC DESCRIPTIVE - eye-balling the variables
-describe() #generates n, frequency and proportion . For a more detailed version,
-stat.desc() #generates
-#generating botplots e.g if i wanted to generate a boxplot for number of episodes for new vs old patients
-boxplot(EA_ageband$EpisodeNumber~EA_ageband$new.pat, ylab='Episode Number', main='Episode number of new patients vs. old patients')
+    #plot split into periods, overall is also an option with a few edits. facet-wrap = produces the two different periods, coord_flip = flips the graphs
+    ggplot(df, aes(x=AgeBand))+geom_bar(width= 0.7)+facet_wrap( ~ period.date)+ggtitle("Distribution of age band")+coord_flip()+ylab("Count")+xlab("Age band categories")
 
 }
+
+
+#' Table of age distribution (categorical data: frequencies/crosstabs)
+#'
+#' @param df
+#'
+#' @return a (two-way) summary table of age distribution containing frequncies for each period and total sums for both periods
+#' @export
+#'
+  plot_dist_table <- function(df, age_col = 'df$AgeBand', stratify = FALSE, strat_col){
+    # df = dataframe
+    #age_col = column containing age band variable
+    #stratify = indicate whether table table is split into periods or overall
+    #stract_col name of column to split age band by
+
+    #age band distribution for both periods + sum of both
+    ageband_perioddate <- table(df$AgeBand, df$period.date)
+
+    ageband_perioddate #this is what I run in the command line
+
+  }
