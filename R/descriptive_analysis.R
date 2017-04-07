@@ -534,3 +534,26 @@ ethn_time_table <- function(df, split_by = '%Y-%m', ethn_col = "EthnicGroupComp"
   m
 
 }
+
+
+#' recode_ethnicity
+#'
+#' @param df a dataframe
+#' @param ethn_col the column of df containing the ethnicity data to be recoded
+#'
+#' @return df with an additional column "EthnicGroupComp" holding the recoded ethnicity data
+#' @export
+#'
+#'
+recode_ethnicity <- function(df, ethn_col = "EthnicGroup") {
+
+  # This recoding is particular to this dataset.
+  # TODO: Consider writing this function so that it automatically
+  # establishes suitable recoding.
+  df$EthnicGroupComp <- sub('D|E|F|G','T',df[,ethn_col])
+  df$EthnicGroupComp <- sub('K|L','I',df$EthnicGroupComp)
+  df$EthnicGroupComp <- sub('M|N|P','U',df$EthnicGroupComp)
+  df$EthnicGroupComp <- sub('R|S','V',df$EthnicGroupComp)
+  df
+}
+
