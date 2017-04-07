@@ -9,7 +9,7 @@
   plot_age_dist <- function(df) {
 
     #dataframe restricted to only rows where 'new.spell' = TRUE
-    emergency_spells <- clahrcnwlhf::emergency_adms[which(clahrcnwlhf::emergency_adms$new_spell == TRUE),]
+    df <- df[which(df$new_spell == TRUE),]
 
     #age band in ascending order
     df$AgeBand <- factor(df$AgeBand,
@@ -40,3 +40,4 @@
     ageband_perioddate #this is what I run in the command line
 
   }
+
