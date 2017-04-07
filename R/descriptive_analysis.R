@@ -13,6 +13,9 @@ make_emergency_adms_dataset <- function(sv = TRUE, rt = FALSE) {
   emergency_adms <- clahrcnwlhf::admission_data_clean[
     which(clahrcnwlhf::admission_data_clean[,"AdmissionType"] == "Emergency"),]
 
+  # Code ethnicity into groups appropriate for the analysis
+  emergency_adms <- clahrcnwlhf::recode_ethnicity(emergency_adms)
+
   # Add a column indicating if the episode primary diagnosis is heart failure
   emergency_adms <- clahrcnwlhf::make_diag_flag(emergency_adms,
                                                 code_regex="I110|I255|I420|I429|I500|I501|I509",
@@ -473,3 +476,26 @@ ethn_time_table <- function(df, split_by = '%Y-%m', ethn_col = "EthnicGroupComp"
   m
 
 }
+
+
+#' recode_ethnicity
+#'
+#' @param df a dataframe
+#' @param ethn_col the column of df containing the ethnicity data to be recoded
+#'
+#' @return df with an additional column "EthnicGroupComp" holding the recoded ethnicity data
+#' @export
+#'
+#'
+recode_ethnicity <- function(df, ethn_col = "EthnicGroup") {
+
+  # This recoding is particular to this dataset.
+  # TODO: Consider writing this function so that it automatically
+  # establishes suitable recoding.
+  df$EthnicGroupComp <- sub('D|E|F|G','T',df[,ethn_col])
+  df$EthnicGroupComp <- sub('K|L','I',df$EthnicGroupComp)
+  df$EthnicGroupComp <- sub('M|N|P','U',df$EthnicGroupComp)
+  df$EthnicGroupComp <- sub('R|S','V',df$EthnicGroupComp)
+  df
+}
+

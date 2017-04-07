@@ -35,10 +35,6 @@ small group and will be merged with the other group in its category
 
 
 ```{r, echo=TRUE, results='asis', cache=TRUE}
-emergency_spells_nph$EthnicGroupComp <- sub('D|E|F|G','T',emergency_spells_nph$EthnicGroup)
-emergency_spells_nph$EthnicGroupComp <- sub('K|L','I',emergency_spells_nph$EthnicGroupComp)
-emergency_spells_nph$EthnicGroupComp <- sub('M|N|P','U',emergency_spells_nph$EthnicGroupComp)
-emergency_spells_nph$EthnicGroupComp <- sub('R|S','V',emergency_spells_nph$EthnicGroupComp)
 knitr::kable(t(as.data.frame.table(table(emergency_spells_nph$EthnicGroupComp))))
 ```
 
