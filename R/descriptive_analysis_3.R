@@ -34,6 +34,14 @@
     #stratify = indicate whether table table is split into periods or overall
     #stract_col name of column to split age band by
 
+    #dataframe restricted to only rows where 'new.spell' = TRUE
+    df <- df[which(df$new_spell == TRUE),]
+
+    #age band in ascending order
+    df$AgeBand <- factor(df$AgeBand,
+                         levels = c('0', '1 to 4', '5 to 9', '10 to 14', '15 to 19', '20 to 24', '25 to 29', '30 to 34', '35 to 39', '40 to 44', '45 to 49', '50 to 54', '55 to 59', '60 to 64', '65 to 69', '70 to 74', '75 to 79', '80 to 84', '85 to 89', '90 to 94', '95 to 99', '100 to 104', '105 to 109', '106 to 109', '107 to 109', '108 to 109', '109 to 109'))
+
+
     #age band distribution for both periods + sum of both
     ageband_perioddate <- addmargins(table(df$AgeBand, df$period.date),2)
 
