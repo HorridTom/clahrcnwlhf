@@ -77,8 +77,17 @@ Table1$ColData <- 'Period'
 pander(Table1)
 pander(Table1$CST)
 ```
-
 This shows that there is a statistically significant difference between the ethnicity distributions of all NPH spells across the two periods. 
+
+```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
+ggplot(data=emergency_spells_nph, aes(x=EthnicGroupComp, fill=period.date)) + geom_bar(position=position_dodge())
+```
+```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
+ggplot(data=emergency_spells_nph[which(emergency_spells_nph$period.date == "A"),], aes(x=EthnicGroupComp)) + geom_bar(position=position_dodge(), aes(y = (..count..)/sum(..count..)))
+```
+```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
+ggplot(data=emergency_spells_nph[which(emergency_spells_nph$period.date == "B"),], aes(x=EthnicGroupComp)) + geom_bar(position=position_dodge(), aes(y = (..count..)/sum(..count..)))
+```
 
 ## Ethnicity - primary diagnosis heart failure
 
