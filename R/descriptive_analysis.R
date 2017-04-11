@@ -435,3 +435,19 @@ make_period_col <- function(df, colname, split_dates, period_labels, new_colname
   df[,new_colname] <- cut(df[,colname], breaks = bins, labels = period_labels)
   df
 }
+
+
+#' restrict_to_spells
+#'
+#' @param df dataframe
+#'
+#' @return df restricted to only rows where 'new.spell' = TRUE
+#' @export
+#'
+#'
+restrict_to_spells <- function (df) {
+  #dataframe restricted to only rows where 'new.spell' = TRUE
+  df <- df[which(df$new_spell == TRUE),]
+  df
+
+}
