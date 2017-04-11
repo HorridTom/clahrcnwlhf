@@ -34,6 +34,9 @@ clean_data <-function(df, restrict_disch_date = TRUE) {
                    "AdmissionType","CSPLastWard")
   factor_columns <- colnames(df) %in% f_cols_list
   df <- make_factors(df, cols = factor_columns)
+  # age band in ascending order
+  df$AgeBand <- factor(df$AgeBand,
+                       levels = c('0', '1 to 4', '5 to 9', '10 to 14', '15 to 19', '20 to 24', '25 to 29', '30 to 34', '35 to 39', '40 to 44', '45 to 49', '50 to 54', '55 to 59', '60 to 64', '65 to 69', '70 to 74', '75 to 79', '80 to 84', '85 to 89', '90 to 94', '95 to 99', '100 to 104', '105 to 109', '106 to 109', '107 to 109', '108 to 109', '109 to 109'))
 
   # Convert the following columns to date format:
   d_cols_list <- c("AdmissionDate","DischargeDate","EpisodeStartDate",
