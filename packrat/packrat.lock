@@ -19,6 +19,11 @@ Source: CRAN
 Version: 4.0-2
 Hash: 4d3704cb29c9fd363837f2db54b1eb57
 
+Package: MatrixModels
+Source: CRAN
+Version: 0.4-1
+Hash: 60a5c75e57aae4a0ce76cb7422939aaf
+
 Package: R6
 Source: CRAN
 Version: 2.2.0
@@ -33,6 +38,16 @@ Package: Rcpp
 Source: CRAN
 Version: 0.12.7
 Hash: f0ba7322cfb66f1b563462faa9c2b2ab
+
+Package: RcppEigen
+Source: CRAN
+Version: 0.3.2.9.1
+Hash: 8ee7a46bd2da91911f7f32287de383bc
+
+Package: SparseM
+Source: CRAN
+Version: 1.76
+Hash: 806cd94a667a8a17fc253fe2efd788f9
 
 Package: acepack
 Source: CRAN
@@ -215,6 +230,11 @@ Source: CRAN
 Version: 0.2.0
 Hash: 3d6e7608e65bbf5cb170dab1e3c9ed8b
 
+Package: lme4
+Source: CRAN
+Version: 1.1-12
+Hash: 19bf2910d965d17b873cee05a681a491
+
 Package: magrittr
 Source: CRAN
 Version: 1.5
@@ -235,6 +255,11 @@ Source: CRAN
 Version: 0.5
 Hash: 463550cf44fb6f0a2359368f42eebe62
 
+Package: minqa
+Source: CRAN
+Version: 1.2.4
+Hash: 057103b0f0aa585854d1ae615a534e0e
+
 Package: mnormt
 Source: CRAN
 Version: 1.5-5
@@ -244,6 +269,11 @@ Package: munsell
 Source: CRAN
 Version: 0.4.3
 Hash: f96d896947fcaf9b6d0074002e9f4f9d
+
+Package: nloptr
+Source: CRAN
+Version: 1.0.4
+Hash: 8053df240a4635aeb54fc68c6de67709
 
 Package: openssl
 Source: CRAN
@@ -270,6 +300,11 @@ Version: 0.6.0
 Hash: 616991d56add9a1784dfe6c58877c590
 Requires: Rcpp, digest
 
+Package: pbkrtest
+Source: CRAN
+Version: 0.4-7
+Hash: f195c3a0f527f69c491569c5cbaaf1db
+
 Package: plyr
 Source: CRAN
 Version: 1.8.4
@@ -284,6 +319,11 @@ Package: qcc
 Source: CRAN
 Version: 2.6
 Hash: b188a1799c20d647f50d086a3a9cd198
+
+Package: quantreg
+Source: CRAN
+Version: 5.33
+Hash: 30421e83e9d36563250019b6b2adafce
 
 Package: reshape2
 Source: CRAN
