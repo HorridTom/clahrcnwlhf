@@ -40,3 +40,15 @@
   }
 
 
+    test_plot_dist_table <- function(df, age_col = 'AgeBand', stratify = FALSE, strat_col){
+      df <- restrict_to_spells (df)
+
+      if (stratify) {
+        ageband_perioddate <- addmargins(table(df$AgeBand, df$period.date),2)
+      } else {
+          ageband_perioddate <- addmargins(table(df$AgeBand),2)
+      }
+
+      ageband_perioddate
+    }
+
