@@ -83,11 +83,14 @@ This shows that there is a statistically significant difference between the ethn
 ggplot(data=emergency_spells_nph, aes(x=EthnicGroupComp, fill=period.date)) + geom_bar(position=position_dodge())
 ```
 ```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
-ggplot(data=emergency_spells_nph[which(emergency_spells_nph$period.date == "A"),], aes(x=EthnicGroupComp)) + geom_bar(position=position_dodge(), aes(y = (..count..)/sum(..count..)))
+ntab <- table(emergency_spells_nph$EthnicGroupComp,emergency_spells_nph$period.date)
+nprops <- prop.table(ntab,2)
+npmelt <- reshape2::melt(nprops)
+colnames(npmelt)<-c("Ethnicity","Period","Value")
+p <- ggplot(data=npmelt, aes(x=Ethnicity, y=Value, fill=Period))
+p + geom_bar(position=position_dodge(), stat="identity")
 ```
-```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
-ggplot(data=emergency_spells_nph[which(emergency_spells_nph$period.date == "B"),], aes(x=EthnicGroupComp)) + geom_bar(position=position_dodge(), aes(y = (..count..)/sum(..count..)))
-```
+
 
 ## Ethnicity - primary diagnosis heart failure
 
@@ -137,6 +140,19 @@ pander(Table1$CST)
 ```
 
 This shows that there is a statistically significant difference between the ethnicity distributions of spells primary coded heart failure, across the two periods.
+
+
+```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
+ggplot(data=emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,], aes(x=EthnicGroupComp, fill=period.date)) + geom_bar(position=position_dodge())
+```
+```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
+ntab <- table(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"EthnicGroupComp"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period"])
+nprops <- prop.table(ntab,2)
+npmelt <- reshape2::melt(nprops)
+colnames(npmelt)<-c("Ethnicity","Period","Value")
+p <- ggplot(data=npmelt, aes(x=Ethnicity, y=Value, fill=Period))
+p + geom_bar(position=position_dodge(), stat="identity")
+```
 
 This simplistic analysis does not take into account the "hierarchical" nature of the data, in the sense that each patient in the dataset may have one or more admission spells during the time period covered. Some approaches that may be of value here are:
 
