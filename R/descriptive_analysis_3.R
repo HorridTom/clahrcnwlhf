@@ -38,7 +38,7 @@
         } else {  #(overall distribution of age band i.e period.date A & B combined)
           ggplot2::ggplot(df, ggplot2::aes(x=AgeBand))+ggplot2::geom_bar(width= 0.7)+ggplot2::ggtitle("Distribution by Age Bands")+ggplot2::coord_flip()+ggplot2::ylab("Frequency")+ggplot2::xlab("Age Band")
         }
-
+}
 #' plot_dist_table
 #'
 #'  @param df dataframe
@@ -72,8 +72,7 @@
 #' @return a (two-way) summary table of age band distribution containing frequncies for each period.date and total sums for both periods
 #' @export
 #'
-
-    test_plot_dist_table <- function(df, age_col = 'AgeBand', stratify = FALSE, strat_col){
+test_plot_dist_table <- function(df, age_col = 'AgeBand', stratify = FALSE, strat_col) {
       df <- restrict_to_spells (df)
 
       # return table dataset specified/split by period.date or else return result unspecified by period.date
@@ -84,4 +83,4 @@
       }
 
       ageband_perioddate
-    }
+}
