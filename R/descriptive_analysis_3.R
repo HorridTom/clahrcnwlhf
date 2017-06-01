@@ -79,7 +79,7 @@ test_plot_dist_table <- function(df, age_col = 'AgeBand', stratify = FALSE, stra
       if (stratify) {
         ageband_perioddate <- addmargins(table(df$AgeBand, df$period.date),2)
       } else {
-          ageband_perioddate <- addmargins(table(df$AgeBand),2)
+          ageband_perioddate <- table(df$AgeBand)
       }
 
       ageband_perioddate
