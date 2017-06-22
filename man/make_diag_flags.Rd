@@ -12,4 +12,3 @@ make_diag_flags(dataframe, col_names, new_colname_suffix, code_regex)
 \description{
 make_diag_flags
 }
-

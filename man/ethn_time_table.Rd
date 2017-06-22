@@ -4,12 +4,15 @@
 \alias{ethn_time_table}
 \title{ethn_time_table}
 \usage{
+<<<<<<< HEAD
 ethn_time_table(df, split_by = "\%Y-\%m", ethn_col = "EthnicGroup")
 }
 \arguments{
 \item{df}{a data frame of spells with column "EthnicGroup" or other specified
 containing data on ethnic group for each spell}
 \item{split_by}{date format to split by}
+
+\item{ethn_col}{the name of the column containing the ethnicity group}
 }
 \value{
 table of counts of ethnic groups by discharge time period
@@ -17,4 +20,3 @@ table of counts of ethnic groups by discharge time period
 \description{
 ethn_time_table
 }
-

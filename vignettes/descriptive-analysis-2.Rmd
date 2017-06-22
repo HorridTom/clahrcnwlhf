@@ -13,11 +13,10 @@ vignette: >
 This vignette covers the descriptive data analysis of demographics for the
 evaluation of the CLAHRC NWL Heart Failure Care Bundle project at North West London Hospitals.
 
-## Ethnicity
+## Ethnicity - all NPH discharges
 
-```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
-library(ggplot2, reshape2)
-
+```{r, echo=TRUE, results='asis', cache=TRUE}
+library(knitr)
 emergency_adms <- clahrcnwlhf::emergency_adms
 emergency_spells <- emergency_adms[
   which(emergency_adms[,"EpisodeNumber"] == 1),]
