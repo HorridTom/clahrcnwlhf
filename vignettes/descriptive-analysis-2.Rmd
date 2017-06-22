@@ -1,0 +1,32 @@
+---
+title: "Descriptive Analysis for CLAHRC NWL Heart Failure Care Bundle: 2 - Demographics"
+author: "Dr. Thomas Woodcock"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+This vignette covers the descriptive data analysis of demographics for the
+evaluation of the CLAHRC NWL Heart Failure Care Bundle project at North West London Hospitals.
+
+## Ethnicity
+
+```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
+library(ggplot2, reshape2)
+emergency_adms <- clahrcnwlhf::emergency_adms
+emergency_spells <- emergency_adms[
+  which(emergency_adms[,"EpisodeNumber"] == 1),]
+emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
+
+X <- clahrcnwlhf::ethn_time_table(emergency_spells_nph)
+Y <- as.data.frame.matrix(t(X))
+Y$timepoint <- c(1:58)
+Y.melted <- reshape2::melt(Y, id = "timepoint")
+ggplot(data = Y.melted, aes(x = timepoint, y = value, color = variable)) + geom_point() + geom_line()
+
+
+```
