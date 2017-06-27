@@ -23,3 +23,4 @@ This function cleans the raw data by performing the following steps:
   the following columns of the raw data:
   AdmissionDate, DischargeDate, EpisodeStartDate, EpisodeEndDate}
 }
+

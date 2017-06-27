@@ -4,7 +4,7 @@
 \alias{plot_age_dist}
 \title{plot_age_dist}
 \usage{
-plot_age_dist(df)
+plot_age_dist(df, stratify = FALSE)
 }
 \arguments{
 \item{df}{data frame containing the data to be plotted}
@@ -15,3 +15,4 @@ plot of age distribution
 \description{
 plot_age_dist
 }
+

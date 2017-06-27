@@ -18,3 +18,4 @@ a vector of row counts for each time period
 Produces a table of number of rows of a dataframe df per time period of the
 column DischargeDate
 }
+
