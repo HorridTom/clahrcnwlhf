@@ -22,3 +22,4 @@ A date vector the same length as v
 Convert a character vector containing dates as substrings into a vector of the
 corresopding dates
 }
+
