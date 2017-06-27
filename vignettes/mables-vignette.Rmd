@@ -1,25 +1,82 @@
 ---
-title: "Vignette Title"
-author: "Vignette Author"
+title: "Descriptive analysis for age band distribution for CLAHRC NWL Heart Failure Care Bundle"
+author: "Dr . Mable Nakubulwa"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Descriptive analysis for age band distribution for CLAHRC NWL Heart Failure Care Bundle}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+This vignette is a description of the distribution characteristics of patients' Age bands for the CLAHRC NWL Heart Failure Care Bundle project at North West London Hospitals.
 
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+The original raw data set from North West London Hospitals `clahrcnwlf::admission_data` was extracted and cleaned for analysis by Dr. T Woodcock using `clahrcnwlhf::clean_and_save`. The data covers discharge periods 1st January 2012 to 31st October 2016.
 
-## Vignette Info
+## Data set
+This analysis is restricted to only emergency admissions data `clahrcnwlhf::emergency_adms` (i.e. data for those episodes for which `admission_data_clean$AdmissionType = "Emergency"`).
 
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
 
-## Styles
+```{r, echo=TRUE, results='asis', cache=TRUE}
+emergency_adms <- clahrcnwlhf::admission_data_clean[
+  which(clahrcnwlhf::admission_data_clean[,"AdmissionType"] == "Emergency"),]
+
+```
+
+
+```
+
+#Notes needed here
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+
+emergency_adms <- clahrcnwlhf::emergency_adms
+
+```
+
+
+AGE DISTRIBUTION FREQUENCY
+
+Let us first restrict attention to only the first episode of each spell.
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+emergency_spells <- emergency_adms[
+  which(emergency_adms[,"EpisodeNumber"] == 1),]
+
+```
+
+## Age band distribution (split by) `period.date`
+
+First lets plot a plot of age-dist `Age Band` frequency using `emergency_spells data`. Age Band in the first ggplot is  split by `period.date`: period `A` (discharges before the CLAHRC NWL Heart Failure Care Bundle project) and period `B` (discharges after the CLAHRC NWL Heart Failure Care Bundle project)
+
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+#test <- clahrcnwlhf::plot_age_dist(emergency_adms)
+#dataframe restricted to only rows where 'new.spell' = TRUE
+ggplot2::ggplot(emergency_adms, ggplot2::aes(x=AgeBand))+ggplot2::geom_bar(width= 0.7)+ggplot2::facet_wrap( ~ period.date)+ggplot2::ggtitle("Distribution by Age Band Across Period Dates A and B")+ggplot2::coord_flip()+ggplot2::ylab("Frequency")+ggplot2::xlab("Age Band")
+```
+
+
+## Age band distribution (Overall distribution, i.e period.date A & B combined)
+Second lets plot out 
+
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+ggplot2::ggplot(emergency_adms, ggplot2::aes(x=AgeBand))+ggplot2::geom_bar(width= 0.7)+ggplot2::ggtitle("Distribution by Age Bands")+ggplot2::coord_flip()+ggplot2::ylab("Frequency")+ggplot2::xlab("Age Band")
+
+```
+
+## Frequency table
+
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+
+ageband_perioddate <- clahrcnwlhf::plot_dist_table(emergency_adms)
+#age band distribution for both periods + sum of both
+addmargins(table(emergency_adms$AgeBand, emergency_adms$period.date),2)
+ageband_perioddate #this is what I run in the command line
+
+```
+
+
+
 
 The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
 
