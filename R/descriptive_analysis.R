@@ -511,5 +511,22 @@ restrict_to_spells <- function (df) {
   #dataframe restricted to only rows where 'new.spell' = TRUE
   df <- df[which(df$new_spell == TRUE),]
   df
+}
+
+#' ethn_time_table
+#'
+#' @param df a data frame of spells with column "EthnicGroup"
+#' @param split_by date format to split by
+#'
+#' @return table of counts of ethnic groups by discharge time period
+#' @export
+#'
+ethn_time_table <- function(df, split_by = '%Y-%m') {
+  df$splitby <- factor(format(df$DischargeDate, split_by))
+  #df_splt <- split.data.frame(df, df$splitby)
+
+  m <- table(df$EthnicGroup,df$splitby)
+
+  m
 
 }
