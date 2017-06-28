@@ -35,6 +35,19 @@ merge_data_files <- function(frame_list) {
 
 }
 
+#' load_bundle_data
+#'
+#' @param fn the file name of the csv file containing the bundle data
+#'
+#' @return no return value
+#' @export
+#'
+load_bundle_data <- function(fn = "Heart_Failure_Admission_Care_Bundles_Raw.csv") {
+  bundle_data <- read.csv(file = paste("data-raw/",fn,sep = ""), stringsAsFactors = FALSE)
+  devtools::use_data(bundle_data)
+}
+
+
 # Load in separate files from NWLH data warehouse and join together.
 fileNames <- Sys.glob("data-raw/split*.xlsx")
 data_frames <- load_data_files(fileNames)
