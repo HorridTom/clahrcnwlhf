@@ -457,7 +457,6 @@ make_period_col <- function(df, colname, split_dates, period_labels, new_colname
   df
 }
 
-<<<<<<< HEAD
 
 #' ethn_time_table
 #'
@@ -511,49 +510,5 @@ recode_ethnicity <- function(df, ethn_col = "EthnicGroup") {
 restrict_to_spells <- function (df) {
   #dataframe restricted to only rows where 'new.spell' = TRUE
   df <- df[which(df$new_spell == TRUE),]
-  df
-}
-=======
->>>>>>> Resolved conflict - added new content and incorporated modifications
-
-
-#' ethn_time_table
-#'
-#' @param df a data frame of spells with column "EthnicGroup"
-#' @param split_by date format to split by
-#' @param ethn_col the name of the column containing the ethnicity group
-#'
-#' @return table of counts of ethnic groups by discharge time period
-#' @export
-#'
-ethn_time_table <- function(df, split_by = '%Y-%m', ethn_col = "EthnicGroupComp") {
-  df$splitby <- factor(format(df$DischargeDate, split_by))
-  #df_splt <- split.data.frame(df, df$splitby)
-
-  m <- table(df[,ethn_col],df$splitby)
-
-  m
-
-}
-
-
-#' recode_ethnicity
-#'
-#' @param df a dataframe
-#' @param ethn_col the column of df containing the ethnicity data to be recoded
-#'
-#' @return df with an additional column "EthnicGroupComp" holding the recoded ethnicity data
-#' @export
-#'
-#'
-recode_ethnicity <- function(df, ethn_col = "EthnicGroup") {
-
-  # This recoding is particular to this dataset.
-  # TODO: Consider writing this function so that it automatically
-  # establishes suitable recoding.
-  df$EthnicGroupComp <- sub('D|E|F|G','T',df[,ethn_col])
-  df$EthnicGroupComp <- sub('K|L','I',df$EthnicGroupComp)
-  df$EthnicGroupComp <- sub('M|N|P','U',df$EthnicGroupComp)
-  df$EthnicGroupComp <- sub('R|S','V',df$EthnicGroupComp)
   df
 }
