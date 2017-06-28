@@ -17,4 +17,5 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 Imports:
-    ggplot2
+    ggplot2,
+    car

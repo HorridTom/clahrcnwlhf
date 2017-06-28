@@ -34,9 +34,11 @@ clean_data <-function(df, restrict_disch_date = TRUE) {
                    "AdmissionType","CSPLastWard")
   factor_columns <- colnames(df) %in% f_cols_list
   df <- make_factors(df, cols = factor_columns)
-  # age band in ascending order
+
+  # Age band in ascending order
   df$AgeBand <- factor(df$AgeBand,
                        levels = c('0', '1 to 4', '5 to 9', '10 to 14', '15 to 19', '20 to 24', '25 to 29', '30 to 34', '35 to 39', '40 to 44', '45 to 49', '50 to 54', '55 to 59', '60 to 64', '65 to 69', '70 to 74', '75 to 79', '80 to 84', '85 to 89', '90 to 94', '95 to 99', '100 to 104', '105 to 109', '106 to 109', '107 to 109', '108 to 109', '109 to 109'))
+  df <- age_band_recode(df)
 
   # Convert the following columns to date format:
   d_cols_list <- c("AdmissionDate","DischargeDate","EpisodeStartDate",
@@ -222,3 +224,28 @@ remove_dupes <- function(df, dupe_cols = c("PseudoID","AdmissionDate",
   df <- df[!duplicated(df[dupe_cols]),]
   df
 }
+
+
+#' age_band_recode
+#'
+#' @param df dataframe containing AgeBand column to be recoded
+#'
+#' @return df with AgeBand recoded
+#' @export
+#'
+age_band_recode <- function(df) {
+
+  df$AgeBand <- car::recode(df$AgeBand,"'100 to 104'='100 to 114'")
+  df$AgeBand <- car::recode(df$AgeBand,"'105 to 109'='100 to 114'")
+  df$AgeBand <- car::recode(df$AgeBand,"'106 to 109'='100 to 114'")
+  df$AgeBand <- car::recode(df$AgeBand,"'107 to 109'='100 to 114'")
+  df$AgeBand <- car::recode(df$AgeBand,"'108 to 109'='100 to 114'")
+  df$AgeBand <- car::recode(df$AgeBand,"'109 to 109'='100 to 114'")
+  df$AgeBand <- car::recode(df$AgeBand,"'110 to 114'='100 to 114'")
+
+  df$AgeBand <- factor(df$AgeBand,levels = c('0', '1 to 4', '5 to 9', '10 to 14', '15 to 19', '20 to 24', '25 to 29', '30 to 34', '35 to 39', '40 to 44', '45 to 49', '50 to 54', '55 to 59', '60 to 64', '65 to 69', '70 to 74', '75 to 79', '80 to 84', '85 to 89', '90 to 94', '95 to 99', '100 to 114'))
+
+  df
+
+}
+
