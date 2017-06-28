@@ -130,17 +130,6 @@ Source: CRAN
 Version: 1.1.0
 Hash: 346d3477f87b89692dd1379eaed1a1be
 
-Package: descr
-Source: CRAN
-Version: 1.1.3
-Hash: 655a5e67f86adfd1b5b3e601084b852f
-
-Package: descr
-Source: CRAN
-Version: 1.1.3
-Hash: 655a5e67f86adfd1b5b3e601084b852f
-Requires: xtable
-
 Package: devtools
 Source: CRAN
 Version: 1.13.2
@@ -310,21 +299,10 @@ GithubUsername: rstudio
 GithubRef: master
 GithubSha1: 0427302c6b72439ae85d6d4fe2c00836ab389263
 
-Package: pander
-Source: CRAN
-Version: 0.6.0
-Hash: b89e5726add5b8bb084c8b38ddf20b32
-
 Package: pastecs
 Source: CRAN
 Version: 1.3-18
 Hash: c65bd0f91425f280eb288b51a5450a38
-
-Package: pander
-Source: CRAN
-Version: 0.6.0
-Hash: 616991d56add9a1784dfe6c58877c590
-Requires: Rcpp, digest
 
 Package: pbkrtest
 Source: CRAN
