@@ -18,4 +18,3 @@ corresponding entry in cols is \code{TRUE} is converted to a factor
 \description{
 Converts the specified columns of a dataframe to factors
 }
-

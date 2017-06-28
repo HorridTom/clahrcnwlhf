@@ -58,4 +58,3 @@ Park and Central Middlesex hospitals, for all patients discharged between
 2012 and 2016.
 }
 \keyword{datasets}
-

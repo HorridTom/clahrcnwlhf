@@ -19,4 +19,3 @@ A POSIXlt vector combining dv and tv.
 \description{
 convert_to_datetime
 }
-

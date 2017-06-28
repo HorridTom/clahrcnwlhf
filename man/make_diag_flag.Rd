@@ -16,4 +16,3 @@ dataframe with diagnosis flag column added
 \description{
 make_diag_flag
 }
-

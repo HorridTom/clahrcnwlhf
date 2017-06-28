@@ -12,7 +12,6 @@ containing data on ethnic group for each spell}
 \item{split_by}{date format to split by}
 
 \item{ethn_col}{the name of the column containing the ethnicity group}
-
 }
 \value{
 table of counts of ethnic groups by discharge time period
