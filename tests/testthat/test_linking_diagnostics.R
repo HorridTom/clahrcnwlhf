@@ -12,7 +12,7 @@ test_that("prev.spell column is correctly created by prev_spell",{
   correct_results[correct_results$PseudoID == 1217659, "prev.spell"] <- 179895
   correct_results[correct_results$PseudoID == 1132437, "prev.spell"] <- 108960
 
-  bundles_with_prev_spell <- prev_spell(bundles = bundle_link_test_data, episodes = clahrcnwl::emergency_adms)
+  bundles_with_prev_spell <- prev_spell(bundles = bundle_link_test_data, episodes = clahrcnwlhf::emergency_adms)
 
   expect_match(colnames(bundles_with_prev_spell), "prev.spell", all = FALSE)
 
