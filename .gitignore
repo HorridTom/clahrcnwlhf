@@ -33,4 +33,5 @@ packrat/src/
 .Rproj.user
 # Data
 /data
+/tests/testthat/datafortesting
 inst/doc
