@@ -29,3 +29,27 @@ test_that("prev.spell and next.spell columns are correctly created by nearest_sp
   expect_equal(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1132437, "next.spell"], correct_results[correct_results$PseudoID == 1132437, "next.spell"])
 
 })
+
+
+test_that("bundle.in.spell column is correctly created by bundle_in_spell",{
+
+  load("datafortesting/bundle_link_test_data.Rda")
+
+  # Set up correct results - note this based on the test file created by create_bundle_link_test_dataset
+  # in test_bundle_linking.R
+  correct_results <- bundle_link_test_data
+  correct_results$bundle.in.spell <- NA
+  correct_results[correct_results$PseudoID == 1217659, "bundle.in.spell"] <- TRUE
+  correct_results[correct_results$PseudoID == 1132437, "bundle.in.spell"] <- TRUE
+
+  # Run the bundle_in_spell function
+  bundles_with_in_spell <- bundle_in_spell(bundle_link_test_data)
+
+  # Check the output column exists
+  expect_match(colnames(bundles_with_in_spell), "bundle.in.spell", all = FALSE)
+
+  # Check the values returned in these columns are correct
+  expect_equal(bundles_with_in_spell[bundles_with_in_spell$PseudoID == 1217659, "bundle.in.spell"], correct_results[correct_results$PseudoID == 1217659, "bundle.in.spell"])
+  expect_equal(bundles_with_in_spell[bundles_with_in_spell$PseudoID == 1132437, "bundle.in.spell"], correct_results[correct_results$PseudoID == 1132437, "bundle.in.spell"])
+
+})
