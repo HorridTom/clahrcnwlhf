@@ -10,3 +10,9 @@ link_bundles <- function(bundles, episodes) {
   bundles$linked.spell <- NA
   bundles
 }
+
+
+prev_spell <- function(bundles, episodes) {
+  bundles$prev.spell <- NA
+  bundles
+}
