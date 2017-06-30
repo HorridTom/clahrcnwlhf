@@ -21,11 +21,17 @@ clean_bundle_data <- function(df) {
   df <- make_factors(df, cols = factor_columns)
 
   # Convert the following columns to date format:
-  # TODO: The convert_to_date function currently does not work for dates
-  # of format dd/mm/yyyy
-  d_cols_list <- c("Admission.Date.Bundle")
+  d_cols_list <- c("Admission.Date.Bundle", "BNP.Date", "Date.referred", "Date.completed")
   date_columns <- colnames(df) %in% d_cols_list
-  df[,date_columns] <- as.Date(df[,date_columns], format = "%d/%m/%Y")
+  df[,date_columns] <- lapply(df[,date_columns], as.Date, format = "%d/%m/%Y")
+
+  #TODO: Sort out Date.of.last.echo column - approximate dates
+
+  #TODO: Update the helper functions convert_to_date and convert_to_datetime to deal with:
+  # i) NAs in columns
+  # ii) different date formats - some functionality already but not sufficient?
+  # iii) WRITE TESTS FOR THIS!
+
   df$Admission.Datetime <- convert_to_datetime(df$Admission.Date.Bundle, df$Admission.Time.Bundle, dt_form = "%Y-%m-%d %H:%M")
 
   df
