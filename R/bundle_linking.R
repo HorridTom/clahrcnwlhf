@@ -44,3 +44,24 @@ nearest_spells <- function(bundles, episodes) {
 
   bundles
 }
+
+bundle_in_spell <- function(bundles, episodes = clahrcnwlhf::emergency_adms) {
+
+  bundles <- nearest_spells(bundles = bundles, episodes = episodes)
+
+  bundles$bundle.in.spell <- apply(bundles, 1, function(x) {
+    # Extract the patient id and admission datetime for this bundle
+    sp_id <- x["prev.spell"]
+    bun_dt <- x["Admission.Datetime"]
+
+    # Establish whether or not the Admission.Datetime from the bundle
+    # lies inside the spell
+    spell.start <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
+    spell.end <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
+    as.POSIXct(spell.start) <= as.POSIXct(bun_dt) & as.POSIXct(bun_dt) <= as.POSIXct(spell.end)
+  })
+
+  bundles
+
+}
+
