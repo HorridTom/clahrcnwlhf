@@ -10,10 +10,10 @@ create_bundle_link_test_dataset <- function() {
 }
 
 
-test_that("linked.episode column is created by link_bundles",{
+test_that("linked.spell column is created by link_bundles",{
 
   load("datafortesting/bundle_link_test_data.Rda")
   linked_bundles <- link_bundles(bundles = bundle_link_test_data, episodes = clahrcnwl::emergency_adms)
-  expect_match(colnames(linked_bundles), "linked.episode", all = FALSE)
+  expect_match(colnames(linked_bundles), "linked.spell", all = FALSE)
 
 })
