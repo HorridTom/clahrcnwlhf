@@ -69,3 +69,22 @@ test_that("bundle.in.spell column is correctly created by bundle_in_spell",{
   expect_equal(bundles_with_in_spell[bundles_with_in_spell$PseudoID == 1076292, "bundle.in.spell"], correct_results[correct_results$PseudoID == 1076292, "bundle.in.spell"])
 
 })
+
+
+test_that("bundle_spell_lag function returns lag distributions",{
+
+  load("datafortesting/bundle_link_test_data.Rda")
+
+  # TODO: Write correct results here
+  # ...
+
+  # Run the function
+  ldist <- bundle_spell_lag(bundles = bundle_link_test_data)
+
+  # Check result has a column called "frequency"
+  expect_match(colnames(ldist), "frequency", all = FALSE)
+
+  # TODO: Write expectations on results here
+  # ...
+
+})
