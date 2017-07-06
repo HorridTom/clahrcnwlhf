@@ -16,6 +16,8 @@ nearest_spells <- function(bundles, episodes) {
 
   bundles <- bundles[!is.na(bundles$Admission.Datetime),]
 
+  #TODO: refactor these three "apply" calls into one
+
   bundles$prev.spell <- apply(bundles, 1, function(x) {
 
     # Extract the patient id and admission datetime for this bundle
@@ -47,6 +49,22 @@ nearest_spells <- function(bundles, episodes) {
       nxt_adm <- pt_eps[which.min(as.POSIXct(pt_eps$CSPAdmissionTime)),"spell_number"]
     }
     nxt_adm
+  })
+
+  bundles$lag.from.prev.adm <- apply(bundles, 1, function(x) {
+
+    sp_id <- as.numeric(trimws(x["prev.spell"],which = "both"))
+    bun_dt <- x["Admission.Datetime"]
+
+    if (is.na(sp_id)) {
+      lfpa <- NA
+    } else {
+
+      spell.start <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
+      spell.end <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
+      lfpa <- as.POSIXct(bun_dt) - as.POSIXct(spell.start)
+    }
+    lfpa
   })
 
   bundles
