@@ -80,3 +80,27 @@ bundle_in_spell <- function(bundles, episodes = clahrcnwlhf::emergency_adms) {
 
 }
 
+
+bundle_spell_lags <- function(bundles, episodes = clahrcnwlhf::emergency_adms) {
+
+  bundles$lag.from.prev.adm <- NA
+
+  bundles$lag.from.prev.adm <- apply(bundles, 1, function(x) {
+
+    sp_id <- as.numeric(trimws(x["prev.spell"],which = "both"))
+    bun_dt <- x["Admission.Datetime"]
+
+    if (is.na(sp_id)) {
+      lfpa <- NA
+    } else {
+
+      spell.start <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
+      spell.end <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
+      lfpa <- as.POSIXct(bun_dt) - as.POSIXct(spell.start)
+    }
+    lfpa
+  })
+
+  bundles
+
+}
