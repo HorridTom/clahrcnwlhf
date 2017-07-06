@@ -71,20 +71,27 @@ test_that("bundle.in.spell column is correctly created by bundle_in_spell",{
 })
 
 
-test_that("bundle_spell_lag function returns lag distributions",{
+test_that("bundle_spell_lags function returs lag columns",{
 
   load("datafortesting/bundle_link_test_data.Rda")
+  bundles_with_in_spell <- bundle_in_spell(bundle_link_test_data)
+
 
   # TODO: Write correct results here
-  # ...
+  correct_results <- bundles_with_in_spell
+  correct_results$lag.from.prev.adm <- NA
+  correct_results[correct_results$PseudoID == 1217659, "lag.from.prev.adm"] <- as.difftime(2, units = "days")
+  correct_results[correct_results$PseudoID == 1062983, "lag.from.prev.adm"] <- NA
 
   # Run the function
-  ldist <- bundle_spell_lag(bundles = bundle_link_test_data)
+  bundles_with_lags <- bundle_spell_lags(bundles = bundles_with_in_spell)
 
-  # Check result has a column called "frequency"
-  expect_match(colnames(ldist), "frequency", all = FALSE)
+  # Check result has a column called "lag.from.prev.adm"
+  expect_match(colnames(bundles_with_lags), "lag.from.prev.adm", all = FALSE)
 
   # TODO: Write expectations on results here
-  # ...
+  expect_equal(bundles_with_lags[bundles_with_lags$PseudoID == 1217659, "lag.from.prev.adm"], correct_results[correct_results$PseudoID == 1217659, "lag.from.prev.adm"])
+  expect_equal(bundles_with_lags[bundles_with_lags$PseudoID == 1062983, "lag.from.prev.adm"], correct_results[correct_results$PseudoID == 1062983, "lag.from.prev.adm"])
+
 
 })
