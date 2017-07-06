@@ -16,7 +16,7 @@ nearest_spells <- function(bundles, episodes) {
 
   bundles <- bundles[!is.na(bundles$Admission.Datetime),]
 
-  #TODO: refactor these three "apply" calls into one
+  #TODO: refactor these four "apply" calls into one
 
   bundles$prev.spell <- apply(bundles, 1, function(x) {
 
@@ -67,8 +67,25 @@ nearest_spells <- function(bundles, episodes) {
     lfpa
   })
 
+  bundles$lag.to.next.adm <- apply(bundles, 1, function(x) {
+
+    sp_id <- as.numeric(trimws(x["next.spell"],which = "both"))
+    bun_dt <- x["Admission.Datetime"]
+
+    if (is.na(sp_id)) {
+      ltna <- NA
+    } else {
+
+      spell.start <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
+      spell.end <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
+      ltna <- as.POSIXct(spell.start) - as.POSIXct(bun_dt)
+    }
+    ltna
+  })
+
   bundles
 }
+
 
 bundle_in_spell <- function(bundles, episodes = clahrcnwlhf::emergency_adms) {
 
@@ -121,4 +138,18 @@ bundle_spell_lags <- function(bundles, episodes = clahrcnwlhf::emergency_adms) {
 
   bundles
 
+}
+
+
+
+plot_lag_dist <- function(bundles = clahrcnwlhf::bundle_data_clean, episodes = clahrcnwlhf::emergency_adms, prev = TRUE) {
+
+
+  if (prev) {
+    p <- ggplot(bis, aes(lag.from.prev.adm)) + geom_histogram() + facet_wrap(~bundle.in.spell, scales = "free_x")
+  } else {
+    p <- ggplot(bis, aes(lag.to.next.adm)) + geom_histogram() + facet_wrap(~bundle.in.spell, scales = "free_x")
+  }
+
+  p
 }
