@@ -62,10 +62,12 @@ nearest_spells <- function(bundles, episodes) {
 
       spell.start <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
       spell.end <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
-      lfpa <- as.POSIXct(bun_dt) - as.POSIXct(spell.start)
+      lfpa <- difftime(as.POSIXct(bun_dt), as.POSIXct(spell.start), units = "days")
     }
     lfpa
   })
+
+  bundles$lag.from.prev.adm <- as.difftime(bundles$lag.from.prev.adm, units = "days")
 
   bundles$lag.to.next.adm <- apply(bundles, 1, function(x) {
 
@@ -78,10 +80,12 @@ nearest_spells <- function(bundles, episodes) {
 
       spell.start <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
       spell.end <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
-      ltna <- as.POSIXct(spell.start) - as.POSIXct(bun_dt)
+      ltna <- difftime(as.POSIXct(spell.start), as.POSIXct(bun_dt), units = "days")
     }
     ltna
   })
+
+  bundles$lag.to.next.adm <- as.difftime(bundles$lag.to.next.adm, units = "days")
 
   bundles
 }
@@ -142,14 +146,29 @@ bundle_spell_lags <- function(bundles, episodes = clahrcnwlhf::emergency_adms) {
 
 
 
-plot_lag_dist <- function(bundles = clahrcnwlhf::bundle_data_clean, episodes = clahrcnwlhf::emergency_adms, prev = TRUE) {
+plot_lag_dist <- function(bundles = clahrcnwlhf::bundle_data_clean, episodes = clahrcnwlhf::emergency_adms, bis = NULL, prev = TRUE, cumulative = FALSE) {
 
-
-  if (prev) {
-    p <- ggplot(bis, aes(lag.from.prev.adm)) + geom_histogram() + facet_wrap(~bundle.in.spell, scales = "free_x")
-  } else {
-    p <- ggplot(bis, aes(lag.to.next.adm)) + geom_histogram() + facet_wrap(~bundle.in.spell, scales = "free_x")
+  if (is.null(bis)) {
+    bis <- clahrcnwlhf::bundle_in_spell(bundles = bundles, episodes = episodes)
   }
 
+  if (prev) {
+    p <- ggplot(bis, aes(lag.from.prev.adm)) + facet_wrap(~bundle.in.spell, scales = "free_x")
+  } else {
+    p <- ggplot(bis, aes(lag.to.next.adm)) + facet_wrap(~bundle.in.spell, scales = "free_x")
+  }
+
+  if (cumulative) {
+    p <- p + stat_ecdf()
+  } else {
+    p <- p + geom_histogram()
+  }
   p
+}
+
+
+link_diag_table <- function(bis, lag_cutoff = 3) {
+
+  table(bis$bundle.in.spell, bis$lag.to.next.adm <= as.difftime(lag_cutoff, units = "days"), useNA = "always")
+
 }

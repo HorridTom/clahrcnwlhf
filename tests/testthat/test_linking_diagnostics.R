@@ -82,17 +82,22 @@ test_that("nearest_spells function returns lag columns",{
 
   correct_results[correct_results$PseudoID == 1217659, "lag.from.prev.adm"] <- as.difftime(2, units = "days")
   correct_results[correct_results$PseudoID == 1062983, "lag.from.prev.adm"] <- NA
+  correct_results$lag.from.prev.adm <- as.difftime(correct_results$lag.from.prev.adm, units = "days")
 
   correct_results[correct_results$PseudoID == 1217659, "lag.to.next.adm"] <- as.difftime(31.52431, units = "days")
   correct_results[correct_results$PseudoID == 1241298, "lag.to.next.adm"] <- NA
+  correct_results[correct_results$PseudoID == 1076292, "lag.to.next.adm"] <- as.difftime(45/(60*24), units = "days")
+  correct_results$lag.to.next.adm <- as.difftime(correct_results$lag.to.next.adm, units = "days")
 
   # Run the function
   bundles_with_nearest_spells <- nearest_spells(bundles = bundle_link_test_data, episodes = clahrcnwlhf::emergency_adms)
 
 
-  # Check result has a column called "lag.from.prev.adm"
+  # Check result has a column called "lag.from.prev.adm" with type "difftime"
   expect_match(colnames(bundles_with_nearest_spells), "lag.from.prev.adm", all = FALSE)
   expect_match(colnames(bundles_with_nearest_spells), "lag.to.next.adm", all = FALSE)
+  expect_match(class(bundles_with_nearest_spells$lag.from.prev.adm),"difftime")
+  expect_match(class(bundles_with_nearest_spells$lag.to.next.adm),"difftime")
 
   # TODO: Write expectations on results here
   expect_equal(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1217659, "lag.from.prev.adm"], correct_results[correct_results$PseudoID == 1217659, "lag.from.prev.adm"])
@@ -100,5 +105,8 @@ test_that("nearest_spells function returns lag columns",{
 
   expect_equal(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1217659, "lag.to.next.adm"], correct_results[correct_results$PseudoID == 1217659, "lag.to.next.adm"], tolerance = 1e-4)
   expect_equal(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1241298, "lag.to.next.adm"], correct_results[correct_results$PseudoID == 1241298, "lag.to.next.adm"], tolerance = 1e-4)
+  expect_equal(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1076292, "lag.to.next.adm"], correct_results[correct_results$PseudoID == 1076292, "lag.to.next.adm"], tolerance = 1e-4,
+               info = paste(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1076292, "lag.to.next.adm"],correct_results[correct_results$PseudoID == 1076292, "lag.to.next.adm"], sep = "---"))
+
 
 })
