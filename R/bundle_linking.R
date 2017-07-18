@@ -18,7 +18,7 @@ nearest_spells <- function(bundles, episodes) {
 
   #TODO: refactor these four "apply" calls into one
 
-  bundles$prev.spell <- apply(bundles, 1, function(x) {
+  bundles_prv_nxt_spells <- apply(bundles, 1, function(x) {
 
     # Extract the patient id and admission datetime for this bundle
     pt_id <- x["PseudoID"]
@@ -31,15 +31,6 @@ nearest_spells <- function(bundles, episodes) {
     if(nrow(pt_eps)==0) {prv_adm <- NA} else {
       prv_adm <- pt_eps[which.max(as.POSIXct(pt_eps$CSPAdmissionTime)),"spell_number"]
     }
-    prv_adm
-
-  })
-
-  bundles$next.spell <- apply(bundles, 1, function(x) {
-
-    # Extract the patient id and admission datetime for this bundle
-    pt_id <- x["PseudoID"]
-    bun_dt <- x["Admission.Datetime"]
 
     # Identify the first subsequent admission for this patient
     # after the bundle admission datetime
@@ -48,10 +39,13 @@ nearest_spells <- function(bundles, episodes) {
     if(nrow(pt_eps)==0) {nxt_adm <- NA} else {
       nxt_adm <- pt_eps[which.min(as.POSIXct(pt_eps$CSPAdmissionTime)),"spell_number"]
     }
-    nxt_adm
+    list('prev.spell'=prv_adm, 'next.spell'=nxt_adm)
+
   })
 
-  bundles$lag.from.prev.adm <- apply(bundles, 1, function(x) {
+  bundles <- cbind(bundles, do.call(rbind.data.frame, bundles_prv_nxt_spells))
+
+  blfpa <- apply(bundles, 1, function(x) {
 
     sp_id <- as.numeric(trimws(x["prev.spell"],which = "both"))
     bun_dt <- x["Admission.Datetime"]
@@ -66,6 +60,8 @@ nearest_spells <- function(bundles, episodes) {
     }
     lfpa
   })
+
+  bundles$lag.from.prev.adm <- blfpa
 
   bundles$lag.from.prev.adm <- as.difftime(bundles$lag.from.prev.adm, units = "days")
 
