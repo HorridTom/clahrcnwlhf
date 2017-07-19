@@ -16,7 +16,7 @@ nearest_spells <- function(bundles, episodes) {
 
   bundles <- bundles[!is.na(bundles$Admission.Datetime),]
 
-  #TODO: refactor these four "apply" calls into one
+  #TODO: consider refactoring these two apply calls into one.
 
   bundles_prv_nxt_spells <- apply(bundles, 1, function(x) {
 
@@ -45,41 +45,39 @@ nearest_spells <- function(bundles, episodes) {
 
   bundles <- cbind(bundles, do.call(rbind.data.frame, bundles_prv_nxt_spells))
 
-  blfpa <- apply(bundles, 1, function(x) {
+  bundles_lags <- apply(bundles, 1, function(x) {
 
-    sp_id <- as.numeric(trimws(x["prev.spell"],which = "both"))
+    p_sp_id <- as.numeric(trimws(x["prev.spell"],which = "both"))
+    n_sp_id <- as.numeric(trimws(x["next.spell"],which = "both"))
     bun_dt <- x["Admission.Datetime"]
 
-    if (is.na(sp_id)) {
+    # Get lag from previous admission
+    if (is.na(p_sp_id)) {
       lfpa <- NA
     } else {
 
-      spell.start <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
-      spell.end <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
+      spell.start <- episodes[episodes$spell_number == p_sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
+      spell.end <- episodes[episodes$spell_number == p_sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
       lfpa <- difftime(as.POSIXct(bun_dt), as.POSIXct(spell.start), units = "days")
     }
-    lfpa
-  })
 
-  bundles$lag.from.prev.adm <- blfpa
-
-  bundles$lag.from.prev.adm <- as.difftime(bundles$lag.from.prev.adm, units = "days")
-
-  bundles$lag.to.next.adm <- apply(bundles, 1, function(x) {
-
-    sp_id <- as.numeric(trimws(x["next.spell"],which = "both"))
-    bun_dt <- x["Admission.Datetime"]
-
-    if (is.na(sp_id)) {
+    # Get lag to next admission
+    if (is.na(n_sp_id)) {
       ltna <- NA
     } else {
 
-      spell.start <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
-      spell.end <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
+      spell.start <- episodes[episodes$spell_number == n_sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
+      spell.end <- episodes[episodes$spell_number == n_sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
       ltna <- difftime(as.POSIXct(spell.start), as.POSIXct(bun_dt), units = "days")
     }
-    ltna
+
+    list('lag.from.prev.adm'=lfpa, 'lag.to.next.adm'=ltna)
+    #lfpa
   })
+
+  bundles <- cbind(bundles, do.call(rbind.data.frame, bundles_lags))
+
+  bundles$lag.from.prev.adm <- as.difftime(bundles$lag.from.prev.adm, units = "days")
 
   bundles$lag.to.next.adm <- as.difftime(bundles$lag.to.next.adm, units = "days")
 
@@ -114,32 +112,6 @@ bundle_in_spell <- function(bundles, episodes = clahrcnwlhf::emergency_adms) {
   bundles
 
 }
-
-
-bundle_spell_lags <- function(bundles, episodes = clahrcnwlhf::emergency_adms) {
-
-  bundles$lag.from.prev.adm <- NA
-
-  bundles$lag.from.prev.adm <- apply(bundles, 1, function(x) {
-
-    sp_id <- as.numeric(trimws(x["prev.spell"],which = "both"))
-    bun_dt <- x["Admission.Datetime"]
-
-    if (is.na(sp_id)) {
-      lfpa <- NA
-    } else {
-
-      spell.start <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
-      spell.end <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
-      lfpa <- as.POSIXct(bun_dt) - as.POSIXct(spell.start)
-    }
-    lfpa
-  })
-
-  bundles
-
-}
-
 
 
 plot_lag_dist <- function(bundles = clahrcnwlhf::bundle_data_clean, episodes = clahrcnwlhf::emergency_adms, bis = NULL, prev = TRUE, cumulative = FALSE) {
