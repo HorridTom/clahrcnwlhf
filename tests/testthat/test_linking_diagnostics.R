@@ -75,7 +75,7 @@ test_that("nearest_spells function returns lag columns",{
 
   load("datafortesting/bundle_link_test_data.Rda")
 
-  # TODO: Write correct results here
+  # Specify correct results
   correct_results <- bundle_link_test_data
   correct_results$lag.from.prev.adm <- NA
   correct_results$lag.to.next.adm <- NA
@@ -108,5 +108,39 @@ test_that("nearest_spells function returns lag columns",{
   expect_equal(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1076292, "lag.to.next.adm"], correct_results[correct_results$PseudoID == 1076292, "lag.to.next.adm"], tolerance = 1e-4,
                info = paste(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1076292, "lag.to.next.adm"],correct_results[correct_results$PseudoID == 1076292, "lag.to.next.adm"], sep = "---"))
 
+
+})
+
+
+test_that("nearest_spells pulls in admission dates for prev.spell and next.spell correctly",{
+
+  load("datafortesting/bundle_link_test_data.Rda")
+
+  # Specify correct results
+  correct_results <- bundle_link_test_data
+  #correct_results$prev.adm.dt <- strptime(NA, format = "%Y-%m-%d %H:%M:%S")
+  #correct_results$next.adm.dt <- strptime(NA, format = "%Y-%m-%d %H:%M:%S")
+
+  correct_results[correct_results$PseudoID == 1217659, "prev.adm.dt"] <- as.POSIXct(strptime("2015-07-25 14:45:00", format = "%Y-%m-%d %H:%M:%S"))
+  correct_results[correct_results$PseudoID == 1062983, "prev.adm.dt"] <- as.POSIXct(strptime(NA, format = "%Y-%m-%d %H:%M:%S"))
+
+  correct_results[correct_results$PseudoID == 1217659, "next.adm.dt"] <- as.POSIXct(strptime("2015-08-28 03:20:00", format = "%Y-%m-%d %H:%M:%S"))
+  correct_results[correct_results$PseudoID == 1241298, "next.adm.dt"] <- as.POSIXct(strptime(NA, format = "%Y-%m-%d %H:%M:%S"))
+
+  correct_results$prev.adm.dt <- as.POSIXct(correct_results$prev.adm.dt, origin="1970-01-01")
+  correct_results$next.adm.dt <- as.POSIXct(correct_results$next.adm.dt, origin="1970-01-01")
+
+  # Run the function
+  bundles_with_nearest_spells <- nearest_spells(bundles = bundle_link_test_data, episodes = clahrcnwlhf::emergency_adms)
+
+  # Check result has columns called "prev.adm.dt" and "next.adm.dt"
+  expect_match(colnames(bundles_with_nearest_spells), "prev.adm.dt", all = FALSE)
+  expect_match(colnames(bundles_with_nearest_spells), "next.adm.dt", all = FALSE)
+
+  # Check results are correct
+  expect_equal(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1217659, "prev.adm.dt"], correct_results[correct_results$PseudoID == 1217659, "prev.adm.dt"])
+  expect_equal(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1062983, "prev.adm.dt"], correct_results[correct_results$PseudoID == 1062983, "prev.adm.dt"])
+  expect_equal(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1217659, "next.adm.dt"], correct_results[correct_results$PseudoID == 1217659, "next.adm.dt"])
+  expect_equal(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1241298, "next.adm.dt"], correct_results[correct_results$PseudoID == 1241298, "next.adm.dt"])
 
 })
