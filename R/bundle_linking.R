@@ -6,8 +6,28 @@
 #' @return dataframe with new column linked.spell containing spell_number of the spell associated with this bundle
 #' @export
 #'
-link_bundles <- function(bundles, episodes) {
+link_bundles <- function(bundles = clahrcnwlhf::bundle_data_clean, episodes = clahrcnwlhf::emergency_adms, show.working = TRUE) {
   bundles$linked.spell <- NA
+
+  # Run preparatory analysis
+  bundles <- bundle_in_spell(bundles = bundles, episodes = episodes)
+
+  # 1. First link all bundles "in" their previous admission to that admission.
+  type1s <- which(bundles$bundle.in.spell == TRUE)
+  bundles[type1s,"linked.spell"] <- bundles[type1s,"prev.spell"]
+
+  # 2. Next link all bundles not already linked, with lag to next admission <= 3 days,
+  #     to that next admission.
+  type2s <- which((bundles$bundle.in.spell == FALSE | is.na(bundles$bundle.in.spell)) & bundles$lag.to.next.adm <= 3)
+  bundles[type2s,"linked.spell"] <- bundles[type2s,"next.spell"]
+
+  # 3. The remaining bundles cannot be linked at this time.
+
+  if (!show.working) {
+    wcs <- c("prev.spell", "next.spell", "lag.from.prev.adm", "lag.to.next.adm", "bundle.in.spell")
+    bundles <- bundles[,!(colnames(bundles) %in% wcs)]
+  }
+
   bundles
 }
 
