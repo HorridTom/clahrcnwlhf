@@ -82,32 +82,37 @@ nearest_spells <- function(bundles, episodes) {
     # Get lag from previous admission
     if (is.na(p_sp_id)) {
       lfpa <- NA
+      pa.dt <- as.POSIXct(strptime(NA, format = "%Y-%m-%d %H:%M:%S"))
     } else {
 
       spell.start <- episodes[episodes$spell_number == p_sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
       spell.end <- episodes[episodes$spell_number == p_sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
       lfpa <- difftime(as.POSIXct(bun_dt), as.POSIXct(spell.start), units = "days")
+      pa.dt <- as.POSIXct(spell.start, origin="1970-01-01")
     }
 
     # Get lag to next admission
     if (is.na(n_sp_id)) {
       ltna <- NA
+      na.dt <- as.POSIXct(strptime(NA, format = "%Y-%m-%d %H:%M:%S"))
     } else {
 
       spell.start <- episodes[episodes$spell_number == n_sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
       spell.end <- episodes[episodes$spell_number == n_sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
       ltna <- difftime(as.POSIXct(spell.start), as.POSIXct(bun_dt), units = "days")
+      na.dt <- as.POSIXct(spell.start, origin="1970-01-01")
     }
 
-    list('lag.from.prev.adm'=lfpa, 'lag.to.next.adm'=ltna)
+    list('lag.from.prev.adm'=lfpa, 'lag.to.next.adm'=ltna, 'prev.adm.dt'=pa.dt, 'next.adm.dt'=na.dt)
     #lfpa
   })
 
   bundles <- cbind(bundles, do.call(rbind.data.frame, bundles_lags))
 
   bundles$lag.from.prev.adm <- as.difftime(bundles$lag.from.prev.adm, units = "days")
-
   bundles$lag.to.next.adm <- as.difftime(bundles$lag.to.next.adm, units = "days")
+  bundles$prev.adm.dt <- as.POSIXct(bundles$prev.adm.dt, origin="1970-01-01")
+  bundles$next.adm.dt <- as.POSIXct(bundles$next.adm.dt, origin="1970-01-01")
 
   bundles
 }

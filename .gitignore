@@ -35,3 +35,5 @@ packrat/src/
 /data
 /tests/testthat/datafortesting
 inst/doc
+# Data out
+/data-out/
