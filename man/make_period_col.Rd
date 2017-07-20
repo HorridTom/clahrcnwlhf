@@ -25,3 +25,4 @@ df with an extra column of periods
 \description{
 make_period_col
 }
+
