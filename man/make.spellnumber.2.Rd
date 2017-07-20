@@ -15,3 +15,4 @@ df with added column for spell number
 \description{
 make.spellnumber.2
 }
+

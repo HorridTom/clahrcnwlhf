@@ -12,6 +12,14 @@ link_bundles <- function(bundles, episodes) {
 }
 
 
+#' nearest_spells
+#'
+#' @param bundles dataframe of care bundle audit sheets
+#' @param episodes dataframe of hospital admissions from data warehouse
+#'
+#' @return copy of bundles with additional columns added giving information on adjacent admissions
+#' @export
+#'
 nearest_spells <- function(bundles, episodes) {
 
   bundles <- bundles[!is.na(bundles$Admission.Datetime),]
@@ -85,6 +93,14 @@ nearest_spells <- function(bundles, episodes) {
 }
 
 
+#' bundle_in_spell
+#'
+#' @param bundles dataframe of care bundle audit sheets
+#' @param episodes dataframe of hospital admissions from data warehouse
+#'
+#' @return copy of bundles with additional columns added giving information on adjacent admissions
+#' @export
+#'
 bundle_in_spell <- function(bundles, episodes = clahrcnwlhf::emergency_adms) {
 
   bundles <- nearest_spells(bundles = bundles, episodes = episodes)
@@ -114,6 +130,17 @@ bundle_in_spell <- function(bundles, episodes = clahrcnwlhf::emergency_adms) {
 }
 
 
+#' plot_lag_dist
+#'
+#' @param bundles dataframe of care bundle audit sheets
+#' @param episodes dataframe of hospital admissions from data warehouse
+#' @param bis optional pre-analysed output of bundle_in_spell
+#' @param prev toggle between lags from previous admission and to next
+#' @param cumulative show cumulative distributions vs distributions
+#'
+#' @return plot of the lag distribution
+#' @export
+#'
 plot_lag_dist <- function(bundles = clahrcnwlhf::bundle_data_clean, episodes = clahrcnwlhf::emergency_adms, bis = NULL, prev = TRUE, cumulative = FALSE) {
 
   if (is.null(bis)) {
@@ -135,6 +162,14 @@ plot_lag_dist <- function(bundles = clahrcnwlhf::bundle_data_clean, episodes = c
 }
 
 
+#' link_diag_table
+#'
+#' @param bis output of bundle_in_spell
+#' @param lag_cutoff cutoff for classifying lags
+#'
+#' @return table of lag diagnostic information
+#' @export
+#'
 link_diag_table <- function(bis, lag_cutoff = 3) {
 
   table(bis$bundle.in.spell, bis$lag.to.next.adm <= as.difftime(lag_cutoff, units = "days"), useNA = "always")

@@ -15,3 +15,4 @@ A dataframe showing the number of NA values in each column of df
 \description{
 Display the number of NAs per column
 }
+

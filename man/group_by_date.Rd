@@ -25,3 +25,4 @@ that row. Periods are defined by cutoff_dates and labelled by period_labels.
 \description{
 group_by_date
 }
+
