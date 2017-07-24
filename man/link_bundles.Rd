@@ -4,7 +4,8 @@
 \alias{link_bundles}
 \title{link_bundles}
 \usage{
-link_bundles(bundles, episodes)
+link_bundles(bundles = clahrcnwlhf::bundle_data_clean,
+  episodes = clahrcnwlhf::emergency_adms, show.working = TRUE)
 }
 \arguments{
 \item{bundles}{the bundle data}
