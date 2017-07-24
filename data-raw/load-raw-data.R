@@ -47,6 +47,17 @@ load_bundle_data <- function(fn = "Heart_Failure_Admission_Care_Bundles_Raw.csv"
   devtools::use_data(bundle_data)
 }
 
+#' load_NICOR_data
+#'
+#' @param fn the file name of the csv file containing the NICOR data
+#'
+#' @return no return value
+#' @export
+#'
+load_NICOR_data <- function(fn = "NICOR_NPH_CMH_PSEUDO.csv") {
+  nicor_data <- read.csv(file = paste("data-raw/",fn,sep = ""), stringsAsFactors = FALSE)
+  devtools::use_data(nicor_data)
+}
 
 # Load in separate files from NWLH data warehouse and join together.
 fileNames <- Sys.glob("data-raw/split*.xlsx")
