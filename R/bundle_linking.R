@@ -6,11 +6,27 @@
 #' @return dataframe with new column linked.spell containing spell_number of the spell associated with this bundle
 #' @export
 #'
-link_bundles <- function(bundles = clahrcnwlhf::bundle_data_clean, episodes = clahrcnwlhf::emergency_adms, show.working = TRUE) {
+link_bundles <- function(bundles = clahrcnwlhf::bundle_data_clean,
+                         episodes = clahrcnwlhf::emergency_adms,
+                         show.working = TRUE,
+                         bundle_date_col = "Admission.Datetime",
+                         bundle_id_col = "PseudoID",
+                         episode_id_col = "PseudoID",
+                         episode_date_col = "CSPAdmissionTime",
+                         episode_date_disch_col = "CSPDischargeTime",
+                         episode_spell_col = "spell_number",
+                         episode_new_spell = "new_spell") {
   bundles$linked.spell <- NA
 
   # Run preparatory analysis
-  bundles <- bundle_in_spell(bundles = bundles, episodes = episodes)
+  bundles <- bundle_in_spell(bundles = bundles, episodes = episodes,
+                             bundle_date_col = bundle_date_col,
+                             bundle_id_col = bundle_id_col,
+                             episode_id_col = episode_id_col,
+                             episode_date_col = episode_date_col,
+                             episode_date_disch_col = episode_date_disch_col,
+                             episode_spell_col = episode_spell_col,
+                             episode_new_spell = episode_new_spell)
 
   # 1. First link all bundles "in" their previous admission to that admission.
   type1s <- which(bundles$bundle.in.spell == TRUE)
@@ -40,32 +56,39 @@ link_bundles <- function(bundles = clahrcnwlhf::bundle_data_clean, episodes = cl
 #' @return copy of bundles with additional columns added giving information on adjacent admissions
 #' @export
 #'
-nearest_spells <- function(bundles, episodes) {
+nearest_spells <- function(bundles, episodes, bundle_date_col = "Admission.Datetime",
+                           bundle_id_col = "PseudoID", episode_id_col = "PseudoID",
+                           episode_date_col = "CSPAdmissionTime",
+                           episode_spell_col = "spell_number", episode_new_spell = "new_spell") {
 
-  bundles <- bundles[!is.na(bundles$Admission.Datetime),]
+  bundles <- bundles[!is.na(bundles[,bundle_date_col]),]
 
   #TODO: consider refactoring these two apply calls into one.
 
   bundles_prv_nxt_spells <- apply(bundles, 1, function(x) {
 
     # Extract the patient id and admission datetime for this bundle
-    pt_id <- x["PseudoID"]
-    bun_dt <- x["Admission.Datetime"]
+    pt_id <- x[bundle_id_col]
+    bun_dt <- x[bundle_date_col]
 
     # Identify the most recent admission for this patient
     # prior to or on the bundle admission datetime
-    pt_eps <- episodes[episodes$PseudoID == pt_id,]
-    pt_eps <- pt_eps[as.POSIXct(pt_eps$CSPAdmissionTime) <= as.POSIXct(bun_dt),]
+    pt_eps <- episodes[episodes[,episode_id_col] == pt_id,]
+    date_logical <- as.POSIXct(pt_eps[,episode_date_col]) <= as.POSIXct(bun_dt)
+    date_logical[is.na(date_logical)] <- FALSE
+    pt_eps <- pt_eps[date_logical,]
     if(nrow(pt_eps)==0) {prv_adm <- NA} else {
-      prv_adm <- pt_eps[which.max(as.POSIXct(pt_eps$CSPAdmissionTime)),"spell_number"]
+      prv_adm <- pt_eps[which.max(as.POSIXct(pt_eps[,episode_date_col])),episode_spell_col]
     }
 
     # Identify the first subsequent admission for this patient
     # after the bundle admission datetime
-    pt_eps <- episodes[episodes$PseudoID == pt_id,]
-    pt_eps <- pt_eps[as.POSIXct(pt_eps$CSPAdmissionTime) > as.POSIXct(bun_dt),]
+    pt_eps <- episodes[episodes[,episode_id_col] == pt_id,]
+    date_logical <- as.POSIXct(pt_eps[,episode_date_col]) > as.POSIXct(bun_dt)
+    date_logical[is.na(date_logical)] <- FALSE
+    pt_eps <- pt_eps[date_logical,]
     if(nrow(pt_eps)==0) {nxt_adm <- NA} else {
-      nxt_adm <- pt_eps[which.min(as.POSIXct(pt_eps$CSPAdmissionTime)),"spell_number"]
+      nxt_adm <- pt_eps[which.min(as.POSIXct(pt_eps[,episode_date_col])),episode_spell_col]
     }
     list('prev.spell'=prv_adm, 'next.spell'=nxt_adm)
 
@@ -77,7 +100,7 @@ nearest_spells <- function(bundles, episodes) {
 
     p_sp_id <- as.numeric(trimws(x["prev.spell"],which = "both"))
     n_sp_id <- as.numeric(trimws(x["next.spell"],which = "both"))
-    bun_dt <- x["Admission.Datetime"]
+    bun_dt <- x[bundle_date_col]
 
     # Get lag from previous admission
     if (is.na(p_sp_id)) {
@@ -85,8 +108,7 @@ nearest_spells <- function(bundles, episodes) {
       pa.dt <- as.POSIXct(strptime(NA, format = "%Y-%m-%d %H:%M:%S"))
     } else {
 
-      spell.start <- episodes[episodes$spell_number == p_sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
-      spell.end <- episodes[episodes$spell_number == p_sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
+      spell.start <- episodes[episodes[,episode_spell_col] == p_sp_id & episodes[,episode_new_spell] == TRUE,episode_date_col]
       lfpa <- difftime(as.POSIXct(bun_dt), as.POSIXct(spell.start), units = "days")
       pa.dt <- as.POSIXct(spell.start, origin="1970-01-01")
     }
@@ -97,8 +119,7 @@ nearest_spells <- function(bundles, episodes) {
       na.dt <- as.POSIXct(strptime(NA, format = "%Y-%m-%d %H:%M:%S"))
     } else {
 
-      spell.start <- episodes[episodes$spell_number == n_sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
-      spell.end <- episodes[episodes$spell_number == n_sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
+      spell.start <- episodes[episodes[,episode_spell_col] == n_sp_id & episodes[,episode_new_spell] == TRUE,episode_date_col]
       ltna <- difftime(as.POSIXct(spell.start), as.POSIXct(bun_dt), units = "days")
       na.dt <- as.POSIXct(spell.start, origin="1970-01-01")
     }
@@ -126,25 +147,38 @@ nearest_spells <- function(bundles, episodes) {
 #' @return copy of bundles with additional columns added giving information on adjacent admissions
 #' @export
 #'
-bundle_in_spell <- function(bundles, episodes = clahrcnwlhf::emergency_adms) {
+bundle_in_spell <- function(bundles, episodes = clahrcnwlhf::emergency_adms,
+                            bundle_date_col = "Admission.Datetime",
+                            bundle_id_col = "PseudoID",
+                            episode_id_col = "PseudoID",
+                            episode_date_col = "CSPAdmissionTime",
+                            episode_date_disch_col = "CSPDischargeTime",
+                            episode_spell_col = "spell_number",
+                            episode_new_spell = "new_spell") {
 
-  bundles <- nearest_spells(bundles = bundles, episodes = episodes)
+  bundles <- nearest_spells(bundles = bundles, episodes = episodes,
+                            bundle_date_col = bundle_date_col,
+                            bundle_id_col = bundle_id_col,
+                            episode_id_col = episode_id_col,
+                            episode_date_col = episode_date_col,
+                            episode_spell_col = episode_spell_col,
+                            episode_new_spell = episode_new_spell)
 
-  bundles <- bundles[!is.na(bundles$Admission.Datetime),]
+  bundles <- bundles[!is.na(bundles[,bundle_date_col]),]
 
   bundles$bundle.in.spell <- apply(bundles, 1, function(x) {
     # Extract the patient id and admission datetime for this bundle
     sp_id <- as.numeric(trimws(x["prev.spell"],which = "both"))
-    bun_dt <- x["Admission.Datetime"]
+    bun_dt <- x[bundle_date_col]
 
     # If there is no previous spell, return NA
     if (is.na(sp_id)) {
       bis <- NA
     } else {
-      # Otherwise, establish whether or not the Admission.Datetime from the bundle
+      # Otherwise, establish whether or not the bundle_date_col from the bundle
       # lies inside the spell
-      spell.start <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPAdmissionTime"]
-      spell.end <- episodes[episodes$spell_number == sp_id & episodes$new_spell == TRUE,"CSPDischargeTime"]
+      spell.start <- episodes[episodes[,episode_spell_col] == sp_id & episodes[,episode_new_spell] == TRUE,episode_date_col]
+      spell.end <- episodes[episodes[,episode_spell_col] == sp_id & episodes[,episode_new_spell] == TRUE,episode_date_disch_col]
       bis <- (as.POSIXct(spell.start) <= as.POSIXct(bun_dt)) && (as.POSIXct(bun_dt) <= as.POSIXct(spell.end))
     }
     bis
