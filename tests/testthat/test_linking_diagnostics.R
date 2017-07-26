@@ -144,3 +144,31 @@ test_that("nearest_spells pulls in admission dates for prev.spell and next.spell
   expect_equal(bundles_with_nearest_spells[bundles_with_nearest_spells$PseudoID == 1241298, "next.adm.dt"], correct_results[correct_results$PseudoID == 1241298, "next.adm.dt"])
 
 })
+
+
+test_that("plot_lag_dist successfully generates a plot with various arguments", {
+
+  load("datafortesting/bundle_link_test_data.Rda")
+
+  bundles_with_in_spell <- bundle_in_spell(bundle_link_test_data)
+
+  p1 <- plot_lag_dist(bundles = bundle_link_test_data,
+                      bis = bundles_with_in_spell, prev = TRUE,
+                      cumulative = FALSE, facet = FALSE)
+
+  p2 <- plot_lag_dist(bundles = bundle_link_test_data,
+                      prev = TRUE,
+                      cumulative = FALSE, facet = FALSE, max_lag = 100)
+
+  p3 <- plot_lag_dist(bundles = bundle_link_test_data,
+                      prev = FALSE,
+                      cumulative = TRUE, facet = TRUE)
+
+  expect_is(p1$layers[[1]], "ggproto")
+  expect_identical(sapply(p1$layers, function(x) class(x$geom)[1]),"GeomBar")
+  expect_is(p2$layers[[1]], "ggproto")
+  expect_identical(sapply(p2$layers, function(x) class(x$geom)[1]),"GeomBar")
+  expect_is(p3$layers[[1]], "ggproto")
+  expect_identical(sapply(p3$layers, function(x) class(x$geom)[1]),"GeomStep")
+
+})

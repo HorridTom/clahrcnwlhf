@@ -48,6 +48,60 @@ link_bundles <- function(bundles = clahrcnwlhf::bundle_data_clean,
 }
 
 
+#' link_nicor
+#'
+#' @param nicor the NICOR data
+#' @param episodes dataframe of hospital admissions from data warehouse
+#' @param show.working include helper columns in output
+#' @param bundle_date_col column in NICOR data containing date pertaining to admission
+#' @param bundle_id_col column in NICOR data containing patient (pseudo-)ID
+#' @param episode_id_col column in episodes containing patient (pseudo-)ID
+#' @param episode_date_col column in episodes containing datetime of admission
+#' @param episode_date_disch_col column in episodes containing datetime of discharge
+#' @param episode_spell_col column in episodes containing spell ID to return
+#' @param episode_new_spell column in episodes indicating first episodes in spell
+#'
+#' @return nicor with linked spells, and helper columns if requested
+#' @export
+#'
+link_nicor <- function(nicor = clahrcnwlhf::nicor_data_clean,
+                       episodes = clahrcnwlhf::emergency_adms,
+                       show.working = TRUE,
+                       bundle_date_col = "Date.of.Visit",
+                       bundle_id_col = "PseudoID",
+                       episode_id_col = "PseudoID",
+                       episode_date_col = "CSPAdmissionTime",
+                       episode_date_disch_col = "CSPDischargeTime",
+                       episode_spell_col = "spell_number",
+                       episode_new_spell = "new_spell") {
+
+  nicor$linked.spell <- NA
+
+  # Run preparatory analysis
+  nicor <- bundle_in_spell(bundles = nicor, episodes = episodes,
+                             bundle_date_col = bundle_date_col,
+                             bundle_id_col = bundle_id_col,
+                             episode_id_col = episode_id_col,
+                             episode_date_col = episode_date_col,
+                             episode_date_disch_col = episode_date_disch_col,
+                             episode_spell_col = episode_spell_col,
+                             episode_new_spell = episode_new_spell)
+
+  # 1. First link all NICOR records with Date.of.Visit within a spell,
+  # to that spell.
+  type1s <- which(nicor$bundle.in.spell == TRUE)
+  nicor[type1s, "linked.spell"] <- nicor[type1s,"prev.spell"]
+
+  # 2. Next link all NICOR records with Date.of.Visit less than 2 days before
+  # an admission, to that admission.
+  type2s <- which((nicor$bundle.in.spell == FALSE | is.na(nicor$bundle.in.spell)) & nicor$lag.to.next.adm <= as.difftime(2, units = "days"))
+  nicor[type2s,"linked.spell"] <- nicor[type2s,"next.spell"]
+
+  nicor
+
+}
+
+
 #' nearest_spells
 #'
 #' @param bundles dataframe of care bundle audit sheets
@@ -104,7 +158,7 @@ nearest_spells <- function(bundles, episodes, bundle_date_col = "Admission.Datet
 
     # Get lag from previous admission
     if (is.na(p_sp_id)) {
-      lfpa <- NA
+      lfpa <- NA_integer_
       pa.dt <- as.POSIXct(strptime(NA, format = "%Y-%m-%d %H:%M:%S"))
     } else {
 
@@ -115,7 +169,7 @@ nearest_spells <- function(bundles, episodes, bundle_date_col = "Admission.Datet
 
     # Get lag to next admission
     if (is.na(n_sp_id)) {
-      ltna <- NA
+      ltna <- NA_integer_
       na.dt <- as.POSIXct(strptime(NA, format = "%Y-%m-%d %H:%M:%S"))
     } else {
 
@@ -200,22 +254,34 @@ bundle_in_spell <- function(bundles, episodes = clahrcnwlhf::emergency_adms,
 #' @return plot of the lag distribution
 #' @export
 #'
-plot_lag_dist <- function(bundles = clahrcnwlhf::bundle_data_clean, episodes = clahrcnwlhf::emergency_adms, bis = NULL, prev = TRUE, cumulative = FALSE) {
+plot_lag_dist <- function(bundles = clahrcnwlhf::bundle_data_clean, episodes = clahrcnwlhf::emergency_adms, bis = NULL, prev = TRUE, cumulative = FALSE, facet = TRUE, max_lag = NULL) {
 
   if (is.null(bis)) {
     bis <- clahrcnwlhf::bundle_in_spell(bundles = bundles, episodes = episodes)
   }
 
+  if (!is.null(max_lag)) {
+    if (prev) {
+      bis <- bis[which(bis$lag.from.prev.adm <= max_lag),]
+    } else {
+      bis <- bis[which(bis$lag.to.next.adm <= max_lag),]
+    }
+  }
+
   if (prev) {
-    p <- ggplot(bis, aes(lag.from.prev.adm)) + facet_wrap(~bundle.in.spell, scales = "free_x")
+    p <- ggplot2::ggplot(bis, ggplot2::aes(lag.from.prev.adm))
   } else {
-    p <- ggplot(bis, aes(lag.to.next.adm)) + facet_wrap(~bundle.in.spell, scales = "free_x")
+    p <- ggplot2::ggplot(bis, ggplot2::aes(lag.to.next.adm))
+  }
+
+  if (facet) {
+    p <- p + ggplot2::facet_wrap(~bundle.in.spell, scales = "free_x")
   }
 
   if (cumulative) {
-    p <- p + stat_ecdf()
+    p <- p + ggplot2::stat_ecdf()
   } else {
-    p <- p + geom_histogram()
+    p <- p + ggplot2::geom_histogram()
   }
   p
 }

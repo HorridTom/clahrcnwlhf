@@ -10,6 +10,15 @@ create_bundle_link_test_dataset <- function() {
 }
 
 
+create_nicor_link_test_dataset <- function() {
+
+  nicor_link_cols <- c("PseudoID","Date.of.Visit")
+  nicor_link_test_rows <- c(1,1147,72,912)
+  nicor_link_test_data <- clahrcnwlhf::nicor_data_clean[nicor_link_test_rows, which(colnames(clahrcnwlhf::nicor_data_clean) %in% nicor_link_cols)]
+  save(nicor_link_test_data, file="tests/testthat/datafortesting/nicor_link_test_data.Rda")
+}
+
+
 test_that("linked.spell column is created by link_bundles",{
 
   load("datafortesting/bundle_link_test_data.Rda")
@@ -49,6 +58,36 @@ test_that("linked.spell column is created by link_bundles",{
   expect_equal(linked_bundles[linked_bundles$PseudoID == 1053505, "linked.spell"], correct_results[correct_results$PseudoID == 1053505, "linked.spell"])
   expect_equal(linked_bundles[linked_bundles$PseudoID == 1163163, "linked.spell"], correct_results[correct_results$PseudoID == 1163163, "linked.spell"])
   expect_equal(linked_bundles[linked_bundles$PseudoID == 1257929, "linked.spell"], correct_results[correct_results$PseudoID == 1257929, "linked.spell"])
+
+
+})
+
+
+test_that("linked.spell column is created by link_nicor",{
+
+  load("datafortesting/nicor_link_test_data.Rda")
+
+  # Specify correct results
+  correct_results <- nicor_link_test_data
+  correct_results$linked.spell <- NA
+
+  correct_results[correct_results$PseudoID == 1088990, "linked.spell"] <- 73029
+  correct_results[correct_results$PseudoID == 1280004, "linked.spell"] <- NA
+  correct_results[correct_results$PseudoID == 1203126, "linked.spell"] <- 168186
+  correct_results[correct_results$PseudoID == 2000010, "linked.spell"] <- NA
+
+  # Run the linking function
+  linked_nicor <- link_nicor(nicor = nicor_link_test_data,
+                             episodes = clahrcnwlhf::emergency_adms)
+
+  # Test that the linked.spell column exists in the output
+  expect_match(colnames(linked_nicor), "linked.spell", all = FALSE)
+
+  # Test that the values returned in this column is correct
+  expect_equal(linked_nicor[linked_nicor$PseudoID == 1088990, "linked.spell"], correct_results[correct_results$PseudoID == 1088990, "linked.spell"])
+  expect_equal(linked_nicor[linked_nicor$PseudoID == 1280004, "linked.spell"], correct_results[correct_results$PseudoID == 1280004, "linked.spell"])
+  expect_equal(linked_nicor[linked_nicor$PseudoID == 1203126, "linked.spell"], correct_results[correct_results$PseudoID == 1203126, "linked.spell"])
+  expect_equal(linked_nicor[linked_nicor$PseudoID == 2000010, "linked.spell"], correct_results[correct_results$PseudoID == 2000010, "linked.spell"])
 
 
 })
