@@ -300,3 +300,23 @@ link_diag_table <- function(bis, lag_cutoff = 3) {
   table(bis$bundle.in.spell, bis$lag.to.next.adm <= as.difftime(lag_cutoff, units = "days"), useNA = "always")
 
 }
+
+
+plot_linking_venn <- function(episodes = clahrcnwlhf::emergency_adms,
+                              linked_bundles, linked_nicor, plot_vd = TRUE) {
+
+  allspells <- unique(episodes[which(!is.na(episodes$spell_number)),"spell_number"])
+  bundlespells <- unique(linked_bundles[which(!is.na(linked_bundles$linked.spell)),"linked.spell"])
+  nicorspells <- unique(linked_nicor[which(!is.na(linked_nicor$linked.spell)),"linked.spell"])
+
+  futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
+  venn.plot <- VennDiagram::venn.diagram(x = list(admissions = allspells, bundles = bundlespells, nicor = nicorspells), filename = NULL)
+
+  if (!plot_vd) {
+    venn.plot
+  } else {
+    grid::grid.newpage()
+    grid::grid.draw(venn.plot)
+  }
+
+}
