@@ -172,3 +172,25 @@ test_that("plot_lag_dist successfully generates a plot with various arguments", 
   expect_identical(sapply(p3$layers, function(x) class(x$geom)[1]),"GeomStep")
 
 })
+
+
+test_that("plot_linking_venn generates a venn diagram showing linkage results", {
+
+  load("datafortesting/bundle_link_test_data.Rda")
+  load("datafortesting/nicor_link_test_data.Rda")
+
+  linked_bundles <- link_bundles(bundles = bundle_link_test_data)
+  linked_nicor <- link_nicor(nicor = nicor_link_test_data)
+
+  venn.d <- plot_linking_venn(episodes = clahrcnwlhf::emergency_adms,
+                              linked_bundles = linked_bundles,
+                              linked_nicor = linked_nicor, plot_vd = FALSE)
+
+  expect_is(venn.d[[1]], "polygon")
+  expect_is(venn.d[[length(venn.d)]],"text")
+
+  expect_equal(venn.d[[7]]$label, "2")
+  expect_equal(venn.d[[8]]$label, "263246")
+  expect_equal(venn.d[[9]]$label, "5")
+
+})
