@@ -302,6 +302,16 @@ link_diag_table <- function(bis, lag_cutoff = 3) {
 }
 
 
+#' plot_linking_venn
+#'
+#' @param episodes dataframe of hospital admissions from data warehouse
+#' @param linked_bundles output of link_bundles
+#' @param linked_nicor output of link_nicor
+#' @param plot_vd logical to indicate whether to actually draw the plot
+#'
+#' @return venn diagram showing linked data sources
+#' @export
+#'
 plot_linking_venn <- function(episodes = clahrcnwlhf::emergency_adms,
                               linked_bundles, linked_nicor, plot_vd = TRUE) {
 
@@ -318,5 +328,24 @@ plot_linking_venn <- function(episodes = clahrcnwlhf::emergency_adms,
     grid::grid.newpage()
     grid::grid.draw(venn.plot)
   }
+
+}
+
+
+#' duplicated_links
+#'
+#' @param linked_bundles
+#'
+#' @return output of link_bundles
+#' @export
+#'
+duplicated_links <- function(linked_bundles) {
+
+  bls <- linked_bundles[,"linked.spell"]
+  duplicated_bls <- unique(bls[duplicated(bls)])
+  duplicated_bls <- duplicated_bls[!is.na(duplicated_bls)]
+  duplicated_bls_data <- linked_bundles[which(linked_bundles$linked.spell %in% duplicated_bls),]
+
+  duplicated_bls_data
 
 }

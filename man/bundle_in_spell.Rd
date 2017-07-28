@@ -4,7 +4,11 @@
 \alias{bundle_in_spell}
 \title{bundle_in_spell}
 \usage{
-bundle_in_spell(bundles, episodes = clahrcnwlhf::emergency_adms)
+bundle_in_spell(bundles, episodes = clahrcnwlhf::emergency_adms,
+  bundle_date_col = "Admission.Datetime", bundle_id_col = "PseudoID",
+  episode_id_col = "PseudoID", episode_date_col = "CSPAdmissionTime",
+  episode_date_disch_col = "CSPDischargeTime",
+  episode_spell_col = "spell_number", episode_new_spell = "new_spell")
 }
 \arguments{
 \item{bundles}{dataframe of care bundle audit sheets}

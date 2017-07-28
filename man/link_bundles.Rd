@@ -5,7 +5,11 @@
 \title{link_bundles}
 \usage{
 link_bundles(bundles = clahrcnwlhf::bundle_data_clean,
-  episodes = clahrcnwlhf::emergency_adms, show.working = TRUE)
+  episodes = clahrcnwlhf::emergency_adms, show.working = TRUE,
+  bundle_date_col = "Admission.Datetime", bundle_id_col = "PseudoID",
+  episode_id_col = "PseudoID", episode_date_col = "CSPAdmissionTime",
+  episode_date_disch_col = "CSPDischargeTime",
+  episode_spell_col = "spell_number", episode_new_spell = "new_spell")
 }
 \arguments{
 \item{bundles}{the bundle data}
