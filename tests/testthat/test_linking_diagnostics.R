@@ -183,7 +183,7 @@ test_that("plot_linking_venn generates a venn diagram showing linkage results", 
   linked_nicor <- link_nicor(nicor = nicor_link_test_data)
 
   venn.d <- plot_linking_venn(episodes = clahrcnwlhf::emergency_adms,
-                              linked_bundles = linked_bundles,
+                              linked_bundles = linked_bundles[c(1:8),],
                               linked_nicor = linked_nicor, plot_vd = FALSE)
 
   expect_is(venn.d[[1]], "polygon")
@@ -192,5 +192,20 @@ test_that("plot_linking_venn generates a venn diagram showing linkage results", 
   expect_equal(venn.d[[7]]$label, "2")
   expect_equal(venn.d[[8]]$label, "263246")
   expect_equal(venn.d[[9]]$label, "5")
+
+})
+
+
+test_that("duplicated_links returns a dataframe identifying spells linked to multiple bundles",{
+
+  load("datafortesting/bundle_link_test_data.Rda")
+
+  linked_bundles <- link_bundles(bundles = bundle_link_test_data)
+
+  duplicated_bundle_spells <- duplicated_links(linked_bundles = linked_bundles)
+
+  expect_equal(nrow(duplicated_bundle_spells), 2)
+  expect_equal(duplicated_bundle_spells[1,"linked.spell"],8223)
+  expect_equal(duplicated_bundle_spells[2,"linked.spell"],8223)
 
 })

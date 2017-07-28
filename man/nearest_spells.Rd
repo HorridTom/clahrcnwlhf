@@ -4,7 +4,10 @@
 \alias{nearest_spells}
 \title{nearest_spells}
 \usage{
-nearest_spells(bundles, episodes)
+nearest_spells(bundles, episodes, bundle_date_col = "Admission.Datetime",
+  bundle_id_col = "PseudoID", episode_id_col = "PseudoID",
+  episode_date_col = "CSPAdmissionTime", episode_spell_col = "spell_number",
+  episode_new_spell = "new_spell")
 }
 \arguments{
 \item{bundles}{dataframe of care bundle audit sheets}

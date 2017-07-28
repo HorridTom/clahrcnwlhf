@@ -6,7 +6,7 @@
 \usage{
 plot_lag_dist(bundles = clahrcnwlhf::bundle_data_clean,
   episodes = clahrcnwlhf::emergency_adms, bis = NULL, prev = TRUE,
-  cumulative = FALSE)
+  cumulative = FALSE, facet = TRUE, max_lag = NULL)
 }
 \arguments{
 \item{bundles}{dataframe of care bundle audit sheets}
