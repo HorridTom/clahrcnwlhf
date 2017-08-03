@@ -358,7 +358,6 @@ duplicated_links <- function(linked_bundles) {
 #' @return dupe_bundles with details of the multiple bundles associated with each spell
 #' @export
 #'
-#' @examples
 dupe_link_details <- function(dupe_bundles) {
 
   dupe_bundles <- dupe_bundles[order(dupe_bundles$linked.spell),]
