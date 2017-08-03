@@ -334,9 +334,9 @@ plot_linking_venn <- function(episodes = clahrcnwlhf::emergency_adms,
 
 #' duplicated_links
 #'
-#' @param linked_bundles
+#' @param linked_bundles output of link_bundles
 #'
-#' @return output of link_bundles
+#' @return linked_bundles restricted to only those bundles linked to a spell with multiple linked bundles
 #' @export
 #'
 duplicated_links <- function(linked_bundles) {
@@ -347,5 +347,39 @@ duplicated_links <- function(linked_bundles) {
   duplicated_bls_data <- linked_bundles[which(linked_bundles$linked.spell %in% duplicated_bls),]
 
   duplicated_bls_data
+
+}
+
+
+#' dupe_link_details
+#'
+#' @param dupe_bundles output of duplicated_links
+#'
+#' @return dupe_bundles with details of the multiple bundles associated with each spell
+#' @export
+#'
+#' @examples
+dupe_link_details <- function(dupe_bundles) {
+
+  dupe_bundles <- dupe_bundles[order(dupe_bundles$linked.spell),]
+
+  spell_frame_list <- split(dupe_bundles, f = dupe_bundles$linked.spell)
+  spell_min_max <- lapply(spell_frame_list, function(x) {
+    smin <- as.POSIXct(min(x$Admission.Datetime), origin="1970-01-01")
+    smax <- as.POSIXct(max(x$Admission.Datetime), origin="1970-01-01")
+    n <- nrow(x)
+    ais <- all(x$bundle.in.spell)
+    anyis <- any(x$bundle.in.spell)
+    list("min.bun.adm"=smin, "max.bun.adm"=smax, "num.buns"=n,
+         "all.in.spell"=ais, "any.in.spell"=anyis)
+  })
+
+  dld <- cbind(unique(dupe_bundles$linked.spell),
+               do.call(rbind.data.frame, spell_min_max))
+  dld$min.bun.adm <- as.POSIXct(dld$min.bun.adm, origin="1970-01-01")
+  dld$max.bun.adm <- as.POSIXct(dld$max.bun.adm, origin="1970-01-01")
+  dld$diff.bun.adm <- difftime(dld$max.bun.adm, dld$min.bun.adm, units = "days")
+
+  dld
 
 }
