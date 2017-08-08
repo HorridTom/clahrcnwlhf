@@ -15,7 +15,7 @@ create_bundle_link_dupe_removal_test_dataset <- function() {
   bundle_dupe_link_cols <- c("Bundle.Number","PseudoID","Admission.Datetime",
                              "number.nas")
   bundle_dupe_link_bundle_numbers <- c(192, 196, 193, 198, 591, 698, 207, 213,
-                                       234)
+                                       234, 771)
 
   bundle_link_dupe_removal_test_data <-
     clahrcnwlhf::bundle_data_clean[which(clahrcnwlhf::bundle_data_clean$Bundle.Number %in% bundle_dupe_link_bundle_numbers),
@@ -117,7 +117,7 @@ test_that("Duplicate links are removed correctly", {
 
   # Specify correct results
   correct_results <- bundle_link_dupe_removal_test_data[
-    which(bundle_link_dupe_removal_test_data$Bundle.Number %in% c(196, 198, 591, 207)),]
+    which(bundle_link_dupe_removal_test_data$Bundle.Number %in% c(196, 198, 591, 207, 771)),]
   correct_results$linked.spell <- NA
 
   correct_results[correct_results$Bundle.Number == 196, "linked.spell"] <- 8223
@@ -137,9 +137,11 @@ test_that("Duplicate links are removed correctly", {
                correct_results[correct_results$Bundle.Number == 591, "linked.spell"])
   expect_equal(deduped_linked_bundles[deduped_linked_bundles$Bundle.Number == 207, "linked.spell"],
                correct_results[correct_results$Bundle.Number == 207, "linked.spell"])
+  expect_equal(deduped_linked_bundles[deduped_linked_bundles$Bundle.Number == 771, "linked.spell"],
+               correct_results[correct_results$Bundle.Number == 771, "linked.spell"])
 
   #Test that each spell only appears once in the deduped data
-  expect_equal(length(deduped_linked_bundles$linked.spell),
-               length(unique(deduped_linked_bundles$linked.spell)))
+  expect_equal(length(deduped_linked_bundles[which(!is.na(deduped_linked_bundles$linked.spell)),"linked.spell"]),
+               length(unique(deduped_linked_bundles[which(!is.na(deduped_linked_bundles$linked.spell)),"linked.spell"])))
 
 })

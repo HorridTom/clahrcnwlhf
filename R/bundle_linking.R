@@ -111,6 +111,9 @@ link_nicor <- function(nicor = clahrcnwlhf::nicor_data_clean,
 #'
 remove_duplicate_bundle_links <- function(linked_bundles) {
 
+  unlinked_bundles <- linked_bundles[which(is.na(linked_bundles$linked.spell)),]
+  linked_bundles <- linked_bundles[which(!is.na(linked_bundles$linked.spell)),]
+
   episode_bundles <- split(linked_bundles, linked_bundles$linked.spell)
   deduped_ep_bun  <- lapply(episode_bundles, function(x) {
 
@@ -120,7 +123,8 @@ remove_duplicate_bundle_links <- function(linked_bundles) {
 
   })
 
-  do.call(rbind.data.frame, deduped_ep_bun)
+  deduped_linked <- do.call(rbind.data.frame, deduped_ep_bun)
+  rbind(deduped_linked, unlinked_bundles)
 
 }
 
