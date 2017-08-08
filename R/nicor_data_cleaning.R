@@ -33,6 +33,10 @@ clean_nicor_data <- function(df) {
   # ii) different date formats - some functionality already but not sufficient?
   # iii) WRITE TESTS FOR THIS!
 
+  #Remove duplicates
+  dupe_entries <- duplicated(df[,!(colnames(df) %in% c("Date.Created","Readmission.Dataset"))])
+  df <- df[!dupe_entries,]
+
   df
 }
 
