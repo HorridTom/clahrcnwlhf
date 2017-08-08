@@ -361,17 +361,17 @@ plot_linking_venn <- function(episodes = clahrcnwlhf::emergency_adms,
 
 #' duplicated_links
 #'
-#' @param linked_bundles output of link_bundles
+#' @param linked_dataset output of link_bundles
 #'
-#' @return linked_bundles restricted to only those bundles linked to a spell with multiple linked bundles
+#' @return linked_dataset restricted to only those entries linked to a spell with multiple linked entries
 #' @export
 #'
-duplicated_links <- function(linked_bundles) {
+duplicated_links <- function(linked_dataset) {
 
-  bls <- linked_bundles[,"linked.spell"]
+  bls <- linked_dataset[,"linked.spell"]
   duplicated_bls <- unique(bls[duplicated(bls)])
   duplicated_bls <- duplicated_bls[!is.na(duplicated_bls)]
-  duplicated_bls_data <- linked_bundles[which(linked_bundles$linked.spell %in% duplicated_bls),]
+  duplicated_bls_data <- linked_dataset[which(linked_dataset$linked.spell %in% duplicated_bls),]
 
   duplicated_bls_data
 
