@@ -202,7 +202,7 @@ test_that("duplicated_links returns a dataframe identifying spells linked to mul
 
   linked_bundles <- link_bundles(bundles = bundle_link_test_data)
 
-  duplicated_bundle_spells <- duplicated_links(linked_bundles = linked_bundles)
+  duplicated_bundle_spells <- duplicated_links(linked_dataset = linked_bundles)
 
   expect_equal(nrow(duplicated_bundle_spells), 2)
   expect_equal(duplicated_bundle_spells[1,"linked.spell"],8223)
@@ -217,7 +217,7 @@ test_that("dupe_link_details returns range of dates on spells from duplicated_li
 
   linked_bundles <- link_bundles(bundles = bundle_link_test_data)
 
-  duplicated_bundle_spells <- duplicated_links(linked_bundles = linked_bundles)
+  duplicated_bundle_spells <- duplicated_links(linked_dataset = linked_bundles)
 
   #Correct results
   max_date <- as.POSIXct(strptime("2016-01-09 19:30:00", format = "%Y-%m-%d %H:%M:%S"))
