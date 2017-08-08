@@ -34,6 +34,9 @@ clean_bundle_data <- function(df) {
 
   df$Admission.Datetime <- convert_to_datetime(df$Admission.Date.Bundle, df$Admission.Time.Bundle, dt_form = "%Y-%m-%d %H:%M")
 
+  #Add column summarizing completeness of data for each bundle
+  df <- bundle_element_data_completeness(bundles = df)
+
   df
 }
 
@@ -45,5 +48,20 @@ clean_bundle_data <- function(df) {
 bundle_clean_and_save <- function() {
   bundle_data_clean <- clean_bundle_data(clahrcnwlhf::bundle_data)
   devtools::use_data(bundle_data_clean, overwrite = TRUE)
+
+}
+
+
+#' bundle_element_data_completeness
+#'
+#' @param bundles the bundle data to be assessed for completeness
+#'
+#' @return bundles with additional column showing number of NAs
+#' @export
+#'
+bundle_element_data_completeness <- function(bundles = clahrcnwlhf::bundle_data_clean) {
+
+  bundles$number.nas <- rowSums(is.na(bundles))
+  bundles
 
 }

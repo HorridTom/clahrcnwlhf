@@ -7,10 +7,10 @@
 duplicated_links(linked_bundles)
 }
 \arguments{
-\item{linked_bundles}{}
+\item{linked_bundles}{output of link_bundles}
 }
 \value{
-output of link_bundles
+linked_bundles restricted to only those bundles linked to a spell with multiple linked bundles
 }
 \description{
 duplicated_links
