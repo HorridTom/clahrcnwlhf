@@ -102,6 +102,29 @@ link_nicor <- function(nicor = clahrcnwlhf::nicor_data_clean,
 }
 
 
+#' remove_duplicate_bundle_links
+#'
+#' @param linked_bundles output of link_bundles
+#'
+#' @return linked_bundles with duplicate links removed
+#' @export
+#'
+remove_duplicate_bundle_links <- function(linked_bundles) {
+
+  episode_bundles <- split(linked_bundles, linked_bundles$linked.spell)
+  deduped_ep_bun  <- lapply(episode_bundles, function(x) {
+
+    lowest_na_count_rows <- x[which(x$number.nas == min(x$number.nas)),]
+    maxdate <- max(as.POSIXct(lowest_na_count_rows$Admission.Datetime))
+    lowest_na_count_rows[which(as.POSIXct(lowest_na_count_rows$Admission.Datetime) == maxdate),][1,]
+
+  })
+
+  do.call(rbind.data.frame, deduped_ep_bun)
+
+}
+
+
 #' nearest_spells
 #'
 #' @param bundles dataframe of care bundle audit sheets
