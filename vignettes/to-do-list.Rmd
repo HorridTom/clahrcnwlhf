@@ -18,11 +18,14 @@ vignette: >
  2. $\checkmark$ Missing data in `CSP...` columns over final six months of dataset
  3. $\checkmark$ Discrepancies between number of heart failure admissions in my analysis vs
  those in the presentation
- 4. Control chart analysis for admissions (absolute and proportions)
- 0. Time zone tests - and passes!!
+ 4. $\Box$ Control chart analysis for admissions (absolute and proportions)
+ 0. $\Box$ Time zone tests - and passes!!
  5. Link in
-  + $\Box$ the care bundle data
-  + $\Box$ national audit data
+  + $\checkmark$ the care bundle data
+  + $\checkmark$ national audit data
+  + $\checkmark$ make national audit linkage site-sensitive
+  + $\checkmark$ refactor linkage tests to use bundle/nicor id rather than row number
+  + $\checkmark$ add pt 1087099 to nicor link test - to check, in conjunction with 1073855, that multi-site spells are linked to by any appropriate nicor records, but that cross-site linking doesn't happen.
  6. $\Box$ Examine for changes in demographics over the period
  7. Analyse outcomes:
  
