@@ -1,0 +1,103 @@
+---
+title: "Analysis plan for CLAHRC NWL Heart Failure Care Bundle"
+author: "Dr. Thomas Woodcock"
+date: "`r Sys.Date()`"
+output: pdf_document
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Aim
+
+The aim of this piece of work is to evaluate the impact of the CLAHRC NWL Heart Failure Care Bundle project, actively funded by the CLAHRC at London North West Healthcare NHS Trust during October 2014 to March 2016 inclusive. The project's main objective was to improve quality of care against a set of evidence based standards constituting a care bundle, with a view to improving the management of patients' heart failure and ultimately improving their quality of life.
+
+## Research Questions
+
+The set of relevant research questions all take the following form:
+
+For [*heart failure patients*], was there a difference in [*outcome measure*] between i) the periods before and after the bundle was implemented ii) patients who did and did not receive the care bundle?
+
+
+Here, heart failure patients may be defined in one of two ways: a) as those with primary ICD10 code in a specified set of heart failure codes, and b) as those with such a code in any coding position (secondary, tertiary etc.). The outcome measures of interest are the following:
+
+ 1. Length of stay in hospital
+ 2. Bed days
+ 3. In-hospital mortality
+ 4. Readmission for heart failure
+  + .1 7-day
+  + .2 30-day
+  + .3 90-day
+  
+  
+There are thus 2 $\times$ 2 $\times$ 6 = 24 different research questions of interest in this study, which can be referred to for simplicity using the shorthand (a)(1)(i) = "For patients with primary diagnosis heart failure, was there a difference in length of stay in hospital between the periods before and after the bundle was implemented?"
+
+Additionally, each question will be addressed both with and without accounting for covariates.
+
+## Data
+
+Three datasets are available for analysis.
+
+ 1. An extract from the hospital patient administration system, unit of observation = episode of care
+ 2. Data recorded onto paper bundle forms during the project, unit of observation = documentation of care bundle elements for a patient in hospital  
+ 3. A copy of the local national audit (NICOR) dataset, unit of observation = entry of patient spell in hospital into heart failure national audit dataset
+
+In each dataset patients are identified by a unique study number, created through a pseudonymisation process.
+
+## Variables
+
+### Outcome variables
+
+Each of the six outcome variables listed above may be calculated for a given patient spell in hospital, and aggregated up over "space" (e.g. ward, hospital site) and time (e.g. month of discharge, week of admission). Note that for (1) and (2) the spell-level variable is the same, whilst the aggregation is different.
+
+ 1. Length of stay in hospital: non-negative real number. Aggregation by measure of central tendency, spread etc,
+ 2. Bed days: as per LOS above. Aggregation by sum.
+ 3. In-hospital mortality: binary TRUE/FALSE. Aggregation by proportion.
+ 4. Readmission for heart failure
+  + .1 7-day: binary TRUE/FALSE. Aggregation by proportion.
+  + .2 30-day: binary TRUE/FALSE. Aggregation by proportion.
+  + .3 90-day: binary TRUE/FALSE. Aggregation by proportion.
+  
+### Demographic variables
+
+ 1. Age at time of admission: categorical, age band
+ 2. Lower Super Output Area (LSOA) of home postcode: categorical
+ 3. Ethnic Group: categorical
+ 4. Gender
+ 
+### Process and clinical variables
+
+#### From PAS dataset
+
+ 1. Date of admission: date
+ 2. Time of admission: time
+ 3. Date of discharge: date
+ 4. Time of discharge: time
+ 5. Primary diagosis (ICD10): categorical
+ 6. Secondary diagnosis (ICD10): $\times$ 9 categorical
+ 7. HRG Code: categorical
+ 8. Admission method: categorical
+ 9. Admission type: categorical
+ 10. Last ward: categorical
+ 
+#### From bundle dataset 
+ 
+ 11. Bundle ward: categorical
+ 12. BNP Level measured: binary
+ 13. BNP Date: date
+ 14. BNP Result: positive integer
+ 15. Date of last echo: date
+ 16. Date referred for echo: date
+ 17. Time referred for echo: time
+ 18. Date echo completed: date
+ 19. Time echo completed: time
+ 20. Ejection fraction: percentage
+ 21. Specialist referral made: binary
+ 
+#### From NICOR dataset
+
+ 22. Main place of care
+ 23. Specialist input
+ 24. *numerous other clinical measures...*
+ 

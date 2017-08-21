@@ -2,7 +2,7 @@
 title: "Descriptive Analysis for CLAHRC NWL Heart Failure Care Bundle: 4 - Data Linkage"
 author: "Dr. Thomas Woodcock"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: pdf_document
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
