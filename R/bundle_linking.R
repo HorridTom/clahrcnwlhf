@@ -425,3 +425,27 @@ dupe_link_details <- function(dupe_bundles) {
   dld
 
 }
+
+
+#' link_and_save
+#'
+#' @param episodes the emergency admissions data
+#' @param bundles the care bundle data
+#' @param nicor the nicor data
+#'
+#' @return Saves linked bundle and nicor data to the package
+#' @export
+#'
+link_and_save <- function(episodes = clahrcnwlhf::emergency_adms,
+                          bundles = clahrcnwlhf::bundle_data_clean,
+                          nicor = clahrcnwlhf::nicor_data_clean) {
+
+  linked_bundle_data <- link_bundles(episodes = episodes, bundles = bundles)
+  linked_nicor_data <- link_nicor(episodes = episodes, nicor = nicor)
+
+  linked_bundle_data <- remove_duplicate_bundle_links(linked_bundles = linked_bundle_data)
+
+  devtools::use_data(linked_bundle_data, overwrite = TRUE)
+  devtools::use_data(linked_nicor_data, overwrite = TRUE)
+
+}
