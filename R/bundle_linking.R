@@ -97,6 +97,22 @@ link_nicor <- function(nicor = clahrcnwlhf::nicor_data_clean,
   type2s <- which((nicor$bundle.in.spell == FALSE | is.na(nicor$bundle.in.spell)) & nicor$lag.to.next.adm <= as.difftime(2, units = "days"))
   nicor[type2s,"linked.spell"] <- nicor[type2s,"next.spell"]
 
+  # Finally, remove any links to spells that do not contain the nicor site
+  link_output <- apply(nicor, 1, function(x){
+
+    nicor_site <- x["Hospital"]
+    lspell <- as.numeric(trimws(x["linked.spell"],which = "both"))
+    site.in.spell <- any(episodes[which(episodes$spell_number == lspell),"StartWardSite"] == nicor_site)
+    if (site.in.spell) {
+      list('lspell'=lspell)
+    } else {list('lspell'=NA)}
+
+  })
+
+  nicor <- cbind(nicor, do.call(rbind.data.frame, as.list(link_output)))
+  names(nicor)[names(nicor)=="linked.spell"] <- "pre.linked.spell"
+  names(nicor)[names(nicor)=="lspell"] <- "linked.spell"
+
   nicor
 
 }
