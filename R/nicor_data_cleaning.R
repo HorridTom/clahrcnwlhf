@@ -7,6 +7,9 @@
 #' @export
 #'
 clean_nicor_data <- function(df) {
+  # Add entry ID column
+  df$nicor.entry.id <- 1:nrow(df)
+
   # Remove leading and trailing whitespace from any character fields
   char_cols <- sapply(df, is.character)
   df[,char_cols] <- lapply(df[,char_cols], function(x){
@@ -14,6 +17,9 @@ clean_nicor_data <- function(df) {
 
   # Convert any empty values to NA
   df <- as.data.frame(lapply(df, FUN = function(x) {sapply(x, function(x) gsub("^$", NA, x))}), stringsAsFactors = FALSE)
+
+  # Use first three chars of site name only
+  df$Hospital <- substr(df$Hospital,1,3)
 
   # Convert the following columns to factors:
   # NB there are many more columns that should be converted, if they are to be used
