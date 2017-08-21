@@ -27,6 +27,7 @@ vignette: >
   + $\checkmark$ refactor linkage tests to use bundle/nicor id rather than row number
   + $\checkmark$ add pt 1087099 to nicor link test - to check, in conjunction with 1073855, that multi-site spells are linked to by any appropriate nicor records, but that cross-site linking doesn't happen.
  6. $\Box$ Examine for changes in demographics over the period
+ 8. $\Box$ Write research plan
  7. Analyse outcomes:
  
 ```{r xtable, echo=FALSE, results='asis', cache=TRUE}
