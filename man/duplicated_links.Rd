@@ -4,13 +4,13 @@
 \alias{duplicated_links}
 \title{duplicated_links}
 \usage{
-duplicated_links(linked_bundles)
+duplicated_links(linked_dataset)
 }
 \arguments{
-\item{linked_bundles}{output of link_bundles}
+\item{linked_dataset}{output of link_bundles}
 }
 \value{
-linked_bundles restricted to only those bundles linked to a spell with multiple linked bundles
+linked_dataset restricted to only those entries linked to a spell with multiple linked entries
 }
 \description{
 duplicated_links
