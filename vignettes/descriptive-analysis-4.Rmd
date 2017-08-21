@@ -1,0 +1,67 @@
+---
+title: "Descriptive Analysis for CLAHRC NWL Heart Failure Care Bundle: 4 - Data Linkage"
+author: "Dr. Thomas Woodcock"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This vignette covers the data linkage results for the evaluation of the
+CLAHRC NWL Heart Failure Care Bundle project at North West London Hospitals.
+
+## Linking process and exploratory analysis
+
+Description of process here. Include removal of duplicated bundle links.
+
+## Linking results
+
+```{r, echo=FALSE, results='asis', cache=TRUE}
+
+library(scales)
+
+linked_bundle_data <- clahrcnwlhf::linked_bundle_data
+linked_nicor_data <- clahrcnwlhf::linked_nicor_data
+
+N_bundles <- nrow(clahrcnwlhf::bundle_data_clean)
+n_bundles_linked <- nrow(linked_bundle_data[!is.na(linked_bundle_data$linked.spell),])
+
+N_nicor <- nrow(clahrcnwlhf::nicor_data_clean)
+n_nicor_linked <- nrow(linked_nicor_data[!is.na(linked_nicor_data$linked.spell),])
+
+```
+
+Of the `r N_bundles` care bundle records, `r n_bundles_linked` (`r percent(n_bundles_linked / N_bundles)`) were linked to an emergency admission spell, leaving `r N_bundles - n_bundles_linked` (`r percent( 1- n_bundles_linked / N_bundles )`) remaining unlinked (or duplicates of better links).
+
+Of the `r N_nicor` nicor records, `r n_nicor_linked` (`r percent(n_nicor_linked / N_nicor)`) were linked to an emergency admission spell, leaving `r N_nicor - n_nicor_linked` (`r percent( 1- n_nicor_linked / N_nicor )`) remaining unlinked.
+
+These results are summarised by the following Venn Diagram showing how many emergency
+admission spells are linked to bundles, nicor records, or both.
+
+```{r, echo=TRUE, results='asis', cache=TRUE, fig.height=4, fig.width=6,}
+
+clahrcnwlhf::plot_linking_venn(episodes = clahrcnwlhf::emergency_adms, linked_bundles = linked_bundle_data, linked_nicor = linked_nicor_data)
+
+```
+
+Looking only at emergency admissions coded with primary diagnosis Heart Failure,
+the picture is the following:
+
+```{r, echo=TRUE, results='asis', cache=TRUE, fig.height=4, fig.width=6,}
+
+clahrcnwlhf::plot_linking_venn(episodes = clahrcnwlhf::emergency_adms[which(clahrcnwlhf::emergency_adms$Heart.Failure.Episode == TRUE),], linked_bundles = linked_bundle_data, linked_nicor = linked_nicor_data)
+
+```
+
+Finally looking at emergency admissions coded with heart failure in any diagnosis
+position:
+
+```{r, echo=TRUE, results='asis', cache=TRUE, fig.height=4, fig.width=6,}
+
+clahrcnwlhf::plot_linking_venn(episodes = clahrcnwlhf::emergency_adms[which(clahrcnwlhf::emergency_adms$HF.any.code == TRUE),], linked_bundles = linked_bundle_data, linked_nicor = linked_nicor_data)
+
+```
+
+Note that in the all of the above diagrams, only the `r n_bundles_linked` linked bundles and the `r n_nicor_linked` linked nicor records, are included.
