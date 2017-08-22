@@ -492,10 +492,19 @@ recode_ethnicity <- function(df, ethn_col = "EthnicGroup") {
   # This recoding is particular to this dataset.
   # TODO: Consider writing this function so that it automatically
   # establishes suitable recoding.
-  df$EthnicGroupComp <- sub('D|E|F|G','T',df[,ethn_col])
-  df$EthnicGroupComp <- sub('K|L','I',df$EthnicGroupComp)
+  df$EthnicGroupComp2 <- sub('D|E|F|G','T',df[,ethn_col])
+  df$EthnicGroupComp2 <- sub('K|L','I',df$EthnicGroupComp2)
+  df$EthnicGroupComp2 <- sub('M|N|P','U',df$EthnicGroupComp2)
+  df$EthnicGroupComp2 <- sub('R|S','V',df$EthnicGroupComp2)
+
+  # This recoding is from:
+  # http://www.datadictionary.nhs.uk/data_dictionary/attributes/e/end/ethnic_category_code_de.asp
+  df$EthnicGroupComp <- sub('A|B|C','W',df[,ethn_col])
+  df$EthnicGroupComp <- sub('D|E|F|G','X',df$EthnicGroupComp)
+  df$EthnicGroupComp <- sub('H|J|K|L','Y',df$EthnicGroupComp)
   df$EthnicGroupComp <- sub('M|N|P','U',df$EthnicGroupComp)
-  df$EthnicGroupComp <- sub('R|S','V',df$EthnicGroupComp)
+  df$EthnicGroupComp <- sub('R|S|Z','V',df$EthnicGroupComp)
+
   df
 }
 
