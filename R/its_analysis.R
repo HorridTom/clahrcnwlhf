@@ -1,0 +1,73 @@
+
+#' its_aggregate
+#'
+#' @param df emergency admissions episode data
+#'
+#' @return aggregated data for ITS analysis
+#' @export
+#'
+its_aggregate <- function(df = clahrcnwlhf::emergency_adms) {
+
+  emspells <- clahrcnwlhf::create_new_vars(df = df)
+  emspells <- emspells[which(emspells$new_spell == TRUE),]
+  #emspells$CSPAdmissionTime <- as.POSIXct(emspells$CSPAdmissionTime)
+  #emspells$CSPDischargeTime <- as.POSIXct(emspells$CSPDischargeTime)
+  #emspells$EpisodeEndTime <- NULL
+  #emspells$EpisodeStartTime <- NULL
+  emspells$AdmissionMonth <- format(emspells$AdmissionDate, format = '%Y-%m')
+  emspells$DischargeMonth <- format(emspells$DischargeDate, format = '%Y-%m')
+
+  cat_agg <- emspells %>%
+    group_by(DischargeMonth, Heart.Failure.Episode, HF.any.code, Sex, WardSite, Ward_hf_type, bundle, nicor, EthnicGroupComp, AgeBand_B, died) %>%
+    summarize(count = NROW(PseudoID))
+
+  cont_agg <- emspells %>%
+    group_by(DischargeMonth, Heart.Failure.Episode, HF.any.code, Sex, WardSite, Ward_hf_type, bundle, nicor, EthnicGroupComp, AgeBand_B, died) %>%
+    summarize(avLOS = mean(los), avIMD = mean(IMD))
+
+  inner_join(cat_agg, cont_agg, by = c("DischargeMonth", "Heart.Failure.Episode", "HF.any.code","Sex", "WardSite", "Ward_hf_type", "bundle", "nicor", "EthnicGroupComp", "AgeBand_B", "died"))
+
+}
+
+
+create_new_vars <- function(df = clahrcnwlhf::emergency_adms) {
+
+  # Convert date-times to POSIX ct to please tidyverse
+  df$CSPAdmissionTime <- as.POSIXct(df$CSPAdmissionTime)
+  df$CSPDischargeTime <- as.POSIXct(df$CSPDischargeTime)
+  df$EpisodeEndTime <- as.POSIXct(df$EpisodeEndTime)
+  df$EpisodeStartTime <- as.POSIXct(df$EpisodeStartTime)
+
+  # Load ward classification tables
+  ward_hf_types <- read.csv(file = "data-raw/wardhftypes.csv", stringsAsFactors = FALSE)
+  ward_sites <- read.csv(file = "data-raw/wardsites.csv", stringsAsFactors = FALSE)
+
+  # Map discharge ward to ward site and hf_type
+  df <- dplyr::left_join(df, ward_hf_types, by = c("CSPLastWard"="Ward"))
+  df <- dplyr::left_join(df, ward_sites, by = c("CSPLastWard"="Ward"))
+
+  # Add link to linked bundle and nicor record where these exist, and flag variable
+  df <- dplyr::left_join(df, clahrcnwlhf::linked_bundle_data[,c("Bundle.Number","linked.spell")], by = c("spell_number"="linked.spell"))
+  df <- dplyr::left_join(df, clahrcnwlhf::linked_nicor_data[,c("nicor.entry.id","linked.spell")], by = c("spell_number"="linked.spell"))
+  df$bundle <- !is.na(df$Bundle.Number)
+  df$nicor <- !is.na(df$nicor.entry.id)
+
+  # Add alternative codings of ethnicity
+  df <- clahrcnwlhf::recode_ethnicity(df)
+
+  # Add IMD
+  imd_lookup <- read.csv(file = "data-raw/imd-indices.csv", stringsAsFactors = FALSE)
+  df <- dplyr::left_join(df, imd_lookup[,c("LSOA_Code","IMD")], by = c("LSOA"="LSOA_Code"))
+
+  # Collapse age bands
+  df$AgeBand_B <- forcats::fct_collapse(df$AgeBand,
+                               young = c("0","1 to 4", "5 to 9", "10 to 14", "15 to 19", "20 to 24", "25 to 29", "30 to 34", "35 to 39", "40 to 44", "45 to 49", "50 to 54", "55 to 59", "60 to 64"),
+                               old = c("65 to 69", "70 to 74", "75 to 79", "80 to 84", "85 to 89", "90 to 94", "95 to 99", "100 to 114")
+  )
+
+  # In-hospital Mortality
+  df$died <- df$DischargeMethodCode == 4
+
+  df
+
+}
