@@ -14,8 +14,6 @@ its_aggregate <- function(df = clahrcnwlhf::emergency_adms) {
   #emspells$CSPDischargeTime <- as.POSIXct(emspells$CSPDischargeTime)
   #emspells$EpisodeEndTime <- NULL
   #emspells$EpisodeStartTime <- NULL
-  emspells$AdmissionMonth <- format(emspells$AdmissionDate, format = '%Y-%m')
-  emspells$DischargeMonth <- format(emspells$DischargeDate, format = '%Y-%m')
 
   cat_agg <- emspells %>%
     group_by(DischargeMonth, Heart.Failure.Episode, HF.any.code, Sex, WardSite, Ward_hf_type, bundle, nicor, EthnicGroupComp, AgeBand_B, died) %>%
@@ -23,13 +21,20 @@ its_aggregate <- function(df = clahrcnwlhf::emergency_adms) {
 
   cont_agg <- emspells %>%
     group_by(DischargeMonth, Heart.Failure.Episode, HF.any.code, Sex, WardSite, Ward_hf_type, bundle, nicor, EthnicGroupComp, AgeBand_B, died) %>%
-    summarize(avLOS = mean(los), avIMD = mean(IMD))
+    summarize(avLOS = mean(los, na.rm = TRUE), avIMD = mean(IMD, na.rm = TRUE), bed.days = sum(los, na.rm = TRUE))
 
   inner_join(cat_agg, cont_agg, by = c("DischargeMonth", "Heart.Failure.Episode", "HF.any.code","Sex", "WardSite", "Ward_hf_type", "bundle", "nicor", "EthnicGroupComp", "AgeBand_B", "died"))
 
 }
 
 
+#' create_new_vars
+#'
+#' @param df emergency admissions dataframe
+#'
+#' @return df with additional variables for ITS added
+#' @export
+#'
 create_new_vars <- function(df = clahrcnwlhf::emergency_adms) {
 
   # Convert date-times to POSIX ct to please tidyverse
@@ -67,6 +72,10 @@ create_new_vars <- function(df = clahrcnwlhf::emergency_adms) {
 
   # In-hospital Mortality
   df$died <- df$DischargeMethodCode == 4
+
+  # Add discharge Month
+  df$AdmissionMonth <- format(df$AdmissionDate, format = '%Y-%m')
+  df$DischargeMonth <- format(df$DischargeDate, format = '%Y-%m')
 
   df
 
