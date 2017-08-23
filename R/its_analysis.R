@@ -15,14 +15,14 @@ its_aggregate <- function(df = clahrcnwlhf::emergency_adms) {
   #emspells$EpisodeStartTime <- NULL
 
   cat_agg <- emspells %>%
-    group_by(DischargeMonth, Heart.Failure.Episode, HF.any.code, Sex, WardSite, Ward_hf_type, bundle, nicor, EthnicGroupComp, AgeBand_B, died) %>%
+    group_by(DischargeMonth, Heart.Failure.Episode, HF.any.code, Sex, WardSite, Ward_hf_type, bundle, nicor, EthnicGroupComp, AgeBand_B, died, all.cause.readmission.cat, hf.readmission.cat) %>%
     summarize(count = NROW(PseudoID))
 
   cont_agg <- emspells %>%
-    group_by(DischargeMonth, Heart.Failure.Episode, HF.any.code, Sex, WardSite, Ward_hf_type, bundle, nicor, EthnicGroupComp, AgeBand_B, died) %>%
-    summarize(avLOS = mean(los, na.rm = TRUE), avIMD = mean(IMD, na.rm = TRUE), bed.days = sum(los, na.rm = TRUE))
+    group_by(DischargeMonth, Heart.Failure.Episode, HF.any.code, Sex, WardSite, Ward_hf_type, bundle, nicor, EthnicGroupComp, AgeBand_B, died, all.cause.readmission.cat, hf.readmission.cat) %>%
+    summarize(avAge = mean(Age.est, na.rm = TRUE), avLOS = mean(los, na.rm = TRUE), avIMD = mean(IMD, na.rm = TRUE), bed.days = sum(los, na.rm = TRUE))
 
-  inner_join(cat_agg, cont_agg, by = c("DischargeMonth", "Heart.Failure.Episode", "HF.any.code","Sex", "WardSite", "Ward_hf_type", "bundle", "nicor", "EthnicGroupComp", "AgeBand_B", "died"))
+  inner_join(cat_agg, cont_agg, by = c("DischargeMonth", "Heart.Failure.Episode", "HF.any.code","Sex", "WardSite", "Ward_hf_type", "bundle", "nicor", "EthnicGroupComp", "AgeBand_B", "died", "all.cause.readmission.cat", "hf.readmission.cat"))
 
 }
 
@@ -62,6 +62,9 @@ create_new_vars <- function(df = clahrcnwlhf::emergency_adms) {
   # Add IMD
   imd_lookup <- read.csv(file = "data-raw/imd-indices.csv", stringsAsFactors = FALSE)
   df <- dplyr::left_join(df, imd_lookup[,c("LSOA_Code","IMD")], by = c("LSOA"="LSOA_Code"))
+
+  # Add estimated age
+  df$Age.est <- sapply(strsplit(as.character(df$AgeBand) , "to") , function(i) mean(as.numeric(i))) + 0.5
 
   # Collapse age bands
   df$AgeBand_B <- forcats::fct_collapse(df$AgeBand,
