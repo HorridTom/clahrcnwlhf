@@ -9,7 +9,6 @@
 its_aggregate <- function(df = clahrcnwlhf::emergency_adms) {
 
   emspells <- clahrcnwlhf::create_new_vars(df = df)
-  emspells <- emspells[which(emspells$new_spell == TRUE),]
   #emspells$CSPAdmissionTime <- as.POSIXct(emspells$CSPAdmissionTime)
   #emspells$CSPDischargeTime <- as.POSIXct(emspells$CSPDischargeTime)
   #emspells$EpisodeEndTime <- NULL
@@ -77,6 +76,47 @@ create_new_vars <- function(df = clahrcnwlhf::emergency_adms) {
   df$AdmissionMonth <- format(df$AdmissionDate, format = '%Y-%m')
   df$DischargeMonth <- format(df$DischargeDate, format = '%Y-%m')
 
+  # Restrict to only first episode of each spell
+  df <- df[which(df$new_spell == TRUE),]
+
+  # Add readmission columns
+  df <- create_readms(df)
+
   df
 
+}
+
+
+#' create_readms
+#'
+#' @param df dataframe of spell data
+#'
+#' @return df with readmission variable columns added
+#' @export
+#'
+create_readms <- function(df) {
+
+  # Create time to next spell column
+  df <- lag.column(df, "AdmissionDate", nm="next.adm.dt", backlag = TRUE, sc="new.pat")
+  df$time.to.next.spell <- difftime(df$next.adm.dt, df$DischargeDate, units = "days")
+
+  # Create time to next HF spell column (only for HF spells)
+  # TODO: Note this repeats code from new.pat function, refactor!
+  hf <- df[which(df$Heart.Failure.Episode == TRUE),]
+
+  hf <- consecutive.diff(hf, "PseudoID", "PseudoID","hf.new.pat.diff")
+  hf$hf.new.pat <- sapply(hf$hf.new.pat.diff, function(x) {
+    if(is.na(x)||!(x==0)){return(TRUE)}
+    else {return(FALSE)}})
+
+  hf <- lag.column(hf, "AdmissionDate", nm="next.hf.adm.dt", backlag = TRUE, sc="hf.new.pat")
+  hf$time.to.next.hf.spell <- difftime(hf$next.hf.adm.dt, hf$DischargeDate, units = "days")
+
+  df <- dplyr::left_join(df, hf[,c("spell_number","time.to.next.hf.spell")], by = "spell_number")
+
+  # Create the categorical variables
+  df$all.cause.readmission.cat <- cut(as.numeric(df$time.to.next.spell), breaks = c(0,7,30,90), labels = c("7","30","90"), right = FALSE)
+  df$hf.readmission.cat <- cut(as.numeric(df$time.to.next.hf.spell), breaks = c(0,7,30,90), labels = c("7","30","90"), right = FALSE)
+
+  df
 }
