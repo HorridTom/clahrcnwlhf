@@ -4,7 +4,7 @@
 \alias{lag.column}
 \title{lag.column}
 \usage{
-lag.column(df, c1, nm = "lag.col", backlag = FALSE, sc = NULL)
+\method{lag}{column}(df, c1, nm = "lag.col", backlag = FALSE, sc = NULL)
 }
 \arguments{
 \item{df}{a dataframe}
