@@ -232,7 +232,7 @@ new_spell <- function(df, id = "PseudoID", adt = "CSPAdmissionTime",
 #' @export
 #'
 #'
-make.spellnumber.2 <- function(df) {
+make.spellnumber.2 <- function(df, progress.bar = FALSE) {
 
   #This function takes the output of make.newspell
   #and assigns to each episode a spell number and episode order
@@ -250,8 +250,8 @@ make.spellnumber.2 <- function(df) {
   episodeorder.col <- grep("episode_order",colnames(df))
 
   #Set up progress bar
-  pb <- winProgressBar(title="Progress",
-                       label="0% done", min=0, max=100, initial=0)
+  if (progress.bar) {pb <- winProgressBar(title="Progress",
+                       label="0% done", min=0, max=100, initial=0)}
 
 
 
@@ -277,12 +277,15 @@ make.spellnumber.2 <- function(df) {
     }
 
     #Update progress bar
-    info <- sprintf("%d%% done", round((i/n)*100))
-    setWinProgressBar(pb, (i/n)*100, label=info)
-
+    if (progress.bar ) {
+      info <- sprintf("%d%% done", round((i/n)*100))
+      setWinProgressBar(pb, (i/n)*100, label=info)
+    }
   }
   #close the progress bar
-  close(pb)
+  if (progress.bar) {
+    close(pb)
+  }
 
   #return the dataframe
   df
