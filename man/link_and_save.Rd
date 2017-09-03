@@ -21,4 +21,3 @@ Saves linked bundle and nicor data to the package
 \description{
 link_and_save
 }
-

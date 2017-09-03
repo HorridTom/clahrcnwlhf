@@ -9,4 +9,3 @@ nicor_clean_and_save()
 \description{
 nicor_clean_and_save
 }
-

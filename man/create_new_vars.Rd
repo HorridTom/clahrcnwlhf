@@ -15,4 +15,3 @@ df with additional variables for ITS added
 \description{
 create_new_vars
 }
-

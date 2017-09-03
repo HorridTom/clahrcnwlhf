@@ -15,4 +15,3 @@ linked_dataset restricted to only those entries linked to a spell with multiple 
 \description{
 duplicated_links
 }
-

@@ -15,4 +15,3 @@ plot of age distribution
 \description{
 plot_age_dist
 }
-

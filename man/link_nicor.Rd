@@ -38,4 +38,3 @@ nicor with linked spells, and helper columns if requested
 \description{
 link_nicor
 }
-

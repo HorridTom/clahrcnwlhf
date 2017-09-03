@@ -15,4 +15,3 @@ df restricted to only rows where 'new.spell' = TRUE
 \description{
 restrict_to_spells
 }
-

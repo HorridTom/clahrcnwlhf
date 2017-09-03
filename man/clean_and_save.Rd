@@ -10,4 +10,3 @@ clean_and_save()
 Runs clean_data on admission_data and saves the result as
 admission_data_clean, overwriting any previous version.
 }
-

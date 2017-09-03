@@ -21,4 +21,3 @@ copy of bundles with additional columns added giving information on adjacent adm
 \description{
 bundle_in_spell
 }
-

@@ -15,4 +15,3 @@ df with readmission variable columns added
 \description{
 create_readms
 }
-

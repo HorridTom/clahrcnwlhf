@@ -17,4 +17,3 @@ table of lag diagnostic information
 \description{
 link_diag_table
 }
-

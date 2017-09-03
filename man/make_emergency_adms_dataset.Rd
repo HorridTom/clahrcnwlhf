@@ -17,4 +17,3 @@ the emergency admissions dataset with additional columns for analysis
 \description{
 make_emergency_adms_dataset
 }
-

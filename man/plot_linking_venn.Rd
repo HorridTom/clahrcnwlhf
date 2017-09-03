@@ -22,4 +22,3 @@ venn diagram showing linked data sources
 \description{
 plot_linking_venn
 }
-

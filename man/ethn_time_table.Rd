@@ -19,4 +19,3 @@ table of counts of ethnic groups by discharge time period
 \description{
 ethn_time_table
 }
-

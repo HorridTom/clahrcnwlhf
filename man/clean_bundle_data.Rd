@@ -15,4 +15,3 @@ the cleaned bundle data
 \description{
 clean_bundle_data
 }
-

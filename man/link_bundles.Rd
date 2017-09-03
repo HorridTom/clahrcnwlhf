@@ -22,4 +22,3 @@ dataframe with new column linked.spell containing spell_number of the spell asso
 \description{
 link_bundles
 }
-

@@ -25,4 +25,3 @@ plot of the lag distribution
 \description{
 plot_lag_dist
 }
-

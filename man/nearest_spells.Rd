@@ -20,4 +20,3 @@ copy of bundles with additional columns added giving information on adjacent adm
 \description{
 nearest_spells
 }
-

@@ -15,4 +15,3 @@ bundles with additional column showing number of NAs
 \description{
 bundle_element_data_completeness
 }
-

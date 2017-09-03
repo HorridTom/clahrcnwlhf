@@ -15,4 +15,3 @@ the cleaned nicor data
 \description{
 clean_nicor_data
 }
-

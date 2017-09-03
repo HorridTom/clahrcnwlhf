@@ -27,4 +27,3 @@ that row.
 \description{
 consecutive.diff.time
 }
-

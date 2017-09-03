@@ -21,4 +21,3 @@ a (two-way) summary table of age band distribution containing frequncies for eac
 \description{
 test_plot_dist_table
 }
-
