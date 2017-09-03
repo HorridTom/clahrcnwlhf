@@ -58,6 +58,11 @@ Source: CRAN
 Version: 1.77
 Hash: 08f1f60e1038957030bcd9f4a58d22d8
 
+Package: VennDiagram
+Source: CRAN
+Version: 1.6.17
+Hash: 35e88b284af4bf1c8231d745701f2cc2
+
 Package: acepack
 Source: CRAN
 Version: 1.4.1
@@ -208,6 +213,16 @@ Source: CRAN
 Version: 1.5
 Hash: 258cf79a8dbeedf1c981cdb53837d2af
 
+Package: futile.logger
+Source: CRAN
+Version: 1.4.3
+Hash: d1cc6584b39f2c4cfbe377fd94cbdbaa
+
+Package: futile.options
+Source: CRAN
+Version: 1.0.0
+Hash: 4f24cbf581681c263186b9425f05ba3e
+
 Package: gdata
 Source: CRAN
 Version: 2.17.0
@@ -297,6 +312,11 @@ Package: labeling
 Source: CRAN
 Version: 0.3
 Hash: ecf589b42cd284b03a4beb9665482d3e
+
+Package: lambda.r
+Source: CRAN
+Version: 1.1.9
+Hash: d303aea60871b91892fa3815aac6a725
 
 Package: lattice
 Source: CRAN
