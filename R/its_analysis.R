@@ -34,7 +34,7 @@ its_aggregate <- function(df = clahrcnwlhf::emergency_adms) {
 #' @return df with additional variables for ITS added
 #' @export
 #'
-create_new_vars <- function(df = clahrcnwlhf::emergency_adms) {
+create_new_vars <- function(df = clahrcnwlhf::emergency_adms, from.vignette = FALSE, ward_hf_types = NULL, ward_sites = NULL, imd_lookup = NULL) {
 
   # Convert date-times to POSIX ct to please tidyverse
   df$CSPAdmissionTime <- as.POSIXct(df$CSPAdmissionTime)
@@ -42,9 +42,11 @@ create_new_vars <- function(df = clahrcnwlhf::emergency_adms) {
   df$EpisodeEndTime <- as.POSIXct(df$EpisodeEndTime)
   df$EpisodeStartTime <- as.POSIXct(df$EpisodeStartTime)
 
-  # Load ward classification tables
-  ward_hf_types <- read.csv(file = "data-raw/wardhftypes.csv", stringsAsFactors = FALSE)
-  ward_sites <- read.csv(file = "data-raw/wardsites.csv", stringsAsFactors = FALSE)
+  #Load ward classification tables
+  if(!from.vignette) {
+    ward_hf_types <- read.csv(file = "data-raw/wardhftypes.csv", stringsAsFactors = FALSE)
+    ward_sites <- read.csv(file = "data-raw/wardsites.csv", stringsAsFactors = FALSE)
+  }
 
   # Map discharge ward to ward site and hf_type
   df <- dplyr::left_join(df, ward_hf_types, by = c("CSPLastWard"="Ward"))
@@ -60,7 +62,7 @@ create_new_vars <- function(df = clahrcnwlhf::emergency_adms) {
   df <- clahrcnwlhf::recode_ethnicity(df)
 
   # Add IMD
-  imd_lookup <- read.csv(file = "data-raw/imd-indices.csv", stringsAsFactors = FALSE)
+  if(!from.vignette){imd_lookup <- read.csv(file = "data-raw/imd-indices.csv", stringsAsFactors = FALSE)}
   df <- dplyr::left_join(df, imd_lookup[,c("LSOA_Code","IMD")], by = c("LSOA"="LSOA_Code"))
 
   # Add estimated age

@@ -1,0 +1,27 @@
+---
+title: "Descriptive Analysis for CLAHRC NWL Heart Failure Care Bundle: 5 - Deprivation"
+author: "Dr. Thomas Woodcock"
+date: "`r Sys.Date()`"
+output: pdf_document
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Deprivation - All NPH Emergency Spells
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+library(knitr, pander)
+library(tidyverse)
+
+ward_hf_types <- read.csv(file = "../data-raw/wardhftypes.csv", stringsAsFactors = FALSE)
+ward_sites <- read.csv(file = "../data-raw/wardsites.csv", stringsAsFactors = FALSE)
+imd_lookup <- read.csv(file = "../data-raw/imd-indices.csv", stringsAsFactors = FALSE)
+
+emergency_spells <- clahrcnwlhf::create_new_vars(from.vignette = TRUE, ward_hf_types = ward_hf_types, ward_sites = ward_sites, imd_lookup = imd_lookup) 
+emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
+imd_table <- dplyr::summarize(group_by(emergency_spells,period.date),average_imd=mean(IMD, na.rm = TRUE))
+
+imd_table
+```
