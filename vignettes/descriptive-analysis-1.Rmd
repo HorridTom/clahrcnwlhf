@@ -153,12 +153,24 @@ We can examine this data for evidence of change after the date the project comme
 
 ```{r, fig.height=5, fig.width=7, cache=TRUE}
 library(qcc)
-pcc1 <- qcc(data = hf_proportion_data[1:match("2014-03",rownames(hf_proportion_data)),"n_disch_hf"], sizes = hf_proportion_data[1:match("2014-03",rownames(hf_proportion_data)),"n_disch"], plot = FALSE, type = "p", newdata = hf_proportion_data[match("2014-04",rownames(hf_proportion_data)):nrow(hf_proportion_data),"n_disch_hf"], newsizes = hf_proportion_data[match("2014-04",rownames(hf_proportion_data)):nrow(hf_proportion_data),"n_disch"], chart.all = TRUE, data.name = "period before project start")
-pcc1$newdata.name <- "period after project start"
+pcc1 <- qcc(data = hf_proportion_data[1:match("2015-06",rownames(hf_proportion_data)),"n_disch_hf"], sizes = hf_proportion_data[1:match("2015-06",rownames(hf_proportion_data)),"n_disch"], plot = FALSE, type = "p", newdata = hf_proportion_data[match("2015-07",rownames(hf_proportion_data)):nrow(hf_proportion_data),"n_disch_hf"], newsizes = hf_proportion_data[match("2015-07",rownames(hf_proportion_data)):nrow(hf_proportion_data),"n_disch"], chart.all = TRUE, data.name = "period before implementation")
+pcc1$newdata.name <- "period after implementation"
 plot(pcc1, title = "Proportion of emergency admissions discharged with primary diag. heart failure", xlab = "Month", ylab = "Proportion of heart failure discharges", yaxt="n")
 axis(2, at=pretty(c(pcc1$statistics,pcc1$newstats)), lab = paste(pretty(c(pcc1$statistics,pcc1$newstats)) * 100, "%"), las=TRUE)
 
 
+```
+
+As a table:
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+library(pander, descr)
+emergency_spells <- clahrcnwlhf::group_by_date(emergency_spells, cutoff_dates = c(as.Date("31/12/2011", "%d/%m/%Y"),as.Date("30/06/2015", "%d/%m/%Y"),as.Date("30/11/2016", "%d/%m/%Y")), period_labels = c('Before', 'After'), new_col = 'period')
+Table1 <- descr::CrossTable(emergency_spells$Heart.Failure.Episode, emergency_spells$period.date, expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
+Table1$RowData <- 'Primary Diagnosis Heart Failure'
+Table1$ColData <- 'Period'
+pander(Table1)
+pander(Table1$CST)
 ```
 
 

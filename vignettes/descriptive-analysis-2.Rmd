@@ -70,14 +70,14 @@ We now consider the distribution of ethnicity between the two time periods.
 
 ```{r, echo=TRUE, results='asis', cache=TRUE}
 library(pander, descr)
-emergency_spells_nph <- clahrcnwlhf::group_by_date(emergency_spells_nph, cutoff_dates = c(as.Date("31/12/2011", "%d/%m/%Y"),as.Date("31/03/2014", "%d/%m/%Y"),as.Date("30/11/2016", "%d/%m/%Y")), period_labels = c('Before', 'After'), new_col = 'period')
+emergency_spells_nph <- clahrcnwlhf::group_by_date(emergency_spells_nph, cutoff_dates = c(as.Date("31/12/2011", "%d/%m/%Y"),as.Date("30/06/2015", "%d/%m/%Y"),as.Date("30/11/2016", "%d/%m/%Y")), period_labels = c('Before', 'After'), new_col = 'period')
 Table1 <- descr::CrossTable(emergency_spells_nph$EthnicGroupComp, emergency_spells_nph$period, expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
 Table1$RowData <- 'Ethnicity Group'
 Table1$ColData <- 'Period'
 pander(Table1)
 pander(Table1$CST)
 ```
-This shows that there is a statistically significant difference between the ethnicity distributions of all NPH spells across the two periods. 
+This shows whether there is a statistically significant difference between the ethnicity distributions of all NPH spells across the two periods. 
 
 ```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}
 ggplot(data=emergency_spells_nph, aes(x=EthnicGroupComp, fill=period.date)) + geom_bar(position=position_dodge())
@@ -139,7 +139,7 @@ pander(Table1)
 pander(Table1$CST)
 ```
 
-This shows that there is a statistically significant difference between the ethnicity distributions of spells primary coded heart failure, across the two periods.
+This shows whether there is a statistically significant difference between the ethnicity distributions of spells primary coded heart failure, across the two periods.
 
 
 ```{r, fig.height=5, fig.width=7, echo=TRUE, results='asis', cache=TRUE}

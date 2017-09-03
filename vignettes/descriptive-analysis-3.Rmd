@@ -55,3 +55,30 @@ clahrcnwlhf::plot_age_dist(emergency_adms)
 clahrcnwlhf::plot_dist_table(emergency_spells)
 
 ```
+
+## Age distribution - NPH
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+library(pander, descr)
+emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
+Table1 <- descr::CrossTable(emergency_spells_nph[,"AgeBand"], emergency_spells_nph[,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE)
+Table1$RowData <- 'Age Band'
+Table1$ColData <- 'Period'
+pander(Table1)
+pander(Table1$CST)
+```
+
+
+## Age distribution - NPH - Primary Diagnosis Heart Failure
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+library(pander, descr)
+emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
+Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"AgeBand"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
+Table1$RowData <- 'Ethnicity Group'
+Table1$ColData <- 'Period'
+pander(Table1)
+pander(Table1$CST)
+```
+
+
