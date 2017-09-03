@@ -37,7 +37,8 @@ make_emergency_adms_dataset <- function(sv = TRUE, rt = FALSE) {
                                  emergency_adms[,"CSPAdmissionTime"])
 
   #Add new column indicating if the period date was before or after teh care bundle
-  c_date_str <- c('2011-01-01', '2014-03-31', '2020-05-04')
+  #Note cuts are closed on right and open on the left
+  c_date_str <- c('2011-01-01', '2015-06-30', '2020-05-04')
   labs <- c('A', 'B')
   emergency_adms <- clahrcnwlhf::make_period_col(emergency_adms,
                                                  colname = "DischargeDate",
