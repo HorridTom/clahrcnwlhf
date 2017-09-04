@@ -1,0 +1,66 @@
+---
+title: "Descriptive analysis - outcomes - CLAHRC NWL Heart Failure Care Bundle"
+author: "Dr . Thomas Woodcock"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Descriptive analysis for age band distribution for CLAHRC NWL Heart Failure Care Bundle}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Mortality
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+library(knitr, pander)
+library(tidyverse)
+
+ward_hf_types <- read.csv(file = "../data-raw/wardhftypes.csv", stringsAsFactors = FALSE)
+ward_sites <- read.csv(file = "../data-raw/wardsites.csv", stringsAsFactors = FALSE)
+imd_lookup <- read.csv(file = "../data-raw/imd-indices.csv", stringsAsFactors = FALSE)
+
+emergency_spells <- clahrcnwlhf::create_new_vars(from.vignette = TRUE, ward_hf_types = ward_hf_types, ward_sites = ward_sites, imd_lookup = imd_lookup) 
+emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
+#mortality_table <- dplyr::summarize(group_by(emergency_spells,period.date),num_deaths=count(IMD, na.rm = TRUE))
+
+mortality_table <- emergency_spells_nph %>%
+  gather(variable, value, died) %>%
+  group_by(period.date, variable, value) %>%
+  summarize(n = n()) %>%
+  mutate(freq = n/sum(n)) %>%
+  mutate(n = NULL) %>%
+  spread(key = value, value = freq)
+
+knitr::kable(mortality_table)
+
+Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"died"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
+Table1$RowData <- 'Died in hospital'
+Table1$ColData <- 'Period'
+pander(Table1)
+pander(Table1$CST)
+
+Table2 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"hf.readmission.cat"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
+Table2$RowData <- 'Readmitted'
+Table2$ColData <- 'Period'
+pander(Table2)
+pander(Table2$CST)
+```
+
+
+
+
+
+
+## Age distribution - NPH - Primary Diagnosis Heart Failure
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+library(pander, descr)
+emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
+Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"AgeBand"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
+Table1$RowData <- 'Age Band'
+Table1$ColData <- 'Period'
+pander(Table1)
+pander(Table1$CST)
+```
+
+

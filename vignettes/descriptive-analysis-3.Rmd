@@ -75,7 +75,7 @@ pander(Table1$CST)
 library(pander, descr)
 emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
 Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"AgeBand"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
-Table1$RowData <- 'Ethnicity Group'
+Table1$RowData <- 'Age Band'
 Table1$ColData <- 'Period'
 pander(Table1)
 pander(Table1$CST)

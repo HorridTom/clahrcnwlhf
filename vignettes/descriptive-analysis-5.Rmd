@@ -11,7 +11,7 @@ vignette: >
 
 ## Deprivation - All NPH Emergency Spells
 
-```{r, echo=TRUE, results='asis', cache=TRUE}
+```{r, echo=FALSE, results='asis', cache=TRUE}
 library(knitr, pander)
 library(tidyverse)
 
@@ -21,7 +21,13 @@ imd_lookup <- read.csv(file = "../data-raw/imd-indices.csv", stringsAsFactors = 
 
 emergency_spells <- clahrcnwlhf::create_new_vars(from.vignette = TRUE, ward_hf_types = ward_hf_types, ward_sites = ward_sites, imd_lookup = imd_lookup) 
 emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
-imd_table <- dplyr::summarize(group_by(emergency_spells,period.date),average_imd=mean(IMD, na.rm = TRUE))
+imd_table <- dplyr::summarize(group_by(emergency_spells_nph,period.date),average_imd=median(IMD, na.rm = TRUE))
+imd_table_HF <- dplyr::summarize(group_by(emergency_spells_nph[which(emergency_spells_nph$Heart.Failure.Episode == TRUE),],period.date),average_imd=median(IMD, na.rm = TRUE))
 
-imd_table
+knitr::kable(imd_table)
+wilcox.test(emergency_spells_nph$IMD~emergency_spells_nph$period.date)
+
+knitr::kable(imd_table_HF)
+wilcox.test(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"IMD"]~emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"])
+
 ```

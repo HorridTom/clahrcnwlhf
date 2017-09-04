@@ -1,0 +1,86 @@
+---
+title: 'Heart Failure Care Bundle: Descriptive Analysis'
+author: "Tom Woodcock, Mable Nakubulwa"
+date: "04/09/2017"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Outline
+
+
+
+## NWLH Admission Patterns
+
+```{r, echo=FALSE, results='asis', cache=TRUE}
+emergency_spells <- clahrcnwlhf::emergency_adms[
+  which(clahrcnwlhf::emergency_adms[,"EpisodeNumber"] == 1),]
+emergency_spells_nph <- clahrcnwlhf::emergency_adms[
+  which(clahrcnwlhf::emergency_adms[,"EpisodeNumber"] == 1 & clahrcnwlhf::emergency_adms[,"StartWardSite"] == "NPH"),]
+```
+
+`r nrow(emergency_spells)` discharges from the three hospitals between 1st January 2012 and
+31st October 2016 inclusive.
+
+```{r, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+em_sp_site <- split(emergency_spells, emergency_spells$StartWardSite)
+ndisch_site <- lapply(em_sp_site, clahrcnwlhf::disch_time_table)
+site_names <- names(ndisch_site)
+X <- cbind(ndisch_site[[1]], ndisch_site[[2]][match(labels(ndisch_site[[1]]), labels(ndisch_site[[2]]))])
+site_disch <- cbind(X, ndisch_site[[3]][match(row.names(X), labels(ndisch_site[[3]]))])
+colnames(site_disch) <- site_names
+matplot(site_disch[,1], type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,6500),
+        main="Total emergency discharges from NWLH by month and site")
+matplot(site_disch[,2], type = c("b"), pch=19, col = 1, xaxt="n", ylim=c(0,6500), add=TRUE)
+matplot(site_disch[,3], type = c("b"), pch=18, col = 1, xaxt="n", ylim=c(0,6500), add=TRUE)
+axis(side=1,at=1:nrow(site_disch),labels=row.names(site_disch), las = 2, cex.axis =0.6)
+legend("topright", inset=.05, legend=site_names, pch=c(20,19,18), col = 1, horiz=TRUE)
+```
+
+## NPH spells in hospital with primary diagnosis heart failure
+
+```{r, fig.height=5, fig.width=7, cache=TRUE}
+n_disch <- clahrcnwlhf::disch_time_table(emergency_spells_nph)
+n_disch_hf <- clahrcnwlhf::disch_time_table(emergency_spells_nph[
+  which(emergency_spells_nph[,"Heart.Failure.Episode"] == TRUE),])
+
+matplot(n_disch_hf, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,100),
+        main="Monthly discharges primary diagnosis Heart Failure, NPH")
+axis(side=1,at=1:length(n_disch),labels=names(n_disch), las = 2, cex.axis =0.6)
+```
+
+There are a total of `r sum(n_disch_hf)` spells with primary diagnosis code
+heart failure for the period. 
+
+## Evidence of change in proportion of NPH spells with primary diagnosis heart failure
+
+```{r, echo=FALSE, fig.height=5, fig.width=7, cache=TRUE}
+library(qcc)
+p_disch_hf <- n_disch_hf / n_disch
+hf_proportion_data <- cbind(n_disch, n_disch_hf, p_disch_hf)
+pcc1 <- qcc(data = hf_proportion_data[1:match("2015-06",rownames(hf_proportion_data)),"n_disch_hf"], sizes = hf_proportion_data[1:match("2015-06",rownames(hf_proportion_data)),"n_disch"], plot = FALSE, type = "p", newdata = hf_proportion_data[match("2015-07",rownames(hf_proportion_data)):nrow(hf_proportion_data),"n_disch_hf"], newsizes = hf_proportion_data[match("2015-07",rownames(hf_proportion_data)):nrow(hf_proportion_data),"n_disch"], chart.all = TRUE, data.name = "period before implementation")
+pcc1$newdata.name <- "period after implementation"
+plot(pcc1, title = "Proportion emergency spells with primary diag. heart failure", xlab = "Month", ylab = "Proportion heart failure spells", yaxt="n")
+axis(2, at=pretty(c(pcc1$statistics,pcc1$newstats)), lab = paste(pretty(c(pcc1$statistics,pcc1$newstats)) * 100, "%"), las=TRUE)
+```
+
+## Significant difference in proportion of emergency spells with primary diagnosis heart failure
+
+\small
+```{r, echo=FALSE, results='asis', cache=TRUE}
+library(pander, descr)
+emergency_spells <- clahrcnwlhf::group_by_date(emergency_spells, cutoff_dates = c(as.Date("31/12/2011", "%d/%m/%Y"),as.Date("30/06/2015", "%d/%m/%Y"),as.Date("30/11/2016", "%d/%m/%Y")), period_labels = c('Before', 'After'), new_col = 'period')
+Table1 <- descr::CrossTable(emergency_spells$Heart.Failure.Episode, emergency_spells$period.date, expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE)
+Table1$RowData <- 'Primary Diagnosis Heart Failure'
+Table1$ColData <- 'Period'
+pander(Table1)
+pander(Table1$CST)
+```
+
+## Ethnicity distribution
+
+
+
