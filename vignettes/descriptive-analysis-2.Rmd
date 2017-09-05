@@ -132,11 +132,12 @@ We now consider the distribution of ethnicity between the two time periods.
 
 ```{r, echo=TRUE, results='asis', cache=TRUE}
 library(pander, descr)
-Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"EthnicGroupComp"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
+Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"EthnicGroupComp"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE, fisher = TRUE)
 Table1$RowData <- 'Ethnicity Group'
 Table1$ColData <- 'Period'
 pander(Table1)
 pander(Table1$CST)
+pander(Table1$fisher.ts)
 ```
 
 This shows whether there is a statistically significant difference between the ethnicity distributions of spells primary coded heart failure, across the two periods.

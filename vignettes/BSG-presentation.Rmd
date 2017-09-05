@@ -2,7 +2,8 @@
 title: 'Heart Failure Care Bundle: Descriptive Analysis'
 author: "Tom Woodcock, Mable Nakubulwa"
 date: "04/09/2017"
-output: beamer_presentation
+output:
+  beamer_presentation: default
 ---
 
 ```{r setup, include=FALSE}
@@ -16,10 +17,12 @@ knitr::opts_chunk$set(echo = FALSE)
 ## NWLH Admission Patterns
 
 ```{r, echo=FALSE, results='asis', cache=TRUE}
-emergency_spells <- clahrcnwlhf::emergency_adms[
-  which(clahrcnwlhf::emergency_adms[,"EpisodeNumber"] == 1),]
-emergency_spells_nph <- clahrcnwlhf::emergency_adms[
-  which(clahrcnwlhf::emergency_adms[,"EpisodeNumber"] == 1 & clahrcnwlhf::emergency_adms[,"StartWardSite"] == "NPH"),]
+ward_hf_types <- read.csv(file = "../data-raw/wardhftypes.csv", stringsAsFactors = FALSE)
+ward_sites <- read.csv(file = "../data-raw/wardsites.csv", stringsAsFactors = FALSE)
+imd_lookup <- read.csv(file = "../data-raw/imd-indices.csv", stringsAsFactors = FALSE)
+
+emergency_spells <- clahrcnwlhf::create_new_vars(from.vignette = TRUE, ward_hf_types = ward_hf_types, ward_sites = ward_sites, imd_lookup = imd_lookup) 
+emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
 ```
 
 `r nrow(emergency_spells)` discharges from the three hospitals between 1st January 2012 and
@@ -67,20 +70,85 @@ plot(pcc1, title = "Proportion emergency spells with primary diag. heart failure
 axis(2, at=pretty(c(pcc1$statistics,pcc1$newstats)), lab = paste(pretty(c(pcc1$statistics,pcc1$newstats)) * 100, "%"), las=TRUE)
 ```
 
-## Significant difference in proportion of emergency spells with primary diagnosis heart failure
-
-\small
-```{r, echo=FALSE, results='asis', cache=TRUE}
+## Ethnicity distribution
+\tiny
+```{r, echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
 library(pander, descr)
-emergency_spells <- clahrcnwlhf::group_by_date(emergency_spells, cutoff_dates = c(as.Date("31/12/2011", "%d/%m/%Y"),as.Date("30/06/2015", "%d/%m/%Y"),as.Date("30/11/2016", "%d/%m/%Y")), period_labels = c('Before', 'After'), new_col = 'period')
-Table1 <- descr::CrossTable(emergency_spells$Heart.Failure.Episode, emergency_spells$period.date, expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE)
-Table1$RowData <- 'Primary Diagnosis Heart Failure'
+Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"EthnicGroupComp"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE, fisher = TRUE)
+Table1$RowData <- 'Ethnicity Group'
+Table1$ColData <- 'Period'
+pander(Table1)
+pander(Table1$fisher.ts)
+```
+
+## Age distribution
+\tiny
+```{r, echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
+library(pander, descr)
+Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"AgeBand_B"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE, fisher = TRUE)
+Table1$RowData <- 'Age Group'
+Table1$ColData <- 'Period'
+pander(Table1)
+pander(Table1$fisher.ts)
+```
+
+
+## Gender distribution
+\tiny
+```{r, echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
+library(pander, descr)
+Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"Sex"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE, fisher = TRUE)
+Table1$RowData <- 'Gender'
+Table1$ColData <- 'Period'
+pander(Table1)
+pander(Table1$fisher.ts)
+```
+
+## IMD distribution
+
+```{r, echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
+library(tidyverse)
+imd_table <- dplyr::summarize(group_by(emergency_spells_nph,period.date),average_imd=median(IMD, na.rm = TRUE))
+imd_table_HF <- dplyr::summarize(group_by(emergency_spells_nph[which(emergency_spells_nph$Heart.Failure.Episode == TRUE),],period.date),average_imd=median(IMD, na.rm = TRUE))
+
+#knitr::kable(imd_table)
+#wilcox.test(emergency_spells_nph$IMD~emergency_spells_nph$period.date)
+
+knitr::kable(imd_table_HF)
+wilcox.test(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"IMD"]~emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"])
+
+```
+
+## Mortality
+\tiny
+```{r, echo=FALSE, results='asis', cache=TRUE}
+Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"died"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE)
+Table1$RowData <- 'Died in hospital'
 Table1$ColData <- 'Period'
 pander(Table1)
 pander(Table1$CST)
 ```
 
-## Ethnicity distribution
+## Readmissions
+\tiny
+```{r, echo=FALSE, results='asis', cache=TRUE}
+Table2 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"hf.readmission.cat"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE)
+Table2$RowData <- 'Readmitted'
+Table2$ColData <- 'Period'
+pander(Table2)
+pander(Table2$CST)
+```
 
+## Length of stay
 
+```{r, echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
+library(tidyverse)
+emergency_spells_nph$los <- as.numeric(emergency_spells_nph$los, units = "days")
 
+los_table <- dplyr::summarize(group_by(emergency_spells_nph,period.date),average_los=median(los, na.rm = TRUE))
+los_table_HF <- dplyr::summarize(group_by(emergency_spells_nph[which(emergency_spells_nph$Heart.Failure.Episode == TRUE),],period.date),average_los=median(los, na.rm = TRUE))
+
+knitr::kable(los_table_HF)
+wilcox.test(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"los"]~emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"])
+
+```
