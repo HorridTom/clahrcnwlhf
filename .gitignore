@@ -33,6 +33,7 @@ packrat/src/
 .Rproj.user
 # Data
 /data
+/data-backup
 /tests/testthat/datafortesting
 inst/doc
 # Data out
