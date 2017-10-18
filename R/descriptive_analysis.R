@@ -419,9 +419,10 @@ group_by_date <- function(df, date_col = "DischargeDate", cutoff_dates, new_col,
 #' @return a vector of row counts for each time period
 #' @export
 #'
-disch_time_table <- function(df, split_by = '%Y-%m', discharge = TRUE) {
-  if (discharge) {col_split = "DischargeDate"}
-  else {col_split = "AdmissionDate"}
+disch_time_table <- function(df, split_by = '%Y-%m', discharge = TRUE,
+                             disch_col = "DischargeDate", adm_col = "AdmissionDate") {
+  if (discharge) {col_split = disch_col}
+  else {col_split = adm_col}
   df$splitby <- factor(format(df[,col_split], split_by))
   df_splt <- split.data.frame(df, df$splitby)
 
