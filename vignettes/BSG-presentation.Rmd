@@ -3,16 +3,15 @@ title: 'Heart Failure Care Bundle: Descriptive Analysis'
 author:
 date: "04/09/2017"
 output:
-  beamer_presentation: default
+  beamer_presentation:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
-## Outline
-
-
+# Admissions
 
 ## NWLH Admission Patterns
 
@@ -70,7 +69,37 @@ plot(pcc1, title = "Proportion emergency spells with primary diag. heart failure
 axis(2, at=pretty(c(pcc1$statistics,pcc1$newstats)), lab = paste(pretty(c(pcc1$statistics,pcc1$newstats)) * 100, "%"), las=TRUE)
 ```
 
-## Ethnicity distribution
+# Care Bundle Data
+
+## Care bundle implementation
+
+```{r, echo=FALSE, fig.height=5, fig.width=7, cache=TRUE}
+n_bundle <- clahrcnwlhf::disch_time_table(clahrcnwlhf::bundle_data_clean, discharge = FALSE,
+  adm_col = "Admission.Date.Bundle")
+matplot(n_bundle, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,150),
+        main="Number of care bundles implemented per month")
+axis(side=1,at=1:length(n_bundle),labels=names(n_bundle), las = 2, cex.axis =0.6)  
+```
+
+A total of `r sum(n_bundle)` bundles were completed during the period.
+
+# Data Linkage
+
+## Linking admissions, care bundles, and national audit data (NWLH)
+
+```{r, echo=FALSE, fig.height=5, fig.width=7, cache=TRUE}
+clahrcnwlhf::plot_linking_venn(linked_bundles = clahrcnwlhf::linked_bundle_data, linked_nicor = clahrcnwlhf::linked_nicor_data)
+```
+
+## Linking primary diagnoses of heart failure, care bundles, and national audit data (NWLH)
+
+```{r, echo=FALSE, fig.height=5, fig.width=7, cache=TRUE}
+clahrcnwlhf::plot_linking_venn(episodes = clahrcnwlhf::emergency_adms[which(clahrcnwlhf::emergency_adms$Heart.Failure.Episode == TRUE),], linked_bundles = clahrcnwlhf::linked_bundle_data, linked_nicor = clahrcnwlhf::linked_nicor_data)
+```
+
+# Northwick Park Demographics
+
+## Ethnicity distribution (NPH spells, Primary Diag. HF)
 \tiny
 ```{r, echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
 library(pander, descr)
@@ -81,10 +110,16 @@ pander(Table1)
 pander(Table1$fisher.ts)
 ```
 
-## Age distribution
+U = Black or Black British, V = Other Ethnic Groups / Not Stated, W = White, X = Mixed, Y = Asian or Asian British.
+
+## Age distribution (NPH spells, Primary Diag. HF)
 \tiny
 ```{r, echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
 library(pander, descr)
+library(forcats)
+levels(emergency_spells_nph$AgeBand_B)[levels(emergency_spells_nph$AgeBand_B)=="young"] <- "<65"
+levels(emergency_spells_nph$AgeBand_B)[levels(emergency_spells_nph$AgeBand_B)=="old"] <- ">=65"
+
 Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"AgeBand_B"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE, fisher = TRUE)
 Table1$RowData <- 'Age Group'
 Table1$ColData <- 'Period'
@@ -93,7 +128,7 @@ pander(Table1$fisher.ts)
 ```
 
 
-## Gender distribution
+## Gender distribution (NPH spells, Primary Diag. HF)
 \tiny
 ```{r, echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
 library(pander, descr)
@@ -104,7 +139,7 @@ pander(Table1)
 pander(Table1$fisher.ts)
 ```
 
-## IMD distribution
+## IMD distribution (NPH spells, Primary Diag. HF)
 
 ```{r, echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
 library(tidyverse)
@@ -119,7 +154,9 @@ wilcox.test(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == T
 
 ```
 
-## Mortality
+# Northwick Park Unadjusted Outcomes - Spell Level Analysis
+
+## Mortality (NPH spells, Primary Diag. HF)
 \tiny
 ```{r, echo=FALSE, results='asis', cache=TRUE}
 Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"died"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE)
@@ -129,17 +166,21 @@ pander(Table1)
 pander(Table1$CST)
 ```
 
-## Readmissions
+## Readmissions (NPH spells, Primary Diag. HF)
 \tiny
 ```{r, echo=FALSE, results='asis', cache=TRUE}
-Table2 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"hf.readmission.cat"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE)
+em_sp_nph_r <- clahrcnwlhf::subset_by_date(emergency_spells_nph,
+                                      start_date=as.Date("2012-01-01"),
+                                      end_date=as.Date("2016-7-31"))
+
+Table2 <- descr::CrossTable(em_sp_nph_r[em_sp_nph_r$Heart.Failure.Episode == TRUE,"hf.readmission.cat"], em_sp_nph_r[em_sp_nph_r$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, chisq = TRUE, missing.include = TRUE)
 Table2$RowData <- 'Readmitted'
 Table2$ColData <- 'Period'
 pander(Table2)
 pander(Table2$CST)
 ```
 
-## Length of stay
+## Length of stay (NPH spells, Primary Diag. HF)
 
 ```{r, echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
 library(tidyverse)
