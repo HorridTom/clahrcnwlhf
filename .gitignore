@@ -28,11 +28,12 @@ vignettes/**/*.pdf
 packrat/lib*/
 packrat/src/
 # Raw data
-/data-raw/*.xls*
-/data-raw/*.csv
+/data-raw/**/*.xls*
+/data-raw/**/*.csv
 .Rproj.user
 # Data
 /data
+/data-backup
 /tests/testthat/datafortesting
 inst/doc
 # Data out
