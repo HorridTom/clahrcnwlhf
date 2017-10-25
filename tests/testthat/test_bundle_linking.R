@@ -8,7 +8,26 @@ create_bundle_link_test_dataset <- function() {
   bundle_link_test_bundle_numbers <- c(1,2,3,31,5,141,439, 152, 192, 196)
   bundle_link_test_data <- clahrcnwlhf::bundle_data_clean[which(clahrcnwlhf::bundle_data_clean$Bundle.Number %in% bundle_link_test_bundle_numbers),
                                                           which(colnames(clahrcnwlhf::bundle_data_clean) %in% bundle_link_cols)]
+
   save(bundle_link_test_data, file="tests/testthat/datafortesting/bundle_link_test_data.Rda")
+
+}
+
+
+create_episode_link_test_dataset <- function() {
+  load("tests/testthat/datafortesting/bundle_link_test_data.Rda")
+  load("tests/testthat/datafortesting/nicor_link_test_data.Rda")
+  load("tests/testthat/datafortesting/bundle_link_dupe_removal_test_data.Rda")
+
+  patients <- unique(bundle_link_test_data[,"PseudoID"])
+  patients_n <- unique(nicor_link_test_data[,"PseudoID"])
+  patients <- append(patients, patients_n)
+  patients_r <- unique(bundle_link_dupe_removal_test_data[,"PseudoID"])
+  patients <- append(patients, patients_r)
+
+  episode_link_test_data <- clahrcnwlhf::emergency_adms[which(clahrcnwlhf::emergency_adms$PseudoID %in% patients),]
+
+  save(episode_link_test_data, file="tests/testthat/datafortesting/episode_link_test_data.Rda")
 }
 
 
@@ -41,6 +60,8 @@ create_nicor_link_test_dataset <- function() {
 test_that("linked.spell column is created by link_bundles",{
 
   load("datafortesting/bundle_link_test_data.Rda")
+  load("datafortesting/episode_link_test_data.Rda")
+
 
   # Best linking algorithm idea at present:
   # 1. Any bundle with bundle.in.spell == TRUE should be linked to its prev.spell (320)
@@ -66,7 +87,7 @@ test_that("linked.spell column is created by link_bundles",{
   correct_results[correct_results$Bundle.Number == 152, "linked.spell"] <- NA
 
   # Run the linking function
-  linked_bundles <- link_bundles(bundles = bundle_link_test_data, episodes = clahrcnwlhf::emergency_adms)
+  linked_bundles <- link_bundles(bundles = bundle_link_test_data, episodes = episode_link_test_data)
 
   # Test that the linked.spell column exists in the output
   expect_match(colnames(linked_bundles), "linked.spell", all = FALSE)
@@ -85,6 +106,7 @@ test_that("linked.spell column is created by link_bundles",{
 test_that("linked.spell column is created by link_nicor",{
 
   load("datafortesting/nicor_link_test_data.Rda")
+  load("datafortesting/episode_link_test_data.Rda")
 
   # Specify correct results
   correct_results <- nicor_link_test_data
@@ -102,7 +124,7 @@ test_that("linked.spell column is created by link_nicor",{
 
   # Run the linking function
   linked_nicor <- link_nicor(nicor = nicor_link_test_data,
-                             episodes = clahrcnwlhf::emergency_adms)
+                             episodes = episode_link_test_data)
 
   # Test that the linked.spell column exists in the output
   expect_match(colnames(linked_nicor), "linked.spell", all = FALSE)
@@ -125,8 +147,10 @@ test_that("linked.spell column is created by link_nicor",{
 test_that("Duplicate links are removed correctly", {
 
   load("datafortesting/bundle_link_dupe_removal_test_data.Rda")
+  load("datafortesting/episode_link_test_data.Rda")
+
   linked_bundles <- link_bundles(bundles = bundle_link_dupe_removal_test_data,
-                                 episodes = clahrcnwlhf::emergency_adms)
+                                 episodes = episode_link_test_data)
 
   # Specify correct results
   correct_results <- bundle_link_dupe_removal_test_data[
