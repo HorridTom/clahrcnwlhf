@@ -22,4 +22,5 @@ This function cleans the raw data by performing the following steps:
   \item Convert the following columns from character to Date format:
   the following columns of the raw data:
   AdmissionDate, DischargeDate, EpisodeStartDate, EpisodeEndDate}
+  \item FINISH ME
 }

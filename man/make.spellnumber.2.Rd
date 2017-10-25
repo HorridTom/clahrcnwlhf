@@ -4,7 +4,7 @@
 \alias{make.spellnumber.2}
 \title{make.spellnumber.2}
 \usage{
-make.spellnumber.2(df)
+make.spellnumber.2(df, progress.bar = FALSE)
 }
 \arguments{
 \item{df}{episode dataframe}
