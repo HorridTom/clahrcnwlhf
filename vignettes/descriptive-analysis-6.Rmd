@@ -36,14 +36,14 @@ knitr::kable(mortality_table)
 Table1 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"died"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
 Table1$RowData <- 'Died in hospital'
 Table1$ColData <- 'Period'
-pander(Table1)
-pander(Table1$CST)
+pander::pander(Table1)
+pander::pander(Table1$CST)
 
 Table2 <- descr::CrossTable(emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"hf.readmission.cat"], emergency_spells_nph[emergency_spells_nph$Heart.Failure.Episode == TRUE,"period.date"], expected = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = TRUE, chisq = TRUE)
 Table2$RowData <- 'Readmitted'
 Table2$ColData <- 'Period'
-pander(Table2)
-pander(Table2$CST)
+pander::pander(Table2)
+pander::pander(Table2$CST)
 ```
 
 
