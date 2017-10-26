@@ -183,6 +183,7 @@ test_that("plot_linking_venn generates a venn diagram showing linkage results", 
 
   load("datafortesting/bundle_link_test_data.Rda")
   load("datafortesting/nicor_link_test_data.Rda")
+  load("datafortesting/episode_link_test_data.Rda")
 
   bundle_venn_test_bundle_numbers <- c(1,2,3,31,5,141,439, 152)
   nicor_venn_test_entries <- c(1,1149,72,914,150,604)
