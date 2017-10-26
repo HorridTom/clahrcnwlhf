@@ -8,8 +8,8 @@
 #'   AdmissionMethodCode, AdmissionType, CSPLastWard
 #'   \item Convert the following columns from character to Date format:
 #'   the following columns of the raw data:
-#'   AdmissionDate, DischargeDate, EpisodeStartDate, EpisodeEndDate}
-#'   \item FINISH ME
+#'   AdmissionDate, DischargeDate, EpisodeStartDate, EpisodeEndDate
+#'   \item FINISH ME}
 #'
 #'
 #' @param df the data frame containing the episode data to be cleaned
@@ -88,9 +88,9 @@ clean_data <-function(df, restrict_disch_date = TRUE) {
 #' @export
 #'
 #'
-clean_and_save <- function() {
+clean_and_save <- function(restrict_disch_date = TRUE) {
   admission_data_clean <- clean_data(clahrcnwlhf::admission_data,
-                                      restrict_disch_date = TRUE)
+                                      restrict_disch_date = restrict_disch_date)
   devtools::use_data(admission_data_clean, overwrite = TRUE)
 }
 
