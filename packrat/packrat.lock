@@ -308,7 +308,7 @@ Hash: 8162b82ca4809c0d63c30aedbd7348e0
 
 Package: data.table
 Source: CRAN
-Version: 1.10.4
+Version: 1.10.4-2
 Hash: 2c7c47ccb40d01c7b214c8eff818108d
 
 Package: dbplyr
