@@ -10,7 +10,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 min_date_cutoff <- as.Date('2012-01-01')
-max_date_cutoff <- as.Date('2016-10-31')
+max_date_cutoff <- as.Date('2017-10-31')
 ```
 
 # Admissions
@@ -29,9 +29,9 @@ emergency_spells <- clahrcnwlhf::create_new_vars(from.vignette = TRUE, ward_hf_t
 # TODO: Use linked bundle to pull in discharge date (currently restricting on admission date)
 emergency_spells <- emergency_spells[which(emergency_spells$DischargeDate <= max_date_cutoff & emergency_spells$DischargeDate >= min_date_cutoff),]
 
-bundle_data_clean <- clahrcnwlhf::bundle_data_clean[which(clahrcnwlhf::bundle_data_clean$Admission.Date.Bundle <= max_date_cutoff & clahrcnwlhf::bundle_data_clean$Admission.Date.Bundle >= min_date_cutoff)]
-linked_bundle_data <- clahrcnwlhf::linked_bundle_data[which(clahrcnwlhf::linked_bundle_data$Admission.Date.Bundle <= max_date_cutoff & clahrcnwlhf::linked_bundle_data$Admission.Date.Bundle >= min_date_cutoff)]
-linked_nicor_data <- clahrcnwlhf::linked_nicor_data[which(clahrcnwlhf::linked_nicor_data$Date.of.discharge <= max_date_cutoff & clahrcnwlhf::linked_nicor_data$Date.of.discharge >= min_date_cutoff)]
+bundle_data_clean <- clahrcnwlhf::bundle_data_clean[which(clahrcnwlhf::bundle_data_clean$Admission.Date.Bundle <= max_date_cutoff & clahrcnwlhf::bundle_data_clean$Admission.Date.Bundle >= min_date_cutoff),]
+linked_bundle_data <- clahrcnwlhf::linked_bundle_data[which(clahrcnwlhf::linked_bundle_data$Admission.Date.Bundle <= max_date_cutoff & clahrcnwlhf::linked_bundle_data$Admission.Date.Bundle >= min_date_cutoff),]
+linked_nicor_data <- clahrcnwlhf::linked_nicor_data[which(clahrcnwlhf::linked_nicor_data$Date.of.discharge <= max_date_cutoff & clahrcnwlhf::linked_nicor_data$Date.of.discharge >= min_date_cutoff),]
 
 emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
 
@@ -113,7 +113,7 @@ clahrcnwlhf::plot_linking_venn(linked_bundles = linked_bundle_data, linked_nicor
 ## Linking primary diagnoses of heart failure, care bundles, and national audit data (NWLH)
 
 ```{r, echo=FALSE, fig.height=5, fig.width=7, cache=TRUE}
-clahrcnwlhf::plot_linking_venn(episodes = emergency_adms[which(emergency_adms$Heart.Failure.Episode == TRUE),], linked_bundles = linked_bundle_data, linked_nicor = linked_nicor_data)
+clahrcnwlhf::plot_linking_venn(episodes = emergency_spells[which(emergency_spells$Heart.Failure.Episode == TRUE),], linked_bundles = linked_bundle_data, linked_nicor = linked_nicor_data)
 ```
 
 # Northwick Park Demographics
