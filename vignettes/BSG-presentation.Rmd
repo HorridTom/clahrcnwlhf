@@ -1,7 +1,7 @@
 ---
 title: 'Heart Failure Care Bundle: Descriptive Analysis'
 author:
-date: "04/09/2017"
+date: "`r Sys.Date()`"
 output:
   beamer_presentation:
     toc: true
@@ -9,6 +9,8 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+min_date_cutoff <- as.Date('2012-01-01')
+max_date_cutoff <- as.Date('2016-10-31')
 ```
 
 # Admissions
@@ -21,11 +23,27 @@ ward_sites <- read.csv(file = "../data-raw/wardsites.csv", stringsAsFactors = FA
 imd_lookup <- read.csv(file = "../data-raw/imd-indices.csv", stringsAsFactors = FALSE)
 
 emergency_spells <- clahrcnwlhf::create_new_vars(from.vignette = TRUE, ward_hf_types = ward_hf_types, ward_sites = ward_sites, imd_lookup = imd_lookup) 
+
+# Apply date restriction to dataset
+# TODO: Refactor as single function
+# TODO: Use linked bundle to pull in discharge date (currently restricting on admission date)
+emergency_spells <- emergency_spells[which(emergency_spells$DischargeDate <= max_date_cutoff & emergency_spells$DischargeDate >= min_date_cutoff),]
+
+bundle_data_clean <- clahrcnwlhf::bundle_data_clean[which(clahrcnwlhf::bundle_data_clean$Admission.Date.Bundle <= max_date_cutoff & clahrcnwlhf::bundle_data_clean$Admission.Date.Bundle >= min_date_cutoff)]
+linked_bundle_data <- clahrcnwlhf::linked_bundle_data[which(clahrcnwlhf::linked_bundle_data$Admission.Date.Bundle <= max_date_cutoff & clahrcnwlhf::linked_bundle_data$Admission.Date.Bundle >= min_date_cutoff)]
+linked_nicor_data <- clahrcnwlhf::linked_nicor_data[which(clahrcnwlhf::linked_nicor_data$Date.of.discharge <= max_date_cutoff & clahrcnwlhf::linked_nicor_data$Date.of.discharge >= min_date_cutoff)]
+
 emergency_spells_nph <- emergency_spells[which(emergency_spells[,"StartWardSite"] == "NPH"),]
+
+min_data_date <- min(emergency_spells$DischargeDate)
+max_data_date <- max(emergency_spells$DischargeDate)
+effective_min_date <- max(min_date_cutoff, min_data_date)
+effective_max_date <- min(max_date_cutoff, max_data_date)
+
 ```
 
-`r nrow(emergency_spells)` discharges from the three hospitals between 1st January 2012 and
-31st October 2016 inclusive.
+`r nrow(emergency_spells)` discharges from the three hospitals between `r effective_min_date` and
+`r effective_max_date` inclusive.
 
 ```{r, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
 em_sp_site <- split(emergency_spells, emergency_spells$StartWardSite)
@@ -74,9 +92,10 @@ axis(2, at=pretty(c(pcc1$statistics,pcc1$newstats)), lab = paste(pretty(c(pcc1$s
 ## Care bundle implementation
 
 ```{r, echo=FALSE, fig.height=5, fig.width=7, cache=TRUE}
-n_bundle <- clahrcnwlhf::disch_time_table(clahrcnwlhf::bundle_data_clean, discharge = FALSE,
+n_bundle <- clahrcnwlhf::disch_time_table(bundle_data_clean, discharge = FALSE,
   adm_col = "Admission.Date.Bundle")
-matplot(n_bundle, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0,150),
+bundle_max <- max(n_bundle)
+matplot(n_bundle, type = c("b"), pch=20, col = 1, xaxt="n", ylim=c(0, ceiling(bundle_max*.11)*10),
         main="Number of care bundles implemented per month")
 axis(side=1,at=1:length(n_bundle),labels=names(n_bundle), las = 2, cex.axis =0.6)  
 ```
@@ -88,13 +107,13 @@ A total of `r sum(n_bundle)` bundles were completed during the period.
 ## Linking admissions, care bundles, and national audit data (NWLH)
 
 ```{r, echo=FALSE, fig.height=5, fig.width=7, cache=TRUE}
-clahrcnwlhf::plot_linking_venn(linked_bundles = clahrcnwlhf::linked_bundle_data, linked_nicor = clahrcnwlhf::linked_nicor_data)
+clahrcnwlhf::plot_linking_venn(linked_bundles = linked_bundle_data, linked_nicor = linked_nicor_data)
 ```
 
 ## Linking primary diagnoses of heart failure, care bundles, and national audit data (NWLH)
 
 ```{r, echo=FALSE, fig.height=5, fig.width=7, cache=TRUE}
-clahrcnwlhf::plot_linking_venn(episodes = clahrcnwlhf::emergency_adms[which(clahrcnwlhf::emergency_adms$Heart.Failure.Episode == TRUE),], linked_bundles = clahrcnwlhf::linked_bundle_data, linked_nicor = clahrcnwlhf::linked_nicor_data)
+clahrcnwlhf::plot_linking_venn(episodes = emergency_adms[which(emergency_adms$Heart.Failure.Episode == TRUE),], linked_bundles = linked_bundle_data, linked_nicor = linked_nicor_data)
 ```
 
 # Northwick Park Demographics
