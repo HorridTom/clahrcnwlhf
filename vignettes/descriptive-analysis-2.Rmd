@@ -45,7 +45,7 @@ library(ggplot2, reshape2)
 
 X <- clahrcnwlhf::ethn_time_table(emergency_spells_nph, ethn_col = 'EthnicGroupComp')
 Y <- as.data.frame.matrix(t(X))
-Y$timepoint <- c(1:58)
+Y$timepoint <- c(1:nrow(Y))
 Y.melted <- reshape2::melt(Y, id = "timepoint")
 ggplot(data = Y.melted, aes(x = timepoint, y = value, color = variable)) + geom_point() + geom_line()
 
@@ -60,7 +60,7 @@ Y$total <- rowSums(Y)
 Y[,1:n] <- Y[,1:n] / Y[,n+1]
 Z <- Y
 Y$total <- NULL
-Y$timepoint <- c(1:58)
+Y$timepoint <- c(1:nrow(Y))
 Y.melted <- reshape2::melt(Y, id = "timepoint")
 ggplot(data = Y.melted, aes(x = timepoint, y = value, color = variable)) + geom_point() + geom_line()
 
