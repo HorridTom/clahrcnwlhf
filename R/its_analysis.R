@@ -8,7 +8,9 @@
 #'
 its_aggregate_wide <- function(df = clahrcnwlhf::emergency_adms) {
 
+  #add the additional variables needed
   emspells <- clahrcnwlhf::create_new_vars(df = df)
+  emspells <- clahrcnwlhf::make_flag_variables(df = emspells)
   #emspells$CSPAdmissionTime <- as.POSIXct(emspells$CSPAdmissionTime)
   #emspells$CSPDischargeTime <- as.POSIXct(emspells$CSPDischargeTime)
   #emspells$EpisodeEndTime <- NULL
@@ -16,31 +18,33 @@ its_aggregate_wide <- function(df = clahrcnwlhf::emergency_adms) {
 
   cat_agg <- emspells %>%
     group_by(DischargeMonth, WardSite, Ward_hf_type) %>%
-    summarize(count = NROW(PseudoID), any_bundles = max(bundle),
-              num_prim_hf = sum(Heart.Failure.Episode),
-              num_any_hf = sum(HF.any.code),
-              num_female = sum(female),
-              num_bundle = sum(bundle),
-              num_white = sum(white),
-              num_black = sum(black),
-              num_asian = sum(asian),
-              num_otherethnicity = sum(other.ethnicity),
-              num_younger60 = sum(younger.60),
-              num_deaths = sum(died),
-              num_readm_7 = sum(readm.7),
-              num_readm_30 = sum(readm.30),
-              num_readm_90 = sum(readm.90),
-              num_hf_readm_7 = sum(readm.hf.7),
-              num_hf_readm_30 = sum(readm.hf.30),
-              num_hf_readm_90 = sum(readm.hf.90),
-              num_with_imd = sum(imd.available))
+    summarize(count = NROW(PseudoID), bundle = max(bundle),
+              heartfailure = sum(Heart.Failure.Episode),
+              hf_anycode = sum(HF.any.code),
+              female = sum(female),
+              hf_bundle = sum(bundle),
+              white = sum(white),
+              black = sum(black),
+              asian = sum(asian),
+              otherethnicity = sum(other.ethnicity),
+              younger60 = sum(younger.60),
+              deaths = sum(died),
+              readmission_7dd = sum(readm.7),
+              readmission_30dd = sum(readm.30),
+              readmission_90dd = sum(readm.90),
+              hfreadmission_7days = sum(readm.hf.7),
+              hfreadmission_30days = sum(readm.hf.30),
+              hfreadmission_90days = sum(readm.hf.90),
+              with_imd = sum(imd.available))
 
   cont_agg <- emspells %>%
     group_by(DischargeMonth, WardSite, Ward_hf_type) %>%
-    summarize(avAge = mean(Age.est, na.rm = TRUE), avLOS = mean(los, na.rm = TRUE), avIMD = mean(IMD, na.rm = TRUE), bed.days = sum(los, na.rm = TRUE))
+    summarize(mean_age = mean(Age.est, na.rm = TRUE), mean_los = mean(los, na.rm = TRUE), mean_imd = mean(IMD, na.rm = TRUE), bed_days = sum(los, na.rm = TRUE))
 
-  inner_join(cat_agg, cont_agg, by = c("DischargeMonth", "Heart.Failure.Episode", "HF.any.code","Sex", "WardSite", "Ward_hf_type", "bundle", "nicor", "EthnicGroupComp", "AgeBand_B", "died", "all.cause.readmission.cat", "hf.readmission.cat"))
+  its_w <- inner_join(cat_agg, cont_agg, by = c("DischargeMonth", "WardSite", "Ward_hf_type"))
 
+  its_w <- add_proportion_columns(its_w)
+  its_w
 }
 
 
@@ -169,5 +173,89 @@ create_readms <- function(df) {
   df$all.cause.readmission.cat <- cut(as.numeric(df$time.to.next.spell), breaks = c(0,7,30,90), labels = c("7","30","90"), right = FALSE)
   df$hf.readmission.cat <- cut(as.numeric(df$time.to.next.hf.spell), breaks = c(0,7,30,90), labels = c("7","30","90"), right = FALSE)
 
+  df
+}
+
+
+#' make_flag_variables
+#'
+#' @param df emergency admissions dataframe, with additional variables added by create_new_vars
+#'
+#' @return df with additional flag variables needed for the ITS analysis
+#' @export
+#'
+make_flag_variables <- function(df) {
+  df$female <- (as.character(df$Sex) == 'F') %in% TRUE
+  df$white <- (as.character(df$EthnicGroupComp) == 'W') %in% TRUE
+  df$black <- (as.character(df$EthnicGroupComp) == 'U') %in% TRUE
+  df$asian <- (as.character(df$EthnicGroupComp) == 'Y') %in% TRUE
+  df$other.ethnicity <- (as.character(df$EthnicGroupComp) == 'Z' | as.character(df$EthnicGroupComp) == 'X')  %in% TRUE
+  df$younger.60 <- (as.character(df$AgeBand_B) == 'young') %in% TRUE
+  df$readm.7 <- (as.character(df$all.cause.readmission.cat) == '7') %in% TRUE
+  df$readm.30 <- (as.character(df$all.cause.readmission.cat) == '30') %in% TRUE
+  df$readm.90 <- (as.character(df$all.cause.readmission.cat) == '90') %in% TRUE
+  df$readm.hf.7 <- (as.character(df$hf.readmission.cat) == '7') %in% TRUE
+  df$readm.hf.30 <- (as.character(df$hf.readmission.cat) == '30') %in% TRUE
+  df$readm.hf.90 <- (as.character(df$hf.readmission.cat) == '90') %in% TRUE
+  df$imd.available <- !is.na(df$IMD)
+
+  df
+}
+
+
+#' add_proportion_columns
+#'
+#' @param agg_df the wide-aggregated data for its analysis
+#'
+#' @return agg_df with variables expressed as proportions of count
+#' @export
+#'
+add_proportion_columns <- function(agg_df) {
+
+  denom <- 'count'
+  denom2 <- 'heartfailure'
+  nums <- c("heartfailure",
+            "hf_anycode",
+            "female",
+            "hf_bundle",
+            "white",
+            "black",
+            "asian",
+            "otherethnicity",
+            "younger60",
+            "deaths",
+            "readmission_7dd",
+            "readmission_30dd",
+            "readmission_90dd",
+            "with_imd")
+  nums2 <- c("hfreadmission_7days",
+             "hfreadmission_30days",
+             "hfreadmission_90days")
+  for (x in nums) {
+    agg_df <- column_as_proportion(agg_df, numerator_col = x, denominator_col = denom,
+                                   prop_col_name = paste('percentage_',x,sep=''))
+  }
+  for (x in nums2) {
+    agg_df <- column_as_proportion(agg_df, numerator_col = x, denominator_col = denom2,
+                                   prop_col_name = paste('percentage_',x,sep=''))
+  }
+
+  agg_df
+
+}
+
+
+#' column_as_proportion
+#'
+#' @param df input dataframe
+#' @param numerator_col column of df to form numerator of new proportion column
+#' @param denominator_col column of df to form denominator of new proportion column
+#' @param prop_col_name name for new proportion column
+#'
+#' @return df with new proportion column added
+#' @export
+#'
+column_as_proportion <- function(df, numerator_col, denominator_col, prop_col_name) {
+  df[,prop_col_name] <- df[,numerator_col] / df[,denominator_col]
   df
 }
