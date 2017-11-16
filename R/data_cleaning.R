@@ -72,6 +72,17 @@ clean_data <-function(df, restrict_disch_date = TRUE) {
                                       end_date=as.Date("2016-10-31"))
   }
 
+  # Remove duplicate episodes, then fix apparent duplicated PseudoIDs,
+  # then remove any resulting new duplicates
+  df <- clahrcnwlhf::remove_dupes(df)
+  # TODO: This is messy - dependency between datasets, rest of cleaning is dataset-specific
+  corrected_pseudo_ids <- clahrcnwlhf::fix_dupe_IDs(df, clahrcnwlhf::bundle_data, clahrcnwlhf::nicor_data)
+  df <- corrected_pseudo_ids[[1]]
+  bundle_data <- corrected_pseudo_ids[[2]]
+  nicor_data <- corrected_pseudo_ids[[3]]
+  devtools::use_data(bundle_data, overwrite = TRUE)
+  devtools::use_data(nicor_data, overwrite = TRUE)
+
   df <- clahrcnwlhf::remove_dupes(df)
 
   df
@@ -250,3 +261,58 @@ age_band_recode <- function(df) {
 
 }
 
+
+#' fix_dupe_IDs
+#'
+#' @param df dataframe containing episode data
+#'
+#' @return df with duplicated PseudoIDs replaced with common PseudoID
+#' @export
+#'
+fix_dupe_IDs <- function(df, df1, df2) {
+
+  # horrible hack - not enough time to rewrite everything to use POSIXct at present
+  # so instead, convert to ct in order to use tidyverse, then back again!
+  # TODO: rewrite entire package to use POSIXct instead of POSIXlt
+  df <- clahrcnwlhf::convert_time_cols(df)
+
+  # Create group_id variable, constant over groups of records that are
+  # extremely likely to correspond to the same episode of care and hence
+  # the same patient.
+  message('starting grouping...')
+  df$group_id <- df %>% dplyr::group_indices(AdmissionDate, DischargeDate, CSPAdmissionTime,
+                                            CSPDischargeTime, PrimaryDiagnosis, SecondaryDiagnosis1,
+                                            SecondaryDiagnosis2, EpisodeNumber, EpisodeStartTime,
+                                            EpisodeEndTime, Sex)
+  message('...finished grouping, listing groups...')
+  dupe_groups <- df[duplicated(df$group_id),'group_id']
+  groups_list <- unique(dupe_groups)
+  message('...groups listed, starting replacement...')
+
+  for (x in groups_list) {
+    p_ids_in_group <- unique(df[which(df$group_id == x),'PseudoID'])
+    df <- replace_ids(df, p_ids_in_group)
+    df1 <- replace_ids(df1, p_ids_in_group)
+    df2 <- replace_ids(df2, p_ids_in_group)
+  }
+  message('...replacement complete, returning.')
+  df$group_id <- NULL
+
+  list(clahrcnwlhf::convert_time_cols(df, lt_to_ct = FALSE),df1,df2)
+}
+
+
+#' replace_ids
+#'
+#' @param df dataframe of episode data
+#' @param id_group group of ids to be merged
+#'
+#' @return df with PseudoIDs merged
+#' @export
+#'
+replace_ids <- function(df, id_group, id_col = 'PseudoID') {
+  if(length(df[which(df[,id_col] %in% id_group),id_col])>0) {
+    df[which(df[,id_col] %in% id_group),id_col] <- id_group[1]
+  }
+  df
+}
