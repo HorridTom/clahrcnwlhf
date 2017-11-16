@@ -4,7 +4,7 @@
 \alias{clean_and_save}
 \title{clean_and_save}
 \usage{
-clean_and_save()
+clean_and_save(restrict_disch_date = TRUE)
 }
 \description{
 Runs clean_data on admission_data and saves the result as
