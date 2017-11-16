@@ -4,7 +4,7 @@
 \alias{fix_dupe_IDs}
 \title{fix_dupe_IDs}
 \usage{
-fix_dupe_IDs(df)
+fix_dupe_IDs(df, df1, df2)
 }
 \arguments{
 \item{df}{dataframe containing episode data}
