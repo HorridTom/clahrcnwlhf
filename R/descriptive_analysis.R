@@ -504,11 +504,11 @@ recode_ethnicity <- function(df, ethn_col = "EthnicGroup") {
 
   # This recoding is from:
   # http://www.datadictionary.nhs.uk/data_dictionary/attributes/e/end/ethnic_category_code_de.asp
-  df$EthnicGroupComp <- sub('A|B|C','W',df[,ethn_col])
-  df$EthnicGroupComp <- sub('D|E|F|G','X',df$EthnicGroupComp)
-  df$EthnicGroupComp <- sub('H|J|K|L','Y',df$EthnicGroupComp)
-  df$EthnicGroupComp <- sub('M|N|P','U',df$EthnicGroupComp)
-  df$EthnicGroupComp <- sub('R|S|Z','V',df$EthnicGroupComp)
+  df$EthnicGroupComp <- sub('A|B|C','W',df[,ethn_col]) #White
+  df$EthnicGroupComp <- sub('D|E|F|G','X',df$EthnicGroupComp) #Mixed
+  df$EthnicGroupComp <- sub('H|J|K|L','Y',df$EthnicGroupComp) #Asian or Asian British
+  df$EthnicGroupComp <- sub('M|N|P','U',df$EthnicGroupComp) #Black or Black British
+  df$EthnicGroupComp <- sub('R|S|Z','V',df$EthnicGroupComp) #Other Ethnic Groups
 
   df
 }
