@@ -1,4 +1,50 @@
 
+#' its_aggregate_wide
+#'
+#' @param df emergency admissions episode data
+#'
+#' @return aggregated data for ITS analysis
+#' @export
+#'
+its_aggregate_wide <- function(df = clahrcnwlhf::emergency_adms) {
+
+  emspells <- clahrcnwlhf::create_new_vars(df = df)
+  #emspells$CSPAdmissionTime <- as.POSIXct(emspells$CSPAdmissionTime)
+  #emspells$CSPDischargeTime <- as.POSIXct(emspells$CSPDischargeTime)
+  #emspells$EpisodeEndTime <- NULL
+  #emspells$EpisodeStartTime <- NULL
+
+  cat_agg <- emspells %>%
+    group_by(DischargeMonth, WardSite, Ward_hf_type) %>%
+    summarize(count = NROW(PseudoID), any_bundles = max(bundle),
+              num_prim_hf = sum(Heart.Failure.Episode),
+              num_any_hf = sum(HF.any.code),
+              num_female = sum(female),
+              num_bundle = sum(bundle),
+              num_white = sum(white),
+              num_black = sum(black),
+              num_asian = sum(asian),
+              num_otherethnicity = sum(other.ethnicity),
+              num_younger60 = sum(younger.60),
+              num_deaths = sum(died),
+              num_readm_7 = sum(readm.7),
+              num_readm_30 = sum(readm.30),
+              num_readm_90 = sum(readm.90),
+              num_hf_readm_7 = sum(readm.hf.7),
+              num_hf_readm_30 = sum(readm.hf.30),
+              num_hf_readm_90 = sum(readm.hf.90),
+              num_with_imd = sum(imd.available))
+
+  cont_agg <- emspells %>%
+    group_by(DischargeMonth, WardSite, Ward_hf_type) %>%
+    summarize(avAge = mean(Age.est, na.rm = TRUE), avLOS = mean(los, na.rm = TRUE), avIMD = mean(IMD, na.rm = TRUE), bed.days = sum(los, na.rm = TRUE))
+
+  inner_join(cat_agg, cont_agg, by = c("DischargeMonth", "Heart.Failure.Episode", "HF.any.code","Sex", "WardSite", "Ward_hf_type", "bundle", "nicor", "EthnicGroupComp", "AgeBand_B", "died", "all.cause.readmission.cat", "hf.readmission.cat"))
+
+}
+
+
+
 #' its_aggregate
 #'
 #' @param df emergency admissions episode data
