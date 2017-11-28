@@ -10,10 +10,10 @@ convert_time_cols <- function(df, lt_to_ct = TRUE) {
 
   if (lt_to_ct) {
     convert_cols <- sapply(df, is.POSIXlt)
-    df[,convert_cols] <- as.data.frame(lapply(df[,convert_cols], as.POSIXct))
+    df[,convert_cols] <- as.data.frame(lapply(df[,convert_cols], as.POSIXct, tz="Europe/London"))
   } else {
     convert_cols <- sapply(df, is.POSIXct)
-    df[,convert_cols] <- as.data.frame(lapply(df[,convert_cols], as.POSIXlt))
+    df[,convert_cols] <- as.data.frame(lapply(df[,convert_cols], as.POSIXlt, tz="Europe/London"))
   }
 
   df
