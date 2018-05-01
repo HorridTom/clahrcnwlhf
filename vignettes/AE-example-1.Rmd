@@ -1,0 +1,13 @@
+---
+title: "AE-example-1"
+author: "Tom Woodcock"
+date: "23/01/2018"
+output: beamer_presentation
+---
+
+# Example 1: Emergency Care Flow
+
+## 4 hour target performance
+
+[clahrcnwl.shinyapps.io/ae-app/](https://clahrcnwl.shinyapps.io/ae-app/)
+

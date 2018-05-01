@@ -1,0 +1,109 @@
+---
+title: 'Reproducible Research'
+author: 'Tom Woodcock'
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation:
+    toc: true
+---
+
+```{r setup, include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+min_date_cutoff <- as.Date('2012-01-01')
+max_date_cutoff <- as.Date('2017-07-31')
+```
+
+# Introduction: Reproducible Research
+
+## The problem
+
+```{r}
+img1_path <- "Reproducible-research-files/Repr_Res_Problem_1.png"
+knitr::include_graphics(img1_path)
+```
+
+## The problem
+
+```{r}
+img2_path <- "Reproducible-research-files/Repr_Res_Problem_2.png"
+knitr::include_graphics(img2_path)
+```
+
+## What is reproducible research?
+
+> The goal of reproducible research is to tie specific instructions to data analysis and experimental data so that scholarship can be recreated, better understood and verified.
+
+[https://CRAN.R-project.org/view=ReproducibleResearch](https://CRAN.R-project.org/view=ReproducibleResearch)
+
+## How does it work?
+
+```{r}
+img3_path <- "Reproducible-research-files/Repr_Res_Workflow_1.png"
+knitr::include_graphics(img3_path)
+```
+
+## How does it work?
+
+```{r}
+img4_path <- "Reproducible-research-files/Repr_Res_Workflow_2.png"
+knitr::include_graphics(img4_path)
+```
+
+## Why reproducible research in CLAHRC NWL?
+Reproducible research has the potential to
+
+- Increase transparency of analysis and methods
+
+- Facilitate repeat analysis by our team
+
+- Enable analysis to be reproduced by other researchers
+    - to verify results and understand what was done
+    - to conduct analogous research in their setting
+- Enable analysis to be reproduced by other improvers
+    - to understand what data may be needed to replicate an initiative
+    - to adopt operational definitions
+    - to analyse their own data to drive improvement and evaluate
+- Facilitate aggregation of results from multiple sites implementing interventions with a common 'core'
+
+
+
+<!-- # Example 1: Unscheduled Care Flow -->
+
+```{r ae-example, child = 'AE-example-1.Rmd'}
+```
+
+```{r hf-example, child = 'HF-example-1.Rmd'}
+```
+
+
+# Next steps and discussion
+
+## Next steps and discussion
+
+Heart Failure
+
+- publish Northwest London Hospitals analysis
+
+- apply reproducible analysis in roll-out within NWL (++)
+ 
+Unscheduled Care
+
+- develop apps and analyses - UEC collaborative
+
+- publication(s)
+
+- approach NHS England?
+ 
+ Capability Building
+ 
+- Coding Club!
+
+- Recruitment/secondments
+ 
+ Future
+
+- Publish on the approach in improvement science
+
+- CLAHRC projects using routine data - use reproducible research
+
+- Explore collaborations nationally (and internationally)

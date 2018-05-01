@@ -259,3 +259,36 @@ column_as_proportion <- function(df, numerator_col, denominator_col, prop_col_na
   df[,prop_col_name] <- df[,numerator_col] / df[,denominator_col]
   df
 }
+
+
+#' drop_unnecessary_cols
+#'
+#' @param df
+#'
+#' @return copy of df but with only those columns needed for ITS analysis
+#' @export
+#'
+drop_unnecessary_cols <- function(df,
+                                  drop.cols = c('AdmissionDate', 'DischargeDate', 'PrimaryDiagnosis',
+                 'SecondaryDiagnosis1','SecondaryDiagnosis2',
+                 'SecondaryDiagnosis3',
+                 'SecondaryDiagnosis4',
+                 'SecondaryDiagnosis5',
+                 'SecondaryDiagnosis6',
+                 'SecondaryDiagnosis7',
+                 'SecondaryDiagnosis8',
+                 'SecondaryDiagnosis9',
+                 'EthnicGroup',
+                 'EpisodeNumber',
+                 'EpisodeStartDate',
+                 'EpisodeStartTime',
+                 'EpisodeEndDate',
+                 'EpisodeEndTime',
+                 'extract',
+                 'NewPseudo2',
+                 'OldPseudoID',
+                 'new.pat',
+                 'new_spell',
+                 'episode_order')) {
+  df %>% select(-one_of(drop.cols))
+}
