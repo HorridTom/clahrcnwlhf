@@ -4,7 +4,8 @@
 \alias{bundle_element_data_completeness}
 \title{bundle_element_data_completeness}
 \usage{
-bundle_element_data_completeness(bundles = clahrcnwlhf::bundle_data_clean)
+
+  bundle_element_data_completeness(bundles = clahrcnwlhf::bundle_data_clean)
 }
 \arguments{
 \item{bundles}{the bundle data to be assessed for completeness}

@@ -1,0 +1,23 @@
+\frametitle{Length of stay (NPH spells, Primary Diag. HF)}
+
+\begin{longtable}[]{@{}lr@{}}
+\toprule
+period.date & average\_los\tabularnewline
+\midrule
+\endhead
+A & 6.930556\tabularnewline
+B & 7.796875\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{verbatim}
+Wilcoxon rank sum test with continuity correction
+\end{verbatim}
+
+data:
+emergency\_spells\_nph{[}emergency\_spells\_nph\$Heart.Failure.Episode
+== TRUE, ``los''{]} by
+emergency\_spells\_nph{[}emergency\_spells\_nph\$Heart.Failure.Episode
+== TRUE, ``period.date''{]} W = 1028100, p-value = 0.2617 alternative
+hypothesis: true location shift is not equal to 0
+

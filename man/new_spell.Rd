@@ -4,8 +4,8 @@
 \alias{new_spell}
 \title{new_spell}
 \usage{
-new_spell(df, id = "PseudoID", adt = "CSPAdmissionTime", npat = "new.pat",
-  epno = "EpisodeNumber")
+new_spell(df, id = "PseudoID", adt = "CSPAdmissionTime",
+  npat = "new.pat", epno = "EpisodeNumber")
 }
 \arguments{
 \item{df}{an episode dataframe}

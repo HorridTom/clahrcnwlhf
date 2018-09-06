@@ -4,7 +4,8 @@
 \alias{test_plot_dist_table}
 \title{test_plot_dist_table}
 \usage{
-test_plot_dist_table(df, age_col = "AgeBand", stratify = FALSE, strat_col)
+test_plot_dist_table(df, age_col = "AgeBand", stratify = FALSE,
+  strat_col)
 }
 \arguments{
 \item{df}{dataframe}

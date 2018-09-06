@@ -109,4 +109,4 @@
 #'   As per all-cause but second spell restricted to HF only.}
 #'
 #' }
-"emergency_spells_reduced"
+"emergency_adms"
