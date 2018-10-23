@@ -1,0 +1,31 @@
+---
+title: "Population Characteristics: CLAHRC NWL Heart Failure Admission Care Bundle"
+author: "Dr Thomas Woodcock"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, echo=TRUE, results='asis', cache=TRUE}
+library(knitr, pander)
+library(tidyverse)
+
+ward_hf_types <- read.csv(file = "../data-raw/wardhftypes.csv", stringsAsFactors = FALSE)
+ward_sites <- read.csv(file = "../data-raw/wardsites.csv", stringsAsFactors = FALSE)
+imd_lookup <- read.csv(file = "../data-raw/imd-indices.csv", stringsAsFactors = FALSE)
+
+its_wide <- clahrcnwlhf::its_aggregate_wide(from.vignette = TRUE, ward_hf_types = ward_hf_types, ward_sites = ward_sites, imd_lookup = imd_lookup)
+
+
+
+```
