@@ -8,10 +8,9 @@ drop_unnecessary_cols(df, drop.cols = c("AdmissionDate", "DischargeDate",
   "PrimaryDiagnosis", "SecondaryDiagnosis1", "SecondaryDiagnosis2",
   "SecondaryDiagnosis3", "SecondaryDiagnosis4", "SecondaryDiagnosis5",
   "SecondaryDiagnosis6", "SecondaryDiagnosis7", "SecondaryDiagnosis8",
-  "SecondaryDiagnosis9", "EthnicGroup", "EpisodeNumber",
-  "EpisodeStartDate", "EpisodeStartTime", "EpisodeEndDate",
-  "EpisodeEndTime", "extract", "NewPseudo2", "OldPseudoID", "new.pat",
-  "new_spell", "episode_order"))
+  "SecondaryDiagnosis9", "EthnicGroup", "EpisodeNumber", "EpisodeStartDate",
+  "EpisodeStartTime", "EpisodeEndDate", "EpisodeEndTime", "extract",
+  "NewPseudo2", "OldPseudoID", "new.pat", "new_spell", "episode_order"))
 }
 \arguments{
 \item{df}{}

@@ -5,9 +5,8 @@
 \title{remove_dupes}
 \usage{
 remove_dupes(df, dupe_cols = c("PseudoID", "AdmissionDate",
-  "CSPAdmissionTime", "DischargeDate", "CSPDischargeTime",
-  "PrimaryDiagnosis", "SecondaryDiagnosis1", "SecondaryDiagnosis2",
-  "EpisodeNumber"))
+  "CSPAdmissionTime", "DischargeDate", "CSPDischargeTime", "PrimaryDiagnosis",
+  "SecondaryDiagnosis1", "SecondaryDiagnosis2", "EpisodeNumber"))
 }
 \arguments{
 \item{df}{an episode dataframe to be de-duped}

@@ -4,9 +4,8 @@
 \alias{create_new_vars}
 \title{create_new_vars}
 \usage{
-create_new_vars(df = clahrcnwlhf::emergency_adms,
-  from.vignette = FALSE, ward_hf_types = NULL, ward_sites = NULL,
-  imd_lookup = NULL)
+create_new_vars(df = clahrcnwlhf::emergency_adms, from.vignette = FALSE,
+  ward_hf_types = NULL, ward_sites = NULL, imd_lookup = NULL)
 }
 \arguments{
 \item{df}{emergency admissions dataframe}
