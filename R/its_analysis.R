@@ -6,10 +6,14 @@
 #' @return aggregated data for ITS analysis
 #' @export
 #'
-its_aggregate_wide <- function(df = clahrcnwlhf::emergency_adms) {
+its_aggregate_wide <- function(df = clahrcnwlhf::emergency_adms,
+                               from.vignette = FALSE, ward_hf_types = NULL,
+                               ward_sites = NULL, imd_lookup = NULL) {
 
   #add the additional variables needed
-  emspells <- clahrcnwlhf::create_new_vars(df = df)
+  emspells <- clahrcnwlhf::create_new_vars(df = df, from.vignette,
+                                           ward_hf_types, ward_sites,
+                                           imd_lookup)
   emspells <- clahrcnwlhf::make_flag_variables(df = emspells)
   #emspells$CSPAdmissionTime <- as.POSIXct(emspells$CSPAdmissionTime)
   #emspells$CSPDischargeTime <- as.POSIXct(emspells$CSPDischargeTime)
