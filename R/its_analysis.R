@@ -106,9 +106,14 @@ create_new_vars <- function(df = clahrcnwlhf::emergency_adms, from.vignette = FA
   df <- dplyr::left_join(df, ward_hf_types, by = c("CSPLastWard"="Ward"))
   df <- dplyr::left_join(df, ward_sites, by = c("CSPLastWard"="Ward"))
 
+  # Remove duplicate links from nicor data
+  # Note crude method of selecting between duplicate links - ok for now
+  linked_nicor <- clahrcnwlhf::bundle_element_data_completeness(bundles = clahrcnwlhf::linked_nicor_data)
+  linked_nicor <- clahrcnwlhf::remove_duplicate_bundle_links(linked_bundles = linked_nicor, date_col = "Date.of.Visit")
+
   # Add link to linked bundle and nicor record where these exist, and flag variable
   df <- dplyr::left_join(df, clahrcnwlhf::linked_bundle_data[,c("Bundle.Number","linked.spell")], by = c("spell_number"="linked.spell"))
-  df <- dplyr::left_join(df, clahrcnwlhf::linked_nicor_data[,c("nicor.entry.id","linked.spell")], by = c("spell_number"="linked.spell"))
+  df <- dplyr::left_join(df, linked_nicor[,c("nicor.entry.id","linked.spell")], by = c("spell_number"="linked.spell"))
   df$bundle <- !is.na(df$Bundle.Number)
   df$nicor <- !is.na(df$nicor.entry.id)
 

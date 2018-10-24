@@ -125,7 +125,7 @@ link_nicor <- function(nicor = clahrcnwlhf::nicor_data_clean,
 #' @return linked_bundles with duplicate links removed
 #' @export
 #'
-remove_duplicate_bundle_links <- function(linked_bundles) {
+remove_duplicate_bundle_links <- function(linked_bundles, date_col = "Admission.Datetime") {
 
   unlinked_bundles <- linked_bundles[which(is.na(linked_bundles$linked.spell)),]
   linked_bundles <- linked_bundles[which(!is.na(linked_bundles$linked.spell)),]
@@ -134,8 +134,8 @@ remove_duplicate_bundle_links <- function(linked_bundles) {
   deduped_ep_bun  <- lapply(episode_bundles, function(x) {
 
     lowest_na_count_rows <- x[which(x$number.nas == min(x$number.nas)),]
-    maxdate <- max(as.POSIXct(lowest_na_count_rows$Admission.Datetime))
-    lowest_na_count_rows[which(as.POSIXct(lowest_na_count_rows$Admission.Datetime) == maxdate),][1,]
+    maxdate <- max(as.POSIXct(lowest_na_count_rows[, date_col]))
+    lowest_na_count_rows[which(as.POSIXct(lowest_na_count_rows[, date_col]) == maxdate),][1,]
 
   })
 
