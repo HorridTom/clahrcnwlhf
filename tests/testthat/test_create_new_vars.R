@@ -43,7 +43,7 @@ test_that("Time to next spell is non-negative",{
 
   times_to_next_spell <- with_new_vars[!is.na(with_new_vars$time.to.next.spell),"time.to.next.spell"]
 
-  expect_true(as.integer(times_to_next_spell) >= 0)
+  expect_true(all(as.integer(times_to_next_spell) >= 0))
 
 })
 
