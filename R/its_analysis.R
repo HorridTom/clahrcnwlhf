@@ -301,3 +301,27 @@ drop_unnecessary_cols <- function(df,
                  'episode_order')) {
   df %>% select(-one_of(drop.cols))
 }
+
+
+#' save_its_raw_data_csv
+#'
+#' Saves a copy of the raw data for ITS analysis to the data-out folder.
+#' This dataset is the output from create_new_vars(), filtered to
+#' discharges prior to August 2017, with only columns required for
+#' the ITS analysis
+#' @return returns the raw data for ITS analysis invisibly
+#' @export
+#'
+#'
+save_its_raw_data_csv <- function() {
+  emergency_spells <- clahrcnwlhf::create_new_vars()
+  emergency_spells_disch_pre_aug17 <- emergency_spells %>% filter(CSPDischargeTime <= as.Date("2017-07-31"))
+  emergency_spells_reduced <- clahrcnwlhf::drop_unnecessary_cols(emergency_spells_disch_pre_aug17)
+
+  # TODO: For use as part of the package this should be replaced with the package version
+  current_git_commit <- stringr::str_sub(system("git rev-parse HEAD", intern=TRUE), 1, 8)
+  time_stamp <- gsub(":","-",paste(strsplit(x = toString(Sys.time()),split = " ")[[1]], collapse="-"))
+  # TODO: For use as part of the package this should be refactored to save outside package
+  out_path <- paste("data-out/emergency_spells_reduced", current_git_commit, time_stamp, ".csv", sep = "_")
+  readr::write_csv(emergency_spells_reduced, path = out_path)
+}
