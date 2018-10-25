@@ -4,7 +4,8 @@
 \alias{its_aggregate_wide}
 \title{its_aggregate_wide}
 \usage{
-its_aggregate_wide(df = clahrcnwlhf::emergency_adms)
+its_aggregate_wide(df = clahrcnwlhf::emergency_adms, from.vignette = FALSE,
+  ward_hf_types = NULL, ward_sites = NULL, imd_lookup = NULL)
 }
 \arguments{
 \item{df}{emergency admissions episode data}

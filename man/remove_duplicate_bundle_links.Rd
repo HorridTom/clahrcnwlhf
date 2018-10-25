@@ -4,7 +4,7 @@
 \alias{remove_duplicate_bundle_links}
 \title{remove_duplicate_bundle_links}
 \usage{
-remove_duplicate_bundle_links(linked_bundles)
+remove_duplicate_bundle_links(linked_bundles, date_col = "Admission.Datetime")
 }
 \arguments{
 \item{linked_bundles}{output of link_bundles}
