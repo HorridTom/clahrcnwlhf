@@ -16,16 +16,59 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r, echo=TRUE, results='asis', cache=TRUE}
-library(knitr, pander)
+```{r load_data, echo=TRUE, results='asis', cache=TRUE}
+library(knitr)
+library(pander)
 library(tidyverse)
+library(qwraps2)
+options(qwraps2_markup = "markdown")
 
 ward_hf_types <- read.csv(file = "../data-raw/wardhftypes.csv", stringsAsFactors = FALSE)
 ward_sites <- read.csv(file = "../data-raw/wardsites.csv", stringsAsFactors = FALSE)
 imd_lookup <- read.csv(file = "../data-raw/imd-indices.csv", stringsAsFactors = FALSE)
 
-its_wide <- clahrcnwlhf::its_aggregate_wide(from.vignette = TRUE, ward_hf_types = ward_hf_types, ward_sites = ward_sites, imd_lookup = imd_lookup)
+#its_wide <- clahrcnwlhf::its_aggregate_wide(from.vignette = TRUE, ward_hf_types = ward_hf_types, ward_sites = ward_sites, imd_lookup = imd_lookup)
+
+emergency_spells <- clahrcnwlhf::create_new_vars(from.vignette = TRUE, ward_hf_types = ward_hf_types,
+                                                 ward_sites = ward_sites, imd_lookup = imd_lookup)
+emergency_spells_NPHEH_disch_pre_aug17 <- emergency_spells %>%
+  filter(CSPDischargeTime <= as.Date("2017-07-31"), StartWardSite %in% c('NPH', 'EH'))
+emergency_spells_reduced <- clahrcnwlhf::drop_unnecessary_cols(emergency_spells_NPHEH_disch_pre_aug17)
+
+```
+
+## Population characteristics
 
 
+```{r popnchars, echo=TRUE, results='asis', cache=TRUE}
+patients_first_HF_episode <- emergency_spells_reduced %>% filter(Heart.Failure.Episode == TRUE) %>% 
+  group_by(PseudoID) %>% 
+  slice(which.min(CSPAdmissionTime)) %>% 
+  ungroup()
 
+pop_summary <- list(
+  "Age" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(Age.est)),
+    "min" = ~ min(Age.est, na.rm = TRUE),
+    "max" = ~ max(Age.est, na.rm = TRUE),
+    "median (iqr)" = ~ qwraps2::median_iqr(Age.est, na_rm = TRUE),
+    "mean (sd)" = ~ qwraps2::mean_sd(Age.est,na_rm = TRUE , denote_sd = "paren")
+  ),
+  "Gender" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(Sex)),
+    "Female" = ~ qwraps2::n_perc(Sex == "F", na_rm = TRUE, show_denom = "always"),
+    "Male" = ~ qwraps2::n_perc(Sex == "M", na_rm = TRUE, show_denom = "always")
+  ),
+  "Ethnicity" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(EthnicGroupComp)),
+    "Black or Black British" = ~ qwraps2::n_perc(EthnicGroupComp == "U", na_rm = TRUE, show_denom = "always"),
+    "Other Ethnic Groups / Not Stated" = ~ qwraps2::n_perc(EthnicGroupComp == "V", na_rm = TRUE, show_denom = "always"),
+    "White" = ~ qwraps2::n_perc(EthnicGroupComp == "W", na_rm = TRUE, show_denom = "always"),
+    "Mixed" = ~ qwraps2::n_perc(EthnicGroupComp == "X", na_rm = TRUE, show_denom = "always"),
+    "Asian or Asian British" = ~ qwraps2::n_perc(EthnicGroupComp == "Y", na_rm = TRUE, show_denom = "always")
+  )
+)
+
+qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date),
+                       pop_summary)
 ```
