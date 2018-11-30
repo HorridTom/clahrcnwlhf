@@ -46,6 +46,8 @@ patients_first_HF_episode <- emergency_spells_reduced %>% filter(Heart.Failure.E
   slice(which.min(CSPAdmissionTime)) %>% 
   ungroup()
 
+units(patients_first_HF_episode$los) <- 'days'
+
 pop_summary <- list(
   "Age" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(Age.est)),
@@ -66,9 +68,89 @@ pop_summary <- list(
     "White" = ~ qwraps2::n_perc(EthnicGroupComp == "W", na_rm = TRUE, show_denom = "always"),
     "Mixed" = ~ qwraps2::n_perc(EthnicGroupComp == "X", na_rm = TRUE, show_denom = "always"),
     "Asian or Asian British" = ~ qwraps2::n_perc(EthnicGroupComp == "Y", na_rm = TRUE, show_denom = "always")
+  ),
+  "Index of Multiple Deprivation" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(IMD)),
+    "min" = ~ min(IMD, na.rm = TRUE),
+    "max" = ~ max(IMD, na.rm = TRUE),
+    "median (iqr)" = ~ qwraps2::median_iqr(IMD, na_rm = TRUE),
+    "mean (sd)" = ~ qwraps2::mean_sd(IMD,na_rm = TRUE , denote_sd = "paren")
+  ),
+  "Length of Stay" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(los)),
+    "min" = ~ frmt(min(los, na.rm = TRUE), digits = 2),
+    "max" = ~ frmt(max(los, na.rm = TRUE), digits = 2),
+    "median (iqr)" = ~ qwraps2::median_iqr(los, na_rm = TRUE),
+    "mean (sd)" = ~ qwraps2::mean_sd(los,na_rm = TRUE , denote_sd = "paren")
+  ),
+  "Mortality" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(died)),
+    "In-hospital Mortality" = ~ qwraps2::n_perc(died, na_rm = TRUE, show_denom = "always")
+  ),
+  "Time to next Any-Cause Re-admission" = list(
+    "No re-admission" = ~ qwraps2::n_perc(is.na(time.to.next.spell)),
+    "min" = ~ min(time.to.next.spell, na.rm = TRUE),
+    "max" = ~ max(time.to.next.spell, na.rm = TRUE),
+    "median (iqr)" = ~ qwraps2::median_iqr(time.to.next.spell, na_rm = TRUE),
+    "mean (sd)" = ~ qwraps2::mean_sd(time.to.next.spell, na_rm = TRUE , denote_sd = "paren")
+  ),
+  "Any-Cause Re-admission Category" = list(
+    "No re-admission within 90 days" = ~ qwraps2::n_perc(is.na(all.cause.readmission.cat)),
+    "< 7 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
+    ">= 7, < 30 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '30', na_rm = TRUE, show_denom = "always"),
+    ">= 30, < 90 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
+  ),
+  "Time to next HF Re-admission" = list(
+    "No re-admission" = ~ qwraps2::n_perc(is.na(time.to.next.hf.spell)),
+    "min" = ~ min(time.to.next.hf.spell, na.rm = TRUE),
+    "max" = ~ max(time.to.next.hf.spell, na.rm = TRUE),
+    "median (iqr)" = ~ qwraps2::median_iqr(time.to.next.hf.spell, na_rm = TRUE),
+    "mean (sd)" = ~ qwraps2::mean_sd(time.to.next.hf.spell, na_rm = TRUE , denote_sd = "paren")
+  ),
+  "HF Re-admission Category" = list(
+    "No re-admission within 90 days" = ~ qwraps2::n_perc(is.na(hf.readmission.cat)),
+    "< 7 days" = ~ qwraps2::n_perc(hf.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
+    ">= 7, < 30 days" = ~ qwraps2::n_perc(hf.readmission.cat == '30', na_rm = TRUE, show_denom = "always"),
+    ">= 30, < 90 days" = ~ qwraps2::n_perc(hf.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
   )
 )
 
 qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date),
                        pop_summary)
+```
+
+## Age distribution
+
+```{r age, echo=TRUE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+ggplot2::ggplot(patients_first_HF_episode, ggplot2::aes(x=AgeBand))+ggplot2::geom_bar(width= 0.7) + ggplot2::labs(y = "Frequency",x = "Age Band") +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
+  ggplot2::facet_wrap(StartWardSite ~ period.date)
+
+age_summary = list(
+  "Age Band" = list(`0` = ~qwraps2::n_perc(AgeBand == "0", digits = 0, show_symbol = FALSE),
+    `1 to 4` = ~qwraps2::n_perc(AgeBand == "1 to 4", digits = 0, show_symbol = FALSE),
+    `5 to 9` = ~qwraps2::n_perc(AgeBand == "5 to 9", digits = 0, show_symbol = FALSE),
+    `10 to 14` = ~qwraps2::n_perc(AgeBand == "10 to 14", digits = 0, show_symbol = FALSE),
+    `15 to 19` = ~qwraps2::n_perc(AgeBand == "15 to 19", digits = 0, show_symbol = FALSE),
+    `20 to 24` = ~qwraps2::n_perc(AgeBand == "20 to 24", digits = 0, show_symbol = FALSE),
+    `25 to 29` = ~qwraps2::n_perc(AgeBand == "25 to 29", digits = 0, show_symbol = FALSE),
+    `30 to 34` = ~qwraps2::n_perc(AgeBand == "30 to 34", digits = 0, show_symbol = FALSE),
+    `35 to 39` = ~qwraps2::n_perc(AgeBand == "35 to 39", digits = 0, show_symbol = FALSE),
+    `40 to 44` = ~qwraps2::n_perc(AgeBand == "40 to 44", digits = 0, show_symbol = FALSE),
+    `45 to 49` = ~qwraps2::n_perc(AgeBand == "45 to 49", digits = 0, show_symbol = FALSE),
+    `50 to 54` = ~qwraps2::n_perc(AgeBand == "50 to 54", digits = 0, show_symbol = FALSE),
+    `55 to 59` = ~qwraps2::n_perc(AgeBand == "55 to 59", digits = 0, show_symbol = FALSE),
+    `60 to 64` = ~qwraps2::n_perc(AgeBand == "60 to 64", digits = 0, show_symbol = FALSE),
+    `65 to 69` = ~qwraps2::n_perc(AgeBand == "65 to 69", digits = 0, show_symbol = FALSE),
+    `70 to 74` = ~qwraps2::n_perc(AgeBand == "70 to 74", digits = 0, show_symbol = FALSE),
+    `75 to 79` = ~qwraps2::n_perc(AgeBand == "75 to 79", digits = 0, show_symbol = FALSE),
+    `80 to 84` = ~qwraps2::n_perc(AgeBand == "80 to 84", digits = 0, show_symbol = FALSE),
+    `85 to 89` = ~qwraps2::n_perc(AgeBand == "85 to 89", digits = 0, show_symbol = FALSE),
+    `90 to 94` = ~qwraps2::n_perc(AgeBand == "90 to 94", digits = 0, show_symbol = FALSE),
+    `95 to 99` = ~qwraps2::n_perc(AgeBand == "95 to 99", digits = 0, show_symbol = FALSE),
+    `100 to 114` = ~qwraps2::n_perc(AgeBand == "100 to 114", digits = 0, show_symbol = FALSE))
+)
+qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date),
+                       age_summary)
+dput(age_summary, file = '../data-out/age_summary.txt')
 ```
