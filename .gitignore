@@ -40,5 +40,6 @@ packrat/src/
 inst/doc
 # Data out
 /data-out/
+/figure/
 #
 dupe_check_scratch.R

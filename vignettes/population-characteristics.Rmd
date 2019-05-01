@@ -16,11 +16,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r load_data, echo=TRUE, results='asis', cache=TRUE}
+```{r load_data, echo=FALSE, results='asis', cache=TRUE}
 library(knitr)
 library(pander)
 library(tidyverse)
 library(qwraps2)
+library(lubridate)
+library(broom)
 options(qwraps2_markup = "markdown")
 
 ward_hf_types <- read.csv(file = "../data-raw/wardhftypes.csv", stringsAsFactors = FALSE)
@@ -35,19 +37,79 @@ emergency_spells_NPHEH_disch_pre_aug17 <- emergency_spells %>%
   filter(CSPDischargeTime <= as.Date("2017-07-31"), StartWardSite %in% c('NPH', 'EH'))
 emergency_spells_reduced <- clahrcnwlhf::drop_unnecessary_cols(emergency_spells_NPHEH_disch_pre_aug17)
 
+timestamp <- gsub(":","-",paste(strsplit(x = toString(Sys.time()),split = " ")[[1]], collapse="-"))
+readr::write_csv(emergency_spells_reduced, path = paste0("../data-out/clahrcnwlhf_np_eh_emerg_spells_", timestamp, ".csv"))
 ```
 
-## Population characteristics
+## Exclusions
+
+Initially `r nrow(emergency_spells_reduced)` spells. `r nrow(emergency_spells_reduced %>% filter(!(StartWardSite %in% c('NPH', 'EH'))))` not from NPH or EH.
+```{r }
+study_dataset <- emergency_spells_reduced %>% filter(!is.na(los)) 
+inc_exc <- c(nrow(study_dataset), nrow(emergency_spells_reduced) - nrow(study_dataset))
+```
+After removing those with missing length of stay: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r }
+study_dataset <- study_dataset %>% filter(!is.na(AgeBand))
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those with missing age: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r }
+study_dataset <- study_dataset %>% filter(Age.est >= 20)
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those in below the age of 20: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r }
+study_dataset <- study_dataset %>% filter(!((Ward_hf_type %in% c('A&E', 'Ambulatory Care ', 'Community', 'Maternity') | is.na(Ward_hf_type))))
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those spells at NPH discharged from ward types with no care bundles: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r }
+study_dataset <- study_dataset %>% mutate(disch_day = as.Date(CSPDischargeTime)) %>%
+  distinct(PseudoID, disch_day, StartWardSite, .keep_all = TRUE)
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing any duplicates based on PseudoID, StartWardSite and disch_day: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r }
+study_dataset <- study_dataset %>% filter(Sex %in% c('F', 'M'))
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those with missing gender: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r }
+study_dataset <- study_dataset %>% filter(WardSite %in% c('NPH','EH'))
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those discharged from a CMH ward: `r inc_exc[1]` (removed `r inc_exc[2]`).
 
 
-```{r popnchars, echo=TRUE, results='asis', cache=TRUE}
-patients_first_HF_episode <- emergency_spells_reduced %>% filter(Heart.Failure.Episode == TRUE) %>% 
+```{r }
+study_dataset <- study_dataset %>% filter(HF.any.code == TRUE)
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those without heart failure diagnosis: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+Test for any duplicated PseudoID & CSPDischargeTime: `r !all(!duplicated(study_dataset %>% select(PseudoID, disch_day)))`.
+
+## Study population characteristics
+
+
+```{r popnchars_prep, echo=FALSE, results='asis', cache=TRUE}
+patients_first_HF_episode <- study_dataset %>% 
   group_by(PseudoID) %>% 
-  slice(which.min(CSPAdmissionTime)) %>% 
+  slice(which.min(CSPDischargeTime)) %>% 
   ungroup()
 
 units(patients_first_HF_episode$los) <- 'days'
+```
+Population: `r nrow(patients_first_HF_episode)` patients with a diagnosis of heart failure.
 
+```{r popnchars, echo=FALSE, results='asis', cache=TRUE}
 pop_summary <- list(
   "Age" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(Age.est)),
@@ -119,9 +181,23 @@ qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWa
                        pop_summary)
 ```
 
-## Age distribution
+#### Univariate hypothesis tests
 
-```{r age, echo=TRUE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+##### Sex
+Difference in difference analysis of sex
+
+```{r age-diffdiff}
+sex_diff_in_diff_data <- patients_first_HF_episode %>% select(StartWardSite, period.date, Sex) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B", male = Sex == "M") %>% select(intervention_site, intervention_period, male)
+
+model <- glm(male ~. + intervention_site * intervention_period, family=binomial(link='logit'), data=sex_diff_in_diff_data)
+
+cbind(OR = exp(coef(model)), exp(confint(model)), p = tidy(model) %>% pull(p.value))
+```
+
+
+### Study population age distribution
+
+```{r age, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
 ggplot2::ggplot(patients_first_HF_episode, ggplot2::aes(x=AgeBand))+ggplot2::geom_bar(width= 0.7) + ggplot2::labs(y = "Frequency",x = "Age Band") +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
   ggplot2::facet_wrap(StartWardSite ~ period.date)
@@ -154,3 +230,276 @@ qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWa
                        age_summary)
 dput(age_summary, file = '../data-out/age_summary.txt')
 ```
+
+### Type of ward - study population
+
+```{r ward, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+
+ward_summary <- with(patients_first_HF_episode, qwraps2::tab_summary(Ward_hf_type))
+qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date),
+                       list("Ward" = ward_summary))
+
+dput(ward_summary, file = '../data-out/ward_summary.txt')
+```
+
+## Spell characteristics
+
+
+```{r spchars, echo=FALSE, results='asis', cache=TRUE}
+HF_spells <- study_dataset
+
+units(HF_spells$los) <- 'days'
+
+pop_summary <- list(
+  "Age" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(Age.est)),
+    #"min" = ~ min(Age.est, na.rm = TRUE),
+    #"max" = ~ max(Age.est, na.rm = TRUE),
+    "median (iqr)" = ~ qwraps2::median_iqr(Age.est, na_rm = TRUE)#,
+    #"mean (sd)" = ~ qwraps2::mean_sd(Age.est,na_rm = TRUE , denote_sd = "paren")
+  ),
+  "Gender" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(Sex)),
+    "Female" = ~ qwraps2::n_perc(Sex == "F", na_rm = TRUE, show_denom = "always"),
+    "Male" = ~ qwraps2::n_perc(Sex == "M", na_rm = TRUE, show_denom = "always")
+  ),
+  "Ethnicity" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(EthnicGroupComp)),
+    "Black or Black British" = ~ qwraps2::n_perc(EthnicGroupComp == "U", na_rm = TRUE, show_denom = "always"),
+    "Other Ethnic Groups / Not Stated" = ~ qwraps2::n_perc(EthnicGroupComp == "V", na_rm = TRUE, show_denom = "always"),
+    "White" = ~ qwraps2::n_perc(EthnicGroupComp == "W", na_rm = TRUE, show_denom = "always"),
+    "Mixed" = ~ qwraps2::n_perc(EthnicGroupComp == "X", na_rm = TRUE, show_denom = "always"),
+    "Asian or Asian British" = ~ qwraps2::n_perc(EthnicGroupComp == "Y", na_rm = TRUE, show_denom = "always")
+  ),
+  "Index of Multiple Deprivation" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(IMD)),
+    #"min" = ~ min(IMD, na.rm = TRUE),
+    #"max" = ~ max(IMD, na.rm = TRUE),
+    "median (iqr)" = ~ qwraps2::median_iqr(IMD, na_rm = TRUE)#,
+    #"mean (sd)" = ~ qwraps2::mean_sd(IMD,na_rm = TRUE , denote_sd = "paren")
+  ),
+  "Length of Stay" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(los)),
+    #"min" = ~ frmt(min(los, na.rm = TRUE), digits = 2),
+    #"max" = ~ frmt(max(los, na.rm = TRUE), digits = 2),
+    "median (iqr)" = ~ qwraps2::median_iqr(los, na_rm = TRUE)#,
+    #"mean (sd)" = ~ qwraps2::mean_sd(los,na_rm = TRUE , denote_sd = "paren")
+  ),
+  "Mortality" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(died)),
+    "In-hospital Mortality" = ~ qwraps2::n_perc(died, na_rm = TRUE, show_denom = "always")
+  ),
+  #"Time to next Any-Cause Re-admission" = list(
+    #"No re-admission" = ~ qwraps2::n_perc(is.na(time.to.next.spell)),
+    #"min" = ~ min(time.to.next.spell, na.rm = TRUE),
+    #"max" = ~ max(time.to.next.spell, na.rm = TRUE),
+    #"median (iqr)" = ~ qwraps2::median_iqr(time.to.next.spell, na_rm = TRUE),
+    #"mean (sd)" = ~ qwraps2::mean_sd(time.to.next.spell, na_rm = TRUE , denote_sd = "paren")
+  #),
+  "Any-Cause Re-admission Category" = list(
+    "No re-admission within 90 days" = ~ qwraps2::n_perc(is.na(all.cause.readmission.cat)),
+    "< 7 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
+    ">= 7, < 30 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '30', na_rm = TRUE, show_denom = "always"),
+    ">= 30, < 90 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
+  ),
+  #"Time to next HF Re-admission" = list(
+    #"No re-admission" = ~ qwraps2::n_perc(is.na(time.to.next.hf.spell)),
+    #"min" = ~ min(time.to.next.hf.spell, na.rm = TRUE),
+    #"max" = ~ max(time.to.next.hf.spell, na.rm = TRUE),
+    #"median (iqr)" = ~ qwraps2::median_iqr(time.to.next.hf.spell, na_rm = TRUE),
+    #"mean (sd)" = ~ qwraps2::mean_sd(time.to.next.hf.spell, na_rm = TRUE , denote_sd = "paren")
+  #),
+  "HF Re-admission Category" = list(
+    "No re-admission within 90 days" = ~ qwraps2::n_perc(is.na(hf.readmission.cat)),
+    "< 7 days" = ~ qwraps2::n_perc(hf.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
+    ">= 7, < 30 days" = ~ qwraps2::n_perc(hf.readmission.cat == '30', na_rm = TRUE, show_denom = "always"),
+    ">= 30, < 90 days" = ~ qwraps2::n_perc(hf.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
+  )
+)
+
+qwraps2::summary_table(HF_spells %>% group_by(Hospital = StartWardSite, Period = period.date),
+                       pop_summary)
+```
+
+## Spell age distribution
+
+```{r age-sp, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+ggplot2::ggplot(HF_spells, ggplot2::aes(x=AgeBand))+ggplot2::geom_bar(width= 0.7) + ggplot2::labs(y = "Frequency",x = "Age Band") +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
+  ggplot2::facet_wrap(StartWardSite ~ period.date)
+
+age_summary = list(
+  "Age Band" = list(`0` = ~qwraps2::n_perc(AgeBand == "0", digits = 0, show_symbol = FALSE),
+    `1 to 4` = ~qwraps2::n_perc(AgeBand == "1 to 4", digits = 0, show_symbol = FALSE),
+    `5 to 9` = ~qwraps2::n_perc(AgeBand == "5 to 9", digits = 0, show_symbol = FALSE),
+    `10 to 14` = ~qwraps2::n_perc(AgeBand == "10 to 14", digits = 0, show_symbol = FALSE),
+    `15 to 19` = ~qwraps2::n_perc(AgeBand == "15 to 19", digits = 0, show_symbol = FALSE),
+    `20 to 24` = ~qwraps2::n_perc(AgeBand == "20 to 24", digits = 0, show_symbol = FALSE),
+    `25 to 29` = ~qwraps2::n_perc(AgeBand == "25 to 29", digits = 0, show_symbol = FALSE),
+    `30 to 34` = ~qwraps2::n_perc(AgeBand == "30 to 34", digits = 0, show_symbol = FALSE),
+    `35 to 39` = ~qwraps2::n_perc(AgeBand == "35 to 39", digits = 0, show_symbol = FALSE),
+    `40 to 44` = ~qwraps2::n_perc(AgeBand == "40 to 44", digits = 0, show_symbol = FALSE),
+    `45 to 49` = ~qwraps2::n_perc(AgeBand == "45 to 49", digits = 0, show_symbol = FALSE),
+    `50 to 54` = ~qwraps2::n_perc(AgeBand == "50 to 54", digits = 0, show_symbol = FALSE),
+    `55 to 59` = ~qwraps2::n_perc(AgeBand == "55 to 59", digits = 0, show_symbol = FALSE),
+    `60 to 64` = ~qwraps2::n_perc(AgeBand == "60 to 64", digits = 0, show_symbol = FALSE),
+    `65 to 69` = ~qwraps2::n_perc(AgeBand == "65 to 69", digits = 0, show_symbol = FALSE),
+    `70 to 74` = ~qwraps2::n_perc(AgeBand == "70 to 74", digits = 0, show_symbol = FALSE),
+    `75 to 79` = ~qwraps2::n_perc(AgeBand == "75 to 79", digits = 0, show_symbol = FALSE),
+    `80 to 84` = ~qwraps2::n_perc(AgeBand == "80 to 84", digits = 0, show_symbol = FALSE),
+    `85 to 89` = ~qwraps2::n_perc(AgeBand == "85 to 89", digits = 0, show_symbol = FALSE),
+    `90 to 94` = ~qwraps2::n_perc(AgeBand == "90 to 94", digits = 0, show_symbol = FALSE),
+    `95 to 99` = ~qwraps2::n_perc(AgeBand == "95 to 99", digits = 0, show_symbol = FALSE),
+    `100 to 114` = ~qwraps2::n_perc(AgeBand == "100 to 114", digits = 0, show_symbol = FALSE))
+)
+qwraps2::summary_table(HF_spells %>% group_by(Hospital = StartWardSite, Period = period.date),
+                       age_summary)
+dput(age_summary, file = '../data-out/age_sp_summary.txt')
+```
+
+## Type of ward - spells
+
+```{r ward-sp, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+
+ward_summary <- with(patients_first_HF_episode, qwraps2::tab_summary(Ward_hf_type))
+qwraps2::summary_table(HF_spells %>% group_by(Hospital = StartWardSite, Period = period.date),
+                       list("Ward" = ward_summary))
+
+dput(ward_summary, file = '../data-out/ward_sp_summary.txt')
+```
+
+\newpage
+
+## Bundles by month
+
+```{r bundles-month, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
+  filter(bundle == TRUE, HF.any.code == TRUE) %>%
+  group_by(yearMonth) %>%
+  summarize(numBundles = n()) %>%
+  ggplot(mapping = aes(x = yearMonth, y = numBundles)) + geom_line() + geom_point() +
+  labs(title = 'Number of Heart Failure Care Bundles Administered Each Month',
+    subtitle = 'Northwick Park Hospital', ylab = 'Number of care bundles administered',
+    xlab = 'Month of discharge')
+```
+
+```{r bundles-compliance, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+HF_bundle_spells <- HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>% 
+  filter(bundle == TRUE, HF.any.code == TRUE) %>%
+  left_join(clahrcnwlhf::linked_bundle_data %>% select(-Admission.Datetime), by = "Bundle.Number")
+
+# redo these graphs using ggplot properly
+
+HF_bundle_spells %>%
+  group_by(yearMonth) %>%
+  mutate(BNP.Compliant1 = !(is.na(BNP.Level.Measured) | BNP.Level.Measured == "No")) %>%
+  summarise(numBundles = n(), BNP_compliant1 = sum(BNP.Compliant1))  %>%
+  mutate(BNP_compliance1 = BNP_compliant1/numBundles) %>%
+  ggplot(mapping = aes(x = yearMonth, y = BNP_compliance1)) + geom_line() + geom_point() +
+  scale_y_continuous(limits = c(0,1)) +
+  labs(title = 'Percentage Compliance with BNP by Month',
+    subtitle = 'Northwick Park Hospital', ylab = '% compliance',
+    xlab = 'Month of discharge')
+
+HF_bundle_spells %>%
+  group_by(yearMonth) %>%
+  mutate(BNP.Compliant1 = !(is.na(BNP.Level.Measured) | BNP.Level.Measured == "No")) %>%
+  summarise(numBundles = n(), BNP_compliant1 = sum(BNP.Compliant1))  %>%
+  mutate(BNP_compliance1 = BNP_compliant1/numBundles) %>%
+  ggplot(mapping = aes(x = yearMonth, y = BNP_compliant1)) + geom_line() + geom_point() +
+  labs(title = 'Number Compliant with BNP by Month',
+    subtitle = 'Northwick Park Hospital', ylab = 'Number compliant',
+    xlab = 'Month of discharge')
+
+HF_bundle_spells %>%
+  group_by(yearMonth) %>%
+  mutate(BNP.Compliant2 = !(is.na(BNP.Level.Measured) | BNP.Level.Measured == "No" | is.na(BNP.Result))) %>%
+  summarise(numBundles = n(), BNP_compliant2 = sum(BNP.Compliant2))  %>%
+  mutate(BNP_compliance2 = BNP_compliant2/numBundles) %>%
+  ggplot(mapping = aes(x = yearMonth, y = BNP_compliance2)) + geom_line() + geom_point() +
+  scale_y_continuous(limits = c(0,1)) +
+  labs(title = 'Percentage Strict Compliance with BNP by Month',
+    subtitle = 'Northwick Park Hospital', ylab = '% strict compliance',
+    xlab = 'Month of discharge')
+
+HF_bundle_spells %>%
+  group_by(yearMonth) %>%
+  mutate(BNP.Compliant2 = !(is.na(BNP.Level.Measured) | BNP.Level.Measured == "No" | is.na(BNP.Result))) %>%
+  summarise(numBundles = n(), BNP_compliant2 = sum(BNP.Compliant2))  %>%
+  mutate(BNP_compliance2 = BNP_compliant2/numBundles) %>%
+  ggplot(mapping = aes(x = yearMonth, y = BNP_compliant2)) + geom_line() + geom_point() +
+  labs(title = 'Number Strictly Compliant with BNP by Month',
+    subtitle = 'Northwick Park Hospital', ylab = 'Number strictly compliant',
+    xlab = 'Month of discharge')
+
+fix_inaccurate_dates <- function(date_approx) {
+  if(is.na(date_approx)) {
+    return(as_date(NA))
+  } else if(!is.na(stringr::str_match(date_approx, "^[-+]?\\d*$")[1,1])) {
+    return(ymd(paste(date_approx,"0101",sep = "")))
+  } else if(!is.na(stringr::str_match(date_approx, "-")[1,1])) {
+    return(myd(paste(date_approx,"-01", sep = "")))
+  } else return(dmy(date_approx))
+}
+
+fix_inacc_dts_v <- Vectorize(fix_inaccurate_dates)
+
+HF_bundle_spells <- HF_bundle_spells  %>% mutate(Date.of.last.echo = 
+                                                   if_else(Date.of.last.echo == "NA " |
+                                                             Date.of.last.echo == " NA" |
+                                                             Date.of.last.echo == "N/A",
+                                                           NA_character_, Date.of.last.echo)) %>%
+  rowwise() %>%
+  mutate(date_last_echo = fix_inaccurate_dates(Date.of.last.echo)) %>%
+  ungroup() %>%
+  mutate(time_since_last_echo = difftime(CSPAdmissionTime, date_last_echo, units = "days")) %>%
+  mutate(echo_completed_dt = as.POSIXct(Date.completed + hm(Time.completed)),
+         time_to_echo = difftime(echo_completed_dt, CSPAdmissionTime, units = "hours")) %>%
+  mutate(echo_compliant = (time_since_last_echo <= 182) | (time_to_echo <= 48 & time_to_echo > -182*24),
+         echo_compliant = if_else(is.na(echo_compliant), FALSE, echo_compliant))
+
+HF_bundle_spells %>%
+  group_by(yearMonth) %>%
+  summarise(numBundles = n(), echo_compliant = sum(echo_compliant))  %>%
+  mutate(echo_compliance = echo_compliant/numBundles) %>%
+  ggplot(mapping = aes(x = yearMonth, y = echo_compliance)) + geom_line() + geom_point() +
+  scale_y_continuous(limits = c(0,1)) +
+  labs(title = 'Percentage Compliance with Echo by Month',
+    subtitle = 'Northwick Park Hospital', ylab = '% compliance',
+    xlab = 'Month of discharge')
+
+HF_bundle_spells %>%
+  group_by(yearMonth) %>%
+  summarise(numBundles = n(), echo_compliant = sum(echo_compliant))  %>%
+  mutate(echo_compliance = echo_compliant/numBundles) %>%
+  ggplot(mapping = aes(x = yearMonth, y = echo_compliant)) + geom_line() + geom_point() +
+  labs(title = 'Number Compliant with Echo by Month',
+    subtitle = 'Northwick Park Hospital', ylab = 'Number Compliant',
+    xlab = 'Month of discharge')
+
+HF_bundle_spells <- HF_bundle_spells %>% mutate(Specialist.Referral.Made = tolower(Specialist.Referral.Made),
+                                                referral_compliant = if_else(is.na(Specialist.Referral.Made) |
+                                                                                Specialist.Referral.Made == "no",
+                                                                              FALSE, TRUE))
+
+HF_bundle_spells %>%
+  group_by(yearMonth) %>%
+  summarise(numBundles = n(), referral_compliant = sum(referral_compliant))  %>%
+  mutate(referral_compliance = referral_compliant/numBundles) %>%
+  ggplot(mapping = aes(x = yearMonth, y = referral_compliance)) + geom_line() + geom_point() +
+  scale_y_continuous(limits = c(0,1)) +
+  labs(title = 'Percentage Compliance with Specialist Referral by Month',
+    subtitle = 'Northwick Park Hospital', ylab = '% compliance',
+    xlab = 'Month of discharge')
+
+HF_bundle_spells %>%
+  group_by(yearMonth) %>%
+  summarise(numBundles = n(), referral_compliant = sum(referral_compliant))  %>%
+  mutate(referral_compliance = referral_compliant/numBundles) %>%
+  ggplot(mapping = aes(x = yearMonth, y = referral_compliant)) + geom_line() + geom_point() +
+  labs(title = 'Number Compliant with Specialist Referral by Month',
+    subtitle = 'Northwick Park Hospital', ylab = 'Number compliant',
+    xlab = 'Month of discharge')
+```
+Probably need to split echo compliance into those who'd had one <6months and those having new one within 48h.
+

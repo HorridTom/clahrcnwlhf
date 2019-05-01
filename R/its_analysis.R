@@ -143,6 +143,9 @@ create_new_vars <- function(df = clahrcnwlhf::emergency_adms, from.vignette = FA
   # Restrict to only first episode of each spell
   df <- df[which(df$new_spell == TRUE),]
 
+  # Remove duplicate spells
+  df <- dplyr::distinct(df, PseudoID, CSPDischargeTime, .keep_all = TRUE)
+
   # Add readmission columns
   df <- create_readms(df)
 
