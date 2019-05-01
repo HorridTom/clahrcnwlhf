@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r load_data, echo=FALSE, results='asis', cache=TRUE}
+library(tidyverse)
 library(knitr)
 library(pander)
 library(tidyverse)
@@ -181,17 +182,65 @@ qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWa
                        pop_summary)
 ```
 
-#### Univariate hypothesis tests
+#### Univariate analysis
 
 ##### Sex
 Difference in difference analysis of sex
 
-```{r age-diffdiff}
+```{r sex-diffdiff}
 sex_diff_in_diff_data <- patients_first_HF_episode %>% select(StartWardSite, period.date, Sex) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B", male = Sex == "M") %>% select(intervention_site, intervention_period, male)
 
 model <- glm(male ~. + intervention_site * intervention_period, family=binomial(link='logit'), data=sex_diff_in_diff_data)
 
 cbind(OR = exp(coef(model)), exp(confint(model)), p = tidy(model) %>% pull(p.value))
+```
+
+##### Age
+Difference in difference analysis of age band
+
+```{r age-diffdiff}
+age_diff_in_diff_data <- patients_first_HF_episode %>% dplyr::select(StartWardSite, period.date, AgeBand) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, AgeBand)
+
+# Need to collapse age bands due to small numbers in lower bands
+age_diff_in_diff_data$AgeBand <- forcats::fct_collapse(age_diff_in_diff_data$AgeBand, "0 to 39" = c("0", "1 to 4", "5 to 9", "10 to 14", "15 to 19", "20 to 24", "25 to 29", "30 to 34", "35 to 39"))
+
+model <- MASS::polr(AgeBand ~. + intervention_site * intervention_period, data=age_diff_in_diff_data, method = "logistic", Hess = TRUE)
+summary(model)
+
+exp(cbind(OR = coef(model), confint.default(model)))
+```
+
+##### Ethnicity
+```{r eth-diffdiff}
+ethnicity_diff_in_diff_data <- patients_first_HF_episode %>% dplyr::select(StartWardSite, period.date, EthnicGroupComp) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, EthnicGroupComp)
+# Need to collapse ethnicity categories due to small numbers
+ethnicity_diff_in_diff_data$EthnicGroupComp <- forcats::fct_collapse(ethnicity_diff_in_diff_data$EthnicGroupComp, "XU" = c("X", "U"))
+
+ethnicity_diff_in_diff_data$EthnicGroupComp <- relevel(ethnicity_diff_in_diff_data$EthnicGroupComp, ref = "W")
+model <- nnet::multinom(EthnicGroupComp ~. + intervention_site * intervention_period, data=ethnicity_diff_in_diff_data)
+summary(model)
+exp(coef(model))
+exp(confint(model))
+```
+
+##### IMD
+
+```{r imd-diffdiff}
+imd_diff_in_diff_data <- patients_first_HF_episode %>% dplyr::select(StartWardSite, period.date, IMD) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, IMD)
+
+model <- glm(IMD~.+ intervention_site * intervention_period, data = imd_diff_in_diff_data)
+
+bcmod <- MASS::boxcox(model, optimise = TRUE)
+bcresults <- data.frame(x = bcmod$x, y = bcmod$y)
+bc_exp <- bcresults %>% arrange(-y) %>% top_n(1) %>% pull(x)
+bc_model <- glm(((IMD^bc_exp - 1) / bc_exp ) ~.+ intervention_site * intervention_period, data = imd_diff_in_diff_data)
+
+plot(fitted(bc_model), residuals(bc_model)) #qq plot also checked and fine
+
+summary(bc_model)
+
+cbind(Coeffs = coef(bc_model), confint(bc_model))
+
 ```
 
 
@@ -383,6 +432,8 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
     xlab = 'Month of discharge')
 ```
 
+TODO: Exclude BNP below X and with echo in prev. 3 months.
+
 ```{r bundles-compliance, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
 HF_bundle_spells <- HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>% 
   filter(bundle == TRUE, HF.any.code == TRUE) %>%
@@ -503,3 +554,105 @@ HF_bundle_spells %>%
 ```
 Probably need to split echo compliance into those who'd had one <6months and those having new one within 48h.
 
+## Outcomes
+
+### Mortality
+
+```{r mortality-chart, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
+  filter(HF.any.code == TRUE, yearMonth > as.Date("2014-04-01")) %>%
+  group_by(yearMonth, StartWardSite) %>%
+  summarize(numDischarged = n(), numDeaths = sum(died)) %>%
+  mutate(mortality_rate = numDeaths/numDischarged) %>%
+  ggplot(mapping = aes(x = yearMonth, y = mortality_rate, colour = StartWardSite)) + geom_line() + geom_point() +
+  labs(title = 'Monthly Raw Mortality Rate',
+    subtitle = 'LNW', ylab = 'Mortality Rate',
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,NA))
+```
+
+### Length of Stay
+
+```{r los-chart, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+units(HF_spells$los) <- 'days'
+
+HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
+  filter(HF.any.code == TRUE, yearMonth > as.Date("2014-04-01")) %>%
+  group_by(yearMonth, StartWardSite) %>%
+  summarize(av_los = mean(los, na.rm = TRUE)) %>%
+  ggplot(mapping = aes(x = yearMonth, y = av_los, colour = StartWardSite)) + geom_line() + geom_point() +
+  labs(title = 'Monthly Average Length of Stay',
+    subtitle = 'LNW', ylab = 'Average Length of Stay',
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,NA))
+```
+
+### Readmissions
+
+```{r readms-chart-7ac, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
+  filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-06-30")) %>%
+  group_by(yearMonth, StartWardSite) %>%
+  summarize(numDischarged = n(), numReadm = sum(all.cause.readmission.cat == "7", na.rm = TRUE)) %>%
+  mutate(readmission_rate = numReadm/numDischarged) %>%
+  ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
+  labs(title = 'Monthly 7-day All-Cause Readmission Rate',
+    subtitle = 'LNW', ylab = 'Readmission Rate',
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,.25))
+```
+
+```{r readms-chart-30ac, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
+  filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-05-30")) %>%
+  group_by(yearMonth, StartWardSite) %>%
+  summarize(numDischarged = n(), numReadm = sum(all.cause.readmission.cat == "30", na.rm = TRUE)) %>%
+  mutate(readmission_rate = numReadm/numDischarged) %>%
+  ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
+  labs(title = 'Monthly 8- to 30-day All-Cause Readmission Rate',
+    subtitle = 'LNW', ylab = 'Readmission Rate',
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,.25))
+```   
+```{r readms-chart-90ac, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
+  filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-03-30")) %>%
+  group_by(yearMonth, StartWardSite) %>%
+  summarize(numDischarged = n(), numReadm = sum(all.cause.readmission.cat == "90", na.rm = TRUE)) %>%
+  mutate(readmission_rate = numReadm/numDischarged) %>%
+  ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
+  labs(title = 'Monthly 31- to 90-day All-Cause Readmission Rate',
+    subtitle = 'LNW', ylab = 'Readmission Rate',
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,.25))
+```
+
+```{r readms-chart-7hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
+  filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-06-30")) %>%
+  group_by(yearMonth, StartWardSite) %>%
+  summarize(numDischarged = n(), numReadm = sum(hf.readmission.cat == "7", na.rm = TRUE)) %>%
+  mutate(readmission_rate = numReadm/numDischarged) %>%
+  ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
+  labs(title = 'Monthly 7-day Heart Failure Specific Readmission Rate',
+    subtitle = 'LNW', ylab = 'Readmission Rate',
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,0.05))
+```
+
+```{r readms-chart-30hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
+  filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-05-30")) %>%
+  group_by(yearMonth, StartWardSite) %>%
+  summarize(numDischarged = n(), numReadm = sum(hf.readmission.cat == "30", na.rm = TRUE)) %>%
+  mutate(readmission_rate = numReadm/numDischarged) %>%
+  ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
+  labs(title = 'Monthly 8- to 30-day Heart Failure Specific Readmission Rate',
+    subtitle = 'LNW', ylab = 'Readmission Rate',
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,0.05))
+```   
+```{r readms-chart-90hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
+  filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-03-30")) %>%
+  group_by(yearMonth, StartWardSite) %>%
+  summarize(numDischarged = n(), numReadm = sum(hf.readmission.cat == "90", na.rm = TRUE)) %>%
+  mutate(readmission_rate = numReadm/numDischarged) %>%
+  ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
+  labs(title = 'Monthly 31- to 90-day Heart Failure Specific Readmission Rate',
+    subtitle = 'LNW', ylab = 'Readmission Rate',
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,0.05))
+```
