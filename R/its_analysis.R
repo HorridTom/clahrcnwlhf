@@ -302,7 +302,7 @@ drop_unnecessary_cols <- function(df,
                  'new.pat',
                  'new_spell',
                  'episode_order')) {
-  df %>% select(-one_of(drop.cols))
+  df %>% dplyr::select(-one_of(drop.cols))
 }
 
 

@@ -45,57 +45,57 @@ readr::write_csv(emergency_spells_reduced, path = paste0("../data-out/clahrcnwlh
 ## Exclusions
 
 Initially `r nrow(emergency_spells_reduced)` spells. `r nrow(emergency_spells_reduced %>% filter(!(StartWardSite %in% c('NPH', 'EH'))))` not from NPH or EH.
-```{r }
-study_dataset <- emergency_spells_reduced %>% filter(!is.na(los)) 
+```{r exc1}
+study_dataset <- emergency_spells_reduced %>% dplyr::filter(!is.na(los)) 
 inc_exc <- c(nrow(study_dataset), nrow(emergency_spells_reduced) - nrow(study_dataset))
 ```
 After removing those with missing length of stay: `r inc_exc[1]` (removed `r inc_exc[2]`).
 
-```{r }
-study_dataset <- study_dataset %>% filter(!is.na(AgeBand))
+```{r exc2}
+study_dataset <- study_dataset %>% dplyr::filter(!is.na(AgeBand))
 inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
 ```
 After removing those with missing age: `r inc_exc[1]` (removed `r inc_exc[2]`).
 
-```{r }
-study_dataset <- study_dataset %>% filter(Age.est >= 20)
+```{r exc3}
+study_dataset <- study_dataset %>% dplyr::filter(Age.est >= 20)
 inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
 ```
 After removing those in below the age of 20: `r inc_exc[1]` (removed `r inc_exc[2]`).
 
-```{r }
-study_dataset <- study_dataset %>% filter(!((Ward_hf_type %in% c('A&E', 'Ambulatory Care ', 'Community', 'Maternity') | is.na(Ward_hf_type))))
+```{r exc4}
+study_dataset <- study_dataset %>% dplyr::filter(!((Ward_hf_type %in% c('A&E', 'Ambulatory Care ', 'Community', 'Maternity') | is.na(Ward_hf_type))))
 inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
 ```
 After removing those spells at NPH discharged from ward types with no care bundles: `r inc_exc[1]` (removed `r inc_exc[2]`).
 
-```{r }
-study_dataset <- study_dataset %>% mutate(disch_day = as.Date(CSPDischargeTime)) %>%
-  distinct(PseudoID, disch_day, StartWardSite, .keep_all = TRUE)
+```{r exc5}
+study_dataset <- study_dataset %>% dplyr::mutate(disch_day = as.Date(CSPDischargeTime)) %>%
+  dplyr::distinct(PseudoID, disch_day, StartWardSite, .keep_all = TRUE)
 inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
 ```
 After removing any duplicates based on PseudoID, StartWardSite and disch_day: `r inc_exc[1]` (removed `r inc_exc[2]`).
 
-```{r }
-study_dataset <- study_dataset %>% filter(Sex %in% c('F', 'M'))
+```{r exc6}
+study_dataset <- study_dataset %>% dplyr::filter(Sex %in% c('F', 'M'))
 inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
 ```
 After removing those with missing gender: `r inc_exc[1]` (removed `r inc_exc[2]`).
 
-```{r }
-study_dataset <- study_dataset %>% filter(WardSite %in% c('NPH','EH'))
+```{r exc7}
+study_dataset <- study_dataset %>% dplyr::filter(WardSite %in% c('NPH','EH'))
 inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
 ```
 After removing those discharged from a CMH ward: `r inc_exc[1]` (removed `r inc_exc[2]`).
 
 
-```{r }
-study_dataset <- study_dataset %>% filter(HF.any.code == TRUE)
+```{r exc8}
+study_dataset <- study_dataset %>% dplyr::filter(HF.any.code == TRUE)
 inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
 ```
 After removing those without heart failure diagnosis: `r inc_exc[1]` (removed `r inc_exc[2]`).
 
-Test for any duplicated PseudoID & CSPDischargeTime: `r !all(!duplicated(study_dataset %>% select(PseudoID, disch_day)))`.
+Test for any duplicated PseudoID & CSPDischargeTime: `r !all(!duplicated(study_dataset %>% dplyr::select(PseudoID, disch_day)))`.
 
 ## Study population characteristics
 
@@ -188,7 +188,7 @@ qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWa
 Difference in difference analysis of sex
 
 ```{r sex-diffdiff}
-sex_diff_in_diff_data <- patients_first_HF_episode %>% select(StartWardSite, period.date, Sex) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B", male = Sex == "M") %>% select(intervention_site, intervention_period, male)
+sex_diff_in_diff_data <- patients_first_HF_episode %>% dplyr::select(StartWardSite, period.date, Sex) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B", male = Sex == "M") %>% dplyr::select(intervention_site, intervention_period, male)
 
 model <- glm(male ~. + intervention_site * intervention_period, family=binomial(link='logit'), data=sex_diff_in_diff_data)
 
@@ -437,7 +437,7 @@ TODO: Exclude BNP below X and with echo in prev. 3 months.
 ```{r bundles-compliance, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
 HF_bundle_spells <- HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>% 
   filter(bundle == TRUE, HF.any.code == TRUE) %>%
-  left_join(clahrcnwlhf::linked_bundle_data %>% select(-Admission.Datetime), by = "Bundle.Number")
+  left_join(clahrcnwlhf::linked_bundle_data %>% dplyr::select(-Admission.Datetime), by = "Bundle.Number")
 
 # redo these graphs using ggplot properly
 
