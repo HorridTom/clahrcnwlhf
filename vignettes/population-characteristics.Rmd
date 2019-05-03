@@ -114,15 +114,14 @@ Population: `r nrow(patients_first_HF_episode)` patients with a diagnosis of hea
 pop_summary <- list(
   "Age" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(Age.est)),
-    "min" = ~ min(Age.est, na.rm = TRUE),
-    "max" = ~ max(Age.est, na.rm = TRUE),
-    "median (iqr)" = ~ qwraps2::median_iqr(Age.est, na_rm = TRUE),
-    "mean (sd)" = ~ qwraps2::mean_sd(Age.est,na_rm = TRUE , denote_sd = "paren")
+    # "min" = ~ min(Age.est, na.rm = TRUE),
+    # "max" = ~ max(Age.est, na.rm = TRUE),
+    "median (iqr) : band midpoints" = ~ qwraps2::median_iqr(Age.est, na_rm = TRUE)
   ),
   "Gender" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(Sex)),
-    "Female" = ~ qwraps2::n_perc(Sex == "F", na_rm = TRUE, show_denom = "always"),
-    "Male" = ~ qwraps2::n_perc(Sex == "M", na_rm = TRUE, show_denom = "always")
+    "Female" = ~ qwraps2::n_perc(Sex == "F", na_rm = TRUE, show_denom = "ifNA"),
+    "Male" = ~ qwraps2::n_perc(Sex == "M", na_rm = TRUE, show_denom = "ifNA")
   ),
   "Ethnicity" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(EthnicGroupComp)),
@@ -134,42 +133,42 @@ pop_summary <- list(
   ),
   "Index of Multiple Deprivation" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(IMD)),
-    "min" = ~ min(IMD, na.rm = TRUE),
-    "max" = ~ max(IMD, na.rm = TRUE),
-    "median (iqr)" = ~ qwraps2::median_iqr(IMD, na_rm = TRUE),
-    "mean (sd)" = ~ qwraps2::mean_sd(IMD,na_rm = TRUE , denote_sd = "paren")
+    # "min" = ~ min(IMD, na.rm = TRUE),
+    # "max" = ~ max(IMD, na.rm = TRUE),
+    "n; median (iqr)" = ~ qwraps2::median_iqr(IMD, na_rm = TRUE)#,
+    #"mean (sd)" = ~ qwraps2::mean_sd(IMD,na_rm = TRUE , denote_sd = "paren")
   ),
   "Length of Stay" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(los)),
-    "min" = ~ frmt(min(los, na.rm = TRUE), digits = 2),
-    "max" = ~ frmt(max(los, na.rm = TRUE), digits = 2),
+    # "min" = ~ frmt(min(los, na.rm = TRUE), digits = 2),
+    # "max" = ~ frmt(max(los, na.rm = TRUE), digits = 2),
     "median (iqr)" = ~ qwraps2::median_iqr(los, na_rm = TRUE),
     "mean (sd)" = ~ qwraps2::mean_sd(los,na_rm = TRUE , denote_sd = "paren")
   ),
   "Mortality" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(died)),
-    "In-hospital Mortality" = ~ qwraps2::n_perc(died, na_rm = TRUE, show_denom = "always")
+    "In-hospital Mortality" = ~ qwraps2::n_perc(died, na_rm = TRUE, show_denom = "ifNA")
   ),
-  "Time to next Any-Cause Re-admission" = list(
-    "No re-admission" = ~ qwraps2::n_perc(is.na(time.to.next.spell)),
-    "min" = ~ min(time.to.next.spell, na.rm = TRUE),
-    "max" = ~ max(time.to.next.spell, na.rm = TRUE),
-    "median (iqr)" = ~ qwraps2::median_iqr(time.to.next.spell, na_rm = TRUE),
-    "mean (sd)" = ~ qwraps2::mean_sd(time.to.next.spell, na_rm = TRUE , denote_sd = "paren")
-  ),
+  # "Time to next Any-Cause Re-admission" = list(
+  #   "No re-admission" = ~ qwraps2::n_perc(is.na(time.to.next.spell)),
+  #   "min" = ~ min(time.to.next.spell, na.rm = TRUE),
+  #   "max" = ~ max(time.to.next.spell, na.rm = TRUE),
+  #   "median (iqr)" = ~ qwraps2::median_iqr(time.to.next.spell, na_rm = TRUE),
+  #   "mean (sd)" = ~ qwraps2::mean_sd(time.to.next.spell, na_rm = TRUE , denote_sd = "paren")
+  # ),
   "Any-Cause Re-admission Category" = list(
     "No re-admission within 90 days" = ~ qwraps2::n_perc(is.na(all.cause.readmission.cat)),
     "< 7 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
     ">= 7, < 30 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '30', na_rm = TRUE, show_denom = "always"),
     ">= 30, < 90 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
   ),
-  "Time to next HF Re-admission" = list(
-    "No re-admission" = ~ qwraps2::n_perc(is.na(time.to.next.hf.spell)),
-    "min" = ~ min(time.to.next.hf.spell, na.rm = TRUE),
-    "max" = ~ max(time.to.next.hf.spell, na.rm = TRUE),
-    "median (iqr)" = ~ qwraps2::median_iqr(time.to.next.hf.spell, na_rm = TRUE),
-    "mean (sd)" = ~ qwraps2::mean_sd(time.to.next.hf.spell, na_rm = TRUE , denote_sd = "paren")
-  ),
+  # "Time to next HF Re-admission" = list(
+  #   "No re-admission" = ~ qwraps2::n_perc(is.na(time.to.next.hf.spell)),
+  #   "min" = ~ min(time.to.next.hf.spell, na.rm = TRUE),
+  #   "max" = ~ max(time.to.next.hf.spell, na.rm = TRUE),
+  #   "median (iqr)" = ~ qwraps2::median_iqr(time.to.next.hf.spell, na_rm = TRUE),
+  #   "mean (sd)" = ~ qwraps2::mean_sd(time.to.next.hf.spell, na_rm = TRUE , denote_sd = "paren")
+  # ),
   "HF Re-admission Category" = list(
     "No re-admission within 90 days" = ~ qwraps2::n_perc(is.na(hf.readmission.cat)),
     "< 7 days" = ~ qwraps2::n_perc(hf.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
@@ -193,6 +192,8 @@ sex_diff_in_diff_data <- patients_first_HF_episode %>% dplyr::select(StartWardSi
 model <- glm(male ~. + intervention_site * intervention_period, family=binomial(link='logit'), data=sex_diff_in_diff_data)
 
 cbind(OR = exp(coef(model)), exp(confint(model)), p = tidy(model) %>% pull(p.value))
+sex_did_or <- paste(format(exp(coef(model)[4]), digits = 3), " (", format(exp(confint(model)[4,1]), digits = 3), ", ", format(exp(confint(model)[4,2]), digits = 3),")", sep = "")
+sex_did_or
 ```
 
 ##### Age
@@ -208,6 +209,8 @@ model <- MASS::polr(AgeBand ~. + intervention_site * intervention_period, data=a
 summary(model)
 
 exp(cbind(OR = coef(model), confint.default(model)))
+age_did_or <- paste(format(exp(coef(model)[3]), digits = 3), " (", format(exp(confint.default(model)[3,1]), digits = 3), ", ", format(exp(confint.default(model)[3,2]), digits = 3),")", sep = "")
+age_did_or
 ```
 
 ##### Ethnicity
@@ -221,12 +224,22 @@ model <- nnet::multinom(EthnicGroupComp ~. + intervention_site * intervention_pe
 summary(model)
 exp(coef(model))
 exp(confint(model))
+
+eth_did_or_XU <- paste(format(exp(coef(model)[1,4]), digits = 3), " (", format(exp(confint(model)[4,1,1]), digits = 3), ", ", format(exp(confint(model)[4,2,1]), digits = 3),")", sep = "")
+eth_did_or_XU
+eth_did_or_V <- paste(format(exp(coef(model)[2,4]), digits = 3), " (", format(exp(confint(model)[4,1,2]), digits = 3), ", ", format(exp(confint(model)[4,2,2]), digits = 3),")", sep = "")
+eth_did_or_V
+eth_did_or_Y <- paste(format(exp(coef(model)[3,4]), digits = 3), " (", format(exp(confint(model)[4,1,3]), digits = 3), ", ", format(exp(confint(model)[4,2,3]), digits = 3),")", sep = "")
+eth_did_or_Y
+
 ```
 
 ##### IMD
 
 ```{r imd-diffdiff}
 imd_diff_in_diff_data <- patients_first_HF_episode %>% dplyr::select(StartWardSite, period.date, IMD) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, IMD)
+
+patients_first_HF_episode %>% ggplot(aes(x = IMD)) + geom_histogram() + facet_wrap(StartWardSite ~ period.date)
 
 model <- glm(IMD~.+ intervention_site * intervention_period, data = imd_diff_in_diff_data)
 
@@ -240,7 +253,15 @@ plot(fitted(bc_model), residuals(bc_model)) #qq plot also checked and fine
 summary(bc_model)
 
 cbind(Coeffs = coef(bc_model), confint(bc_model))
+imd_did_or <- paste(format(coef(bc_model)[4], digits = 3), " (", format(confint(bc_model)[4,1], digits = 3), ", ", format(confint(bc_model)[4,2], digits = 3),")", sep = "")
+imd_did_or
+```
 
+### Population table
+
+```{r}
+pop_table <- qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date),
+                       pop_summary)
 ```
 
 
@@ -304,13 +325,13 @@ pop_summary <- list(
     "Missing" = ~ qwraps2::n_perc(is.na(Age.est)),
     #"min" = ~ min(Age.est, na.rm = TRUE),
     #"max" = ~ max(Age.est, na.rm = TRUE),
-    "median (iqr)" = ~ qwraps2::median_iqr(Age.est, na_rm = TRUE)#,
+    "median (iqr) : band midpoints" = ~ qwraps2::median_iqr(Age.est, na_rm = TRUE)#,
     #"mean (sd)" = ~ qwraps2::mean_sd(Age.est,na_rm = TRUE , denote_sd = "paren")
   ),
   "Gender" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(Sex)),
-    "Female" = ~ qwraps2::n_perc(Sex == "F", na_rm = TRUE, show_denom = "always"),
-    "Male" = ~ qwraps2::n_perc(Sex == "M", na_rm = TRUE, show_denom = "always")
+    "Female" = ~ qwraps2::n_perc(Sex == "F", na_rm = TRUE, show_denom = "ifNA"),
+    "Male" = ~ qwraps2::n_perc(Sex == "M", na_rm = TRUE, show_denom = "ifNA")
   ),
   "Ethnicity" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(EthnicGroupComp)),
@@ -324,7 +345,7 @@ pop_summary <- list(
     "Missing" = ~ qwraps2::n_perc(is.na(IMD)),
     #"min" = ~ min(IMD, na.rm = TRUE),
     #"max" = ~ max(IMD, na.rm = TRUE),
-    "median (iqr)" = ~ qwraps2::median_iqr(IMD, na_rm = TRUE)#,
+    "n; median (iqr)" = ~ qwraps2::median_iqr(IMD, na_rm = TRUE)#,
     #"mean (sd)" = ~ qwraps2::mean_sd(IMD,na_rm = TRUE , denote_sd = "paren")
   ),
   "Length of Stay" = list(
@@ -336,7 +357,7 @@ pop_summary <- list(
   ),
   "Mortality" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(died)),
-    "In-hospital Mortality" = ~ qwraps2::n_perc(died, na_rm = TRUE, show_denom = "always")
+    "In-hospital Mortality" = ~ qwraps2::n_perc(died, na_rm = TRUE, show_denom = "ifNA")
   ),
   #"Time to next Any-Cause Re-admission" = list(
     #"No re-admission" = ~ qwraps2::n_perc(is.na(time.to.next.spell)),
