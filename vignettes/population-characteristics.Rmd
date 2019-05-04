@@ -1,5 +1,5 @@
 ---
-title: "Population Characteristics: CLAHRC NWL Heart Failure Admission Care Bundle"
+title: "Univariate Analysis: CLAHRC NWL Heart Failure Admission Care Bundle"
 author: "Dr Thomas Woodcock"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -12,11 +12,13 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  echo = FALSE
 )
 ```
 
-```{r load_data, echo=FALSE, results='asis', cache=TRUE}
+```{r load_data, echo=FALSE, results='asis', cache=TRUE, include=FALSE}
+library(magrittr)
 library(tidyverse)
 library(knitr)
 library(pander)
@@ -37,6 +39,7 @@ emergency_spells <- clahrcnwlhf::create_new_vars(from.vignette = TRUE, ward_hf_t
 emergency_spells_NPHEH_disch_pre_aug17 <- emergency_spells %>%
   filter(CSPDischargeTime <= as.Date("2017-07-31"), StartWardSite %in% c('NPH', 'EH'))
 emergency_spells_reduced <- clahrcnwlhf::drop_unnecessary_cols(emergency_spells_NPHEH_disch_pre_aug17)
+emergency_spells_reduced$EthnicGroupComp <- forcats::fct_collapse(emergency_spells_reduced$EthnicGroupComp, "XV" = c("X", "V"))
 
 timestamp <- gsub(":","-",paste(strsplit(x = toString(Sys.time()),split = " ")[[1]], collapse="-"))
 readr::write_csv(emergency_spells_reduced, path = paste0("../data-out/clahrcnwlhf_np_eh_emerg_spells_", timestamp, ".csv"))
@@ -61,7 +64,7 @@ After removing those with missing age: `r inc_exc[1]` (removed `r inc_exc[2]`).
 study_dataset <- study_dataset %>% dplyr::filter(Age.est >= 20)
 inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
 ```
-After removing those in below the age of 20: `r inc_exc[1]` (removed `r inc_exc[2]`).
+After removing those below the age of 20: `r inc_exc[1]` (removed `r inc_exc[2]`).
 
 ```{r exc4}
 study_dataset <- study_dataset %>% dplyr::filter(!((Ward_hf_type %in% c('A&E', 'Ambulatory Care ', 'Community', 'Maternity') | is.na(Ward_hf_type))))
@@ -95,12 +98,17 @@ inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
 ```
 After removing those without heart failure diagnosis: `r inc_exc[1]` (removed `r inc_exc[2]`).
 
-Test for any duplicated PseudoID & CSPDischargeTime: `r !all(!duplicated(study_dataset %>% dplyr::select(PseudoID, disch_day)))`.
+```{r dupe-test}
+#Test for any duplicated PseudoID & CSPDischargeTime: `r !all(!duplicated(study_dataset %>% dplyr::select(PseudoID, disch_day)))`.
+```
 
-## Study population characteristics
-
+## Study population
 
 ```{r popnchars_prep, echo=FALSE, results='asis', cache=TRUE}
+# Spells are exactly the study dataset
+HF_spells <- study_dataset
+
+# Form new table for patients first HF episode during the study
 patients_first_HF_episode <- study_dataset %>% 
   group_by(PseudoID) %>% 
   slice(which.min(CSPDischargeTime)) %>% 
@@ -108,9 +116,9 @@ patients_first_HF_episode <- study_dataset %>%
 
 units(patients_first_HF_episode$los) <- 'days'
 ```
-Population: `r nrow(patients_first_HF_episode)` patients with a diagnosis of heart failure.
+Population: `r nrow(patients_first_HF_episode)` patients with a diagnosis of heart failure, for whom there were `r nrow(HF_spells)` spells in hospital during the study period. All analysis that follows is at spell level rather than patient level, consistent with the bundle intervention itself, and the ITS analysis.
 
-```{r popnchars, echo=FALSE, results='asis', cache=TRUE}
+```{r popnchars, echo=FALSE, results='asis', cache=TRUE, include=FALSE}
 pop_summary <- list(
   "Age" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(Age.est)),
@@ -126,17 +134,16 @@ pop_summary <- list(
   "Ethnicity" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(EthnicGroupComp)),
     "Black or Black British" = ~ qwraps2::n_perc(EthnicGroupComp == "U", na_rm = TRUE, show_denom = "always"),
-    "Other Ethnic Groups / Not Stated" = ~ qwraps2::n_perc(EthnicGroupComp == "V", na_rm = TRUE, show_denom = "always"),
+    "Mixed / Other Ethnic Groups / Not Stated" = ~ qwraps2::n_perc(EthnicGroupComp == "XV", na_rm = TRUE, show_denom = "always"),
     "White" = ~ qwraps2::n_perc(EthnicGroupComp == "W", na_rm = TRUE, show_denom = "always"),
-    "Mixed" = ~ qwraps2::n_perc(EthnicGroupComp == "X", na_rm = TRUE, show_denom = "always"),
     "Asian or Asian British" = ~ qwraps2::n_perc(EthnicGroupComp == "Y", na_rm = TRUE, show_denom = "always")
   ),
   "Index of Multiple Deprivation" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(IMD)),
     # "min" = ~ min(IMD, na.rm = TRUE),
     # "max" = ~ max(IMD, na.rm = TRUE),
-    "n; median (iqr)" = ~ qwraps2::median_iqr(IMD, na_rm = TRUE)#,
-    #"mean (sd)" = ~ qwraps2::mean_sd(IMD,na_rm = TRUE , denote_sd = "paren")
+    "n; median (iqr)" = ~ qwraps2::median_iqr(IMD, na_rm = TRUE),
+    "mean (sd)" = ~ qwraps2::mean_sd(IMD,na_rm = TRUE , denote_sd = "paren")
   ),
   "Length of Stay" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(los)),
@@ -177,16 +184,13 @@ pop_summary <- list(
   )
 )
 
-qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date),
-                       pop_summary)
+# This table now generated below with CIs
+#qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date),
+#                       pop_summary)
 ```
 
-#### Univariate analysis
 
-##### Sex
-Difference in difference analysis of sex
-
-```{r sex-diffdiff}
+```{r sex-diffdiff, include=FALSE}
 sex_diff_in_diff_data <- patients_first_HF_episode %>% dplyr::select(StartWardSite, period.date, Sex) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B", male = Sex == "M") %>% dplyr::select(intervention_site, intervention_period, male)
 
 model <- glm(male ~. + intervention_site * intervention_period, family=binomial(link='logit'), data=sex_diff_in_diff_data)
@@ -196,10 +200,17 @@ sex_did_or <- paste(format(exp(coef(model)[4]), digits = 3), " (", format(exp(co
 sex_did_or
 ```
 
-##### Age
-Difference in difference analysis of age band
+```{r sex-diffdiff-spells, include=FALSE}
+sex_diff_in_diff_data <- HF_spells %>% dplyr::select(StartWardSite, period.date, Sex) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B", male = Sex == "M") %>% dplyr::select(intervention_site, intervention_period, male)
 
-```{r age-diffdiff}
+model <- glm(male ~. + intervention_site * intervention_period, family=binomial(link='logit'), data=sex_diff_in_diff_data)
+
+cbind(OR = exp(coef(model)), exp(confint(model)), p = tidy(model) %>% pull(p.value))
+sex_did_or_sp <- paste(format(exp(coef(model)[4]), digits = 3), " (", format(exp(confint(model)[4,1]), digits = 3), ", ", format(exp(confint(model)[4,2]), digits = 3),")", sep = "")
+sex_did_or_sp
+```
+
+```{r age-diffdiff, include = FALSE}
 age_diff_in_diff_data <- patients_first_HF_episode %>% dplyr::select(StartWardSite, period.date, AgeBand) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, AgeBand)
 
 # Need to collapse age bands due to small numbers in lower bands
@@ -213,11 +224,22 @@ age_did_or <- paste(format(exp(coef(model)[3]), digits = 3), " (", format(exp(co
 age_did_or
 ```
 
-##### Ethnicity
-```{r eth-diffdiff}
+```{r age-diffdiff-spells, include = FALSE}
+age_diff_in_diff_data <- HF_spells %>% dplyr::select(StartWardSite, period.date, AgeBand) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, AgeBand)
+
+# Need to collapse age bands due to small numbers in lower bands
+age_diff_in_diff_data$AgeBand <- forcats::fct_collapse(age_diff_in_diff_data$AgeBand, "0 to 39" = c("0", "1 to 4", "5 to 9", "10 to 14", "15 to 19", "20 to 24", "25 to 29", "30 to 34", "35 to 39"))
+
+model <- MASS::polr(AgeBand ~. + intervention_site * intervention_period, data=age_diff_in_diff_data, method = "logistic", Hess = TRUE)
+summary(model)
+
+exp(cbind(OR = coef(model), confint.default(model)))
+age_did_or_sp <- paste(format(exp(coef(model)[3]), digits = 3), " (", format(exp(confint.default(model)[3,1]), digits = 3), ", ", format(exp(confint.default(model)[3,2]), digits = 3),")", sep = "")
+age_did_or_sp
+```
+
+```{r eth-diffdiff, include = FALSE}
 ethnicity_diff_in_diff_data <- patients_first_HF_episode %>% dplyr::select(StartWardSite, period.date, EthnicGroupComp) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, EthnicGroupComp)
-# Need to collapse ethnicity categories due to small numbers
-ethnicity_diff_in_diff_data$EthnicGroupComp <- forcats::fct_collapse(ethnicity_diff_in_diff_data$EthnicGroupComp, "XU" = c("X", "U"))
 
 ethnicity_diff_in_diff_data$EthnicGroupComp <- relevel(ethnicity_diff_in_diff_data$EthnicGroupComp, ref = "W")
 model <- nnet::multinom(EthnicGroupComp ~. + intervention_site * intervention_period, data=ethnicity_diff_in_diff_data)
@@ -225,18 +247,34 @@ summary(model)
 exp(coef(model))
 exp(confint(model))
 
-eth_did_or_XU <- paste(format(exp(coef(model)[1,4]), digits = 3), " (", format(exp(confint(model)[4,1,1]), digits = 3), ", ", format(exp(confint(model)[4,2,1]), digits = 3),")", sep = "")
-eth_did_or_XU
-eth_did_or_V <- paste(format(exp(coef(model)[2,4]), digits = 3), " (", format(exp(confint(model)[4,1,2]), digits = 3), ", ", format(exp(confint(model)[4,2,2]), digits = 3),")", sep = "")
-eth_did_or_V
+eth_did_or_XV <- paste(format(exp(coef(model)[1,4]), digits = 3), " (", format(exp(confint(model)[4,1,1]), digits = 3), ", ", format(exp(confint(model)[4,2,1]), digits = 3),")", sep = "")
+eth_did_or_XV
+eth_did_or_U <- paste(format(exp(coef(model)[2,4]), digits = 3), " (", format(exp(confint(model)[4,1,2]), digits = 3), ", ", format(exp(confint(model)[4,2,2]), digits = 3),")", sep = "")
+eth_did_or_U
 eth_did_or_Y <- paste(format(exp(coef(model)[3,4]), digits = 3), " (", format(exp(confint(model)[4,1,3]), digits = 3), ", ", format(exp(confint(model)[4,2,3]), digits = 3),")", sep = "")
 eth_did_or_Y
 
 ```
 
-##### IMD
+```{r eth-diffdiff-spells, include = FALSE}
+ethnicity_diff_in_diff_data <- HF_spells %>% dplyr::select(StartWardSite, period.date, EthnicGroupComp) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, EthnicGroupComp)
 
-```{r imd-diffdiff}
+ethnicity_diff_in_diff_data$EthnicGroupComp <- relevel(ethnicity_diff_in_diff_data$EthnicGroupComp, ref = "W")
+model <- nnet::multinom(EthnicGroupComp ~. + intervention_site * intervention_period, data=ethnicity_diff_in_diff_data)
+summary(model)
+exp(coef(model))
+exp(confint(model))
+
+eth_did_or_XV_sp <- paste(format(exp(coef(model)[1,4]), digits = 3), " (", format(exp(confint(model)[4,1,1]), digits = 3), ", ", format(exp(confint(model)[4,2,1]), digits = 3),")", sep = "")
+eth_did_or_XV_sp
+eth_did_or_U_sp <- paste(format(exp(coef(model)[2,4]), digits = 3), " (", format(exp(confint(model)[4,1,2]), digits = 3), ", ", format(exp(confint(model)[4,2,2]), digits = 3),")", sep = "")
+eth_did_or_U_sp
+eth_did_or_Y_sp <- paste(format(exp(coef(model)[3,4]), digits = 3), " (", format(exp(confint(model)[4,1,3]), digits = 3), ", ", format(exp(confint(model)[4,2,3]), digits = 3),")", sep = "")
+eth_did_or_Y_sp
+
+```
+
+```{r imd-diffdiff, include=FALSE}
 imd_diff_in_diff_data <- patients_first_HF_episode %>% dplyr::select(StartWardSite, period.date, IMD) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, IMD)
 
 patients_first_HF_episode %>% ggplot(aes(x = IMD)) + geom_histogram() + facet_wrap(StartWardSite ~ period.date)
@@ -253,21 +291,58 @@ plot(fitted(bc_model), residuals(bc_model)) #qq plot also checked and fine
 summary(bc_model)
 
 cbind(Coeffs = coef(bc_model), confint(bc_model))
-imd_did_or <- paste(format(coef(bc_model)[4], digits = 3), " (", format(confint(bc_model)[4,1], digits = 3), ", ", format(confint(bc_model)[4,2], digits = 3),")", sep = "")
+imd_did_or <- paste(format((bc_exp*coef(bc_model)[4] + 1)^(1/bc_exp), digits = 3), " (", format((bc_exp*confint(bc_model)[4,1]+1)^(1/bc_exp), digits = 3), ", ", format((bc_exp*confint(bc_model)[4,2] + 1)^(1/bc_exp), digits = 3),")", sep = "")
 imd_did_or
 ```
 
-### Population table
+```{r imd-diffdiff-spells, include=FALSE}
+imd_diff_in_diff_data <- HF_spells %>% dplyr::select(StartWardSite, period.date, IMD) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, IMD)
 
-```{r}
-pop_table <- qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date),
-                       pop_summary)
+patients_first_HF_episode %>% ggplot(aes(x = IMD)) + geom_histogram() + facet_wrap(StartWardSite ~ period.date)
+
+model <- glm(IMD~.+ intervention_site * intervention_period, data = imd_diff_in_diff_data)
+
+bcmod <- MASS::boxcox(model, optimise = TRUE)
+bcresults <- data.frame(x = bcmod$x, y = bcmod$y)
+bc_exp <- bcresults %>% arrange(-y) %>% top_n(1) %>% pull(x)
+bc_model <- glm(((IMD^bc_exp - 1) / bc_exp ) ~.+ intervention_site * intervention_period, data = imd_diff_in_diff_data)
+
+plot(fitted(bc_model), residuals(bc_model)) #qq plot also checked and fine
+
+summary(bc_model)
+
+cbind(Coeffs = coef(bc_model), confint(bc_model))
+imd_did_or_sp <- paste(format((bc_exp*coef(bc_model)[4] + 1)^(1/bc_exp), digits = 3), " (", format((bc_exp*confint(bc_model)[4,1]+1)^(1/bc_exp), digits = 3), ", ", format((bc_exp*confint(bc_model)[4,2] + 1)^(1/bc_exp), digits = 3),")", sep = "")
+imd_did_or_sp
 ```
 
+```{r pop-table, results='asis', message='false', include=FALSE}
 
-### Study population age distribution
+pop_table <- qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date), pop_summary)
 
-```{r age, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+# Age row 2, Sex row 4, Ethnicity 7,8,10, IMD 13
+confints <- rep("", nrow(pop_table))
+confints[[2]] <- age_did_or
+confints[[4]] <- sex_did_or
+confints[[7]] <- eth_did_or_U
+confints[[8]] <- eth_did_or_XV
+confints[[10]] <- eth_did_or_Y
+confints[[13]] <- imd_did_or
+
+pop_table_ci <- cbind(pop_table, "Confidence Interval for Difference in Difference" = confints)
+
+# pop_table_ci_cap <- capture.output(print(pop_table_ci))
+# 
+# pop_table_ci_cap[grepl("Age", pop_table_ci_cap)] %<>% sub("&nbsp;&nbsp;\\ \\|$", paste(age_did_or, "|"), .)
+# pop_table_ci_cap[grepl("Gender", pop_table_ci_cap)] %<>% sub("&nbsp;&nbsp;\\ \\|$", paste(sex_did_or, "|"), .)
+# pop_table_ci_cap[grepl("Index of Multiple Deprivation", pop_table_ci_cap)] %<>% sub("&nbsp;&nbsp;\\ \\|$", paste(imd_did_or, "|"), .)
+
+#cat(pop_table_ci, sep = "\n")
+
+print(pop_table_ci)
+```
+
+```{r age, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
 ggplot2::ggplot(patients_first_HF_episode, ggplot2::aes(x=AgeBand))+ggplot2::geom_bar(width= 0.7) + ggplot2::labs(y = "Frequency",x = "Age Band") +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
   ggplot2::facet_wrap(StartWardSite ~ period.date)
@@ -301,9 +376,7 @@ qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWa
 dput(age_summary, file = '../data-out/age_summary.txt')
 ```
 
-### Type of ward - study population
-
-```{r ward, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+```{r ward, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
 
 ward_summary <- with(patients_first_HF_episode, qwraps2::tab_summary(Ward_hf_type))
 qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date),
@@ -312,12 +385,9 @@ qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWa
 dput(ward_summary, file = '../data-out/ward_summary.txt')
 ```
 
-## Spell characteristics
+## Hospital Spell Patient Characteristics and Outcomes
 
-
-```{r spchars, echo=FALSE, results='asis', cache=TRUE}
-HF_spells <- study_dataset
-
+```{r spchars, echo=FALSE, results='asis', cache=TRUE, include=FALSE}
 units(HF_spells$los) <- 'days'
 
 pop_summary <- list(
@@ -336,17 +406,16 @@ pop_summary <- list(
   "Ethnicity" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(EthnicGroupComp)),
     "Black or Black British" = ~ qwraps2::n_perc(EthnicGroupComp == "U", na_rm = TRUE, show_denom = "always"),
-    "Other Ethnic Groups / Not Stated" = ~ qwraps2::n_perc(EthnicGroupComp == "V", na_rm = TRUE, show_denom = "always"),
+    "Mixed / Other Ethnic Groups / Not Stated" = ~ qwraps2::n_perc(EthnicGroupComp == "XV", na_rm = TRUE, show_denom = "always"),
     "White" = ~ qwraps2::n_perc(EthnicGroupComp == "W", na_rm = TRUE, show_denom = "always"),
-    "Mixed" = ~ qwraps2::n_perc(EthnicGroupComp == "X", na_rm = TRUE, show_denom = "always"),
     "Asian or Asian British" = ~ qwraps2::n_perc(EthnicGroupComp == "Y", na_rm = TRUE, show_denom = "always")
   ),
   "Index of Multiple Deprivation" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(IMD)),
     #"min" = ~ min(IMD, na.rm = TRUE),
     #"max" = ~ max(IMD, na.rm = TRUE),
-    "n; median (iqr)" = ~ qwraps2::median_iqr(IMD, na_rm = TRUE)#,
-    #"mean (sd)" = ~ qwraps2::mean_sd(IMD,na_rm = TRUE , denote_sd = "paren")
+    "n; median (iqr)" = ~ qwraps2::median_iqr(IMD, na_rm = TRUE),
+    "mean (sd)" = ~ qwraps2::mean_sd(IMD,na_rm = TRUE , denote_sd = "paren")
   ),
   "Length of Stay" = list(
     "Missing" = ~ qwraps2::n_perc(is.na(los)),
@@ -386,14 +455,37 @@ pop_summary <- list(
     ">= 30, < 90 days" = ~ qwraps2::n_perc(hf.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
   )
 )
-
-qwraps2::summary_table(HF_spells %>% group_by(Hospital = StartWardSite, Period = period.date),
-                       pop_summary)
 ```
 
-## Spell age distribution
+```{r spell_table, results='asis', message='false'}
 
-```{r age-sp, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+sp_table <- qwraps2::summary_table(HF_spells %>% group_by(Hospital = StartWardSite, Period = period.date),
+                       pop_summary)
+
+# Age row 2, Sex row 4, Ethnicity 7,8,10, IMD 13
+confints <- rep("", nrow(sp_table))
+confints[[2]] <- age_did_or_sp
+confints[[4]] <- sex_did_or_sp
+confints[[7]] <- eth_did_or_U_sp
+confints[[8]] <- eth_did_or_XV_sp
+confints[[10]] <- eth_did_or_Y_sp
+confints[[13]] <- imd_did_or_sp
+
+sp_table_ci <- cbind(sp_table, "Confidence Interval for Difference in Difference" = confints)
+
+# pop_table_ci_cap <- capture.output(print(pop_table_ci))
+# 
+# pop_table_ci_cap[grepl("Age", pop_table_ci_cap)] %<>% sub("&nbsp;&nbsp;\\ \\|$", paste(age_did_or, "|"), .)
+# pop_table_ci_cap[grepl("Gender", pop_table_ci_cap)] %<>% sub("&nbsp;&nbsp;\\ \\|$", paste(sex_did_or, "|"), .)
+# pop_table_ci_cap[grepl("Index of Multiple Deprivation", pop_table_ci_cap)] %<>% sub("&nbsp;&nbsp;\\ \\|$", paste(imd_did_or, "|"), .)
+
+#cat(pop_table_ci, sep = "\n")
+
+print(sp_table_ci)
+```
+
+
+```{r age-sp, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
 ggplot2::ggplot(HF_spells, ggplot2::aes(x=AgeBand))+ggplot2::geom_bar(width= 0.7) + ggplot2::labs(y = "Frequency",x = "Age Band") +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
   ggplot2::facet_wrap(StartWardSite ~ period.date)
@@ -427,9 +519,7 @@ qwraps2::summary_table(HF_spells %>% group_by(Hospital = StartWardSite, Period =
 dput(age_summary, file = '../data-out/age_sp_summary.txt')
 ```
 
-## Type of ward - spells
-
-```{r ward-sp, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+```{r ward-sp, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
 
 ward_summary <- with(patients_first_HF_episode, qwraps2::tab_summary(Ward_hf_type))
 qwraps2::summary_table(HF_spells %>% group_by(Hospital = StartWardSite, Period = period.date),
@@ -440,9 +530,7 @@ dput(ward_summary, file = '../data-out/ward_sp_summary.txt')
 
 \newpage
 
-## Bundles by month
-
-```{r bundles-month, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+```{r bundles-month, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(bundle == TRUE, HF.any.code == TRUE) %>%
   group_by(yearMonth) %>%
@@ -453,9 +541,10 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
     xlab = 'Month of discharge')
 ```
 
-TODO: Exclude BNP below X and with echo in prev. 3 months.
+```{r bundles-compliance, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
+#TODO: Exclude BNP below X and with echo in prev. 3 months.
+#Probably need to split echo compliance into those who'd had one <6months and those having new one within 48h.
 
-```{r bundles-compliance, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
 HF_bundle_spells <- HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>% 
   filter(bundle == TRUE, HF.any.code == TRUE) %>%
   left_join(clahrcnwlhf::linked_bundle_data %>% dplyr::select(-Admission.Datetime), by = "Bundle.Number")
@@ -573,7 +662,6 @@ HF_bundle_spells %>%
     subtitle = 'Northwick Park Hospital', ylab = 'Number compliant',
     xlab = 'Month of discharge')
 ```
-Probably need to split echo compliance into those who'd had one <6months and those having new one within 48h.
 
 ## Outcomes
 
@@ -588,7 +676,11 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   ggplot(mapping = aes(x = yearMonth, y = mortality_rate, colour = StartWardSite)) + geom_line() + geom_point() +
   labs(title = 'Monthly Raw Mortality Rate',
     subtitle = 'LNW', ylab = 'Mortality Rate',
-    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,NA))
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,NA)) +
+  scale_x_datetime(limits = c(as.POSIXct("2014-04-01 00:00:00", tz = "Europe/London"),
+                              as.POSIXct("2017-07-01 00:00:00", tz = "Europe/London"))) +
+  geom_vline(aes(xintercept = as.POSIXct("2015-06-15 00:00:00", tz = "Europe/London")),
+                linetype=4, colour="black")
 ```
 
 ### Length of Stay
@@ -603,7 +695,11 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   ggplot(mapping = aes(x = yearMonth, y = av_los, colour = StartWardSite)) + geom_line() + geom_point() +
   labs(title = 'Monthly Average Length of Stay',
     subtitle = 'LNW', ylab = 'Average Length of Stay',
-    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,NA))
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,NA)) +
+  scale_x_datetime(limits = c(as.POSIXct("2014-04-01 00:00:00", tz = "Europe/London"),
+                              as.POSIXct("2017-07-01 00:00:00", tz = "Europe/London"))) +
+  geom_vline(aes(xintercept = as.POSIXct("2015-06-15 00:00:00", tz = "Europe/London")),
+                linetype=4, colour="black")
 ```
 
 ### Readmissions
@@ -615,9 +711,13 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   summarize(numDischarged = n(), numReadm = sum(all.cause.readmission.cat == "7", na.rm = TRUE)) %>%
   mutate(readmission_rate = numReadm/numDischarged) %>%
   ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
-  labs(title = 'Monthly 7-day All-Cause Readmission Rate',
+  labs(title = 'Monthly < 7-day All-Cause Readmission Rate',
     subtitle = 'LNW', ylab = 'Readmission Rate',
-    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,.25))
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,.25)) +
+  scale_x_datetime(limits = c(as.POSIXct("2014-04-01 00:00:00", tz = "Europe/London"),
+                              as.POSIXct("2017-07-01 00:00:00", tz = "Europe/London"))) +
+  geom_vline(aes(xintercept = as.POSIXct("2015-06-15 00:00:00", tz = "Europe/London")),
+                linetype=4, colour="black")
 ```
 
 ```{r readms-chart-30ac, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
@@ -627,10 +727,15 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   summarize(numDischarged = n(), numReadm = sum(all.cause.readmission.cat == "30", na.rm = TRUE)) %>%
   mutate(readmission_rate = numReadm/numDischarged) %>%
   ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
-  labs(title = 'Monthly 8- to 30-day All-Cause Readmission Rate',
+  labs(title = 'Monthly 7 to < 30-day All-Cause Readmission Rate',
     subtitle = 'LNW', ylab = 'Readmission Rate',
-    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,.25))
-```   
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,.25)) +
+  scale_x_datetime(limits = c(as.POSIXct("2014-04-01 00:00:00", tz = "Europe/London"),
+                              as.POSIXct("2017-07-01 00:00:00", tz = "Europe/London"))) +
+  geom_vline(aes(xintercept = as.POSIXct("2015-06-15 00:00:00", tz = "Europe/London")),
+                linetype=4, colour="black")
+```
+
 ```{r readms-chart-90ac, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-03-30")) %>%
@@ -638,42 +743,59 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   summarize(numDischarged = n(), numReadm = sum(all.cause.readmission.cat == "90", na.rm = TRUE)) %>%
   mutate(readmission_rate = numReadm/numDischarged) %>%
   ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
-  labs(title = 'Monthly 31- to 90-day All-Cause Readmission Rate',
+  labs(title = 'Monthly 30 to < 90-day All-Cause Readmission Rate',
     subtitle = 'LNW', ylab = 'Readmission Rate',
-    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,.25))
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,.25)) +
+  scale_x_datetime(limits = c(as.POSIXct("2014-04-01 00:00:00", tz = "Europe/London"),
+                              as.POSIXct("2017-07-01 00:00:00", tz = "Europe/London"))) +
+  geom_vline(aes(xintercept = as.POSIXct("2015-06-15 00:00:00", tz = "Europe/London")),
+                linetype=4, colour="black")
 ```
 
-```{r readms-chart-7hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+```{r readms-chart-7hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-06-30")) %>%
   group_by(yearMonth, StartWardSite) %>%
   summarize(numDischarged = n(), numReadm = sum(hf.readmission.cat == "7", na.rm = TRUE)) %>%
   mutate(readmission_rate = numReadm/numDischarged) %>%
   ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
-  labs(title = 'Monthly 7-day Heart Failure Specific Readmission Rate',
+  labs(title = 'Monthly < 7-day Heart Failure Specific Readmission Rate',
     subtitle = 'LNW', ylab = 'Readmission Rate',
-    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,0.05))
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,0.05)) +
+  scale_x_datetime(limits = c(as.POSIXct("2014-04-01 00:00:00", tz = "Europe/London"),
+                              as.POSIXct("2017-07-01 00:00:00", tz = "Europe/London"))) +
+  geom_vline(aes(xintercept = as.POSIXct("2015-06-15 00:00:00", tz = "Europe/London")),
+                linetype=4, colour="black")
 ```
 
-```{r readms-chart-30hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+```{r readms-chart-30hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-05-30")) %>%
   group_by(yearMonth, StartWardSite) %>%
   summarize(numDischarged = n(), numReadm = sum(hf.readmission.cat == "30", na.rm = TRUE)) %>%
   mutate(readmission_rate = numReadm/numDischarged) %>%
   ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
-  labs(title = 'Monthly 8- to 30-day Heart Failure Specific Readmission Rate',
+  labs(title = 'Monthly 7 to < 30-day Heart Failure Specific Readmission Rate',
     subtitle = 'LNW', ylab = 'Readmission Rate',
-    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,0.05))
-```   
-```{r readms-chart-90hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,0.05)) +
+  scale_x_datetime(limits = c(as.POSIXct("2014-04-01 00:00:00", tz = "Europe/London"),
+                              as.POSIXct("2017-07-01 00:00:00", tz = "Europe/London"))) +
+  geom_vline(aes(xintercept = as.POSIXct("2015-06-15 00:00:00", tz = "Europe/London")),
+                linetype=4, colour="black")
+```
+   
+```{r readms-chart-90hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-03-30")) %>%
   group_by(yearMonth, StartWardSite) %>%
   summarize(numDischarged = n(), numReadm = sum(hf.readmission.cat == "90", na.rm = TRUE)) %>%
   mutate(readmission_rate = numReadm/numDischarged) %>%
   ggplot(mapping = aes(x = yearMonth, y = readmission_rate, colour = StartWardSite)) + geom_line() + geom_point() +
-  labs(title = 'Monthly 31- to 90-day Heart Failure Specific Readmission Rate',
+  labs(title = 'Monthly 30 to < 90-day Heart Failure Specific Readmission Rate',
     subtitle = 'LNW', ylab = 'Readmission Rate',
-    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,0.05))
+    xlab = 'Month of discharge') + scale_y_continuous(limits = c(0,0.05)) +
+  scale_x_datetime(limits = c(as.POSIXct("2014-04-01 00:00:00", tz = "Europe/London"),
+                              as.POSIXct("2017-07-01 00:00:00", tz = "Europe/London"))) +
+  geom_vline(aes(xintercept = as.POSIXct("2015-06-15 00:00:00", tz = "Europe/London")),
+                linetype=4, colour="black")
 ```
