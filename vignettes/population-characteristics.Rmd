@@ -1,6 +1,6 @@
 ---
 title: "Univariate Analysis: CLAHRC NWL Heart Failure Admission Care Bundle"
-author: "Dr Thomas Woodcock"
+author: ""
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -318,7 +318,16 @@ imd_did_or_sp
 
 ```{r pop-table, results='asis', message='false', include=FALSE}
 
-pop_table <- qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date), pop_summary)
+patients_first_HF_episode <- patients_first_HF_episode %>% dplyr::mutate(site_period = dplyr::case_when(
+  StartWardSite == "NPH" & period.date == "A" ~ "Northwick Park, pre-intervention",
+  StartWardSite == "NPH" & period.date == "B" ~ "Northwick Park, post-intervention",
+  StartWardSite == "EH" & period.date == "A" ~ "Ealing, pre-intervention",
+  StartWardSite == "EH" & period.date == "B" ~ "Ealing, post-intervention"
+))
+
+
+pop_table <- qwraps2::summary_table(patients_first_HF_episode %>% dplyr::group_by(site_period), pop_summary)
+colnames(pop_table) <- stringr::str_remove(colnames(pop_table), "site_period: ")
 
 # Age row 2, Sex row 4, Ethnicity 7,8,10, IMD 13
 confints <- rep("", nrow(pop_table))
@@ -371,7 +380,7 @@ age_summary = list(
     `95 to 99` = ~qwraps2::n_perc(AgeBand == "95 to 99", digits = 0, show_symbol = FALSE),
     `100 to 114` = ~qwraps2::n_perc(AgeBand == "100 to 114", digits = 0, show_symbol = FALSE))
 )
-qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date),
+qwraps2::summary_table(patients_first_HF_episode %>% group_by(site_period),
                        age_summary)
 dput(age_summary, file = '../data-out/age_summary.txt')
 ```
@@ -379,7 +388,7 @@ dput(age_summary, file = '../data-out/age_summary.txt')
 ```{r ward, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
 
 ward_summary <- with(patients_first_HF_episode, qwraps2::tab_summary(Ward_hf_type))
-qwraps2::summary_table(patients_first_HF_episode %>% group_by(Hospital = StartWardSite, Period = period.date),
+qwraps2::summary_table(patients_first_HF_episode %>% dplyr::group_by(site_period),
                        list("Ward" = ward_summary))
 
 dput(ward_summary, file = '../data-out/ward_summary.txt')
@@ -459,8 +468,16 @@ pop_summary <- list(
 
 ```{r spell_table, results='asis', message='false'}
 
-sp_table <- qwraps2::summary_table(HF_spells %>% group_by(Hospital = StartWardSite, Period = period.date),
+HF_spells <- HF_spells %>% dplyr::mutate(site_period = dplyr::case_when(
+  StartWardSite == "NPH" & period.date == "A" ~ "Northwick Park, pre-intervention",
+  StartWardSite == "NPH" & period.date == "B" ~ "Northwick Park, post-intervention",
+  StartWardSite == "EH" & period.date == "A" ~ "Ealing, pre-intervention",
+  StartWardSite == "EH" & period.date == "B" ~ "Ealing, post-intervention"
+))
+
+sp_table <- qwraps2::summary_table(HF_spells %>% dplyr::group_by(site_period),
                        pop_summary)
+colnames(sp_table) <- stringr::str_remove(colnames(sp_table), "site_period: ")
 
 # Age row 2, Sex row 4, Ethnicity 7,8,10, IMD 13
 confints <- rep("", nrow(sp_table))
@@ -471,7 +488,7 @@ confints[[8]] <- eth_did_or_XV_sp
 confints[[10]] <- eth_did_or_Y_sp
 confints[[13]] <- imd_did_or_sp
 
-sp_table_ci <- cbind(sp_table, "Confidence Interval for Difference in Difference" = confints)
+sp_table_ci <- cbind(sp_table, "95% CI for Difference in Difference (Odds Ratio/mean)" = confints)
 
 # pop_table_ci_cap <- capture.output(print(pop_table_ci))
 # 
@@ -514,7 +531,7 @@ age_summary = list(
     `95 to 99` = ~qwraps2::n_perc(AgeBand == "95 to 99", digits = 0, show_symbol = FALSE),
     `100 to 114` = ~qwraps2::n_perc(AgeBand == "100 to 114", digits = 0, show_symbol = FALSE))
 )
-qwraps2::summary_table(HF_spells %>% group_by(Hospital = StartWardSite, Period = period.date),
+qwraps2::summary_table(HF_spells %>% dplyr::group_by(site_period),
                        age_summary)
 dput(age_summary, file = '../data-out/age_sp_summary.txt')
 ```
@@ -522,7 +539,7 @@ dput(age_summary, file = '../data-out/age_sp_summary.txt')
 ```{r ward-sp, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
 
 ward_summary <- with(patients_first_HF_episode, qwraps2::tab_summary(Ward_hf_type))
-qwraps2::summary_table(HF_spells %>% group_by(Hospital = StartWardSite, Period = period.date),
+qwraps2::summary_table(HF_spells %>% dplyr::group_by(site_period),
                        list("Ward" = ward_summary))
 
 dput(ward_summary, file = '../data-out/ward_sp_summary.txt')
@@ -667,7 +684,7 @@ HF_bundle_spells %>%
 
 ### Mortality
 
-```{r mortality-chart, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+```{r mortality-chart, echo=FALSE, results='asis', fig.height=4, fig.width=6, cache=TRUE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(HF.any.code == TRUE, yearMonth > as.Date("2014-04-01")) %>%
   group_by(yearMonth, StartWardSite) %>%
@@ -685,7 +702,7 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
 
 ### Length of Stay
 
-```{r los-chart, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+```{r los-chart, echo=FALSE, results='asis', fig.height=4, fig.width=6, cache=TRUE}
 units(HF_spells$los) <- 'days'
 
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
@@ -704,7 +721,7 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
 
 ### Readmissions
 
-```{r readms-chart-7ac, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+```{r readms-chart-7ac, echo=FALSE, results='asis', fig.height=4, fig.width=6, cache=TRUE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-06-30")) %>%
   group_by(yearMonth, StartWardSite) %>%
@@ -720,7 +737,7 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
                 linetype=4, colour="black")
 ```
 
-```{r readms-chart-30ac, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+```{r readms-chart-30ac, echo=FALSE, results='asis', fig.height=4, fig.width=6, cache=TRUE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-05-30")) %>%
   group_by(yearMonth, StartWardSite) %>%
@@ -736,7 +753,7 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
                 linetype=4, colour="black")
 ```
 
-```{r readms-chart-90ac, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE}
+```{r readms-chart-90ac, echo=FALSE, results='asis', fig.height=4, fig.width=6, cache=TRUE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-03-30")) %>%
   group_by(yearMonth, StartWardSite) %>%
@@ -752,7 +769,7 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
                 linetype=4, colour="black")
 ```
 
-```{r readms-chart-7hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
+```{r readms-chart-7hf, echo=FALSE, results='asis', fig.height=4, fig.width=6, cache=TRUE, include=FALSE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-06-30")) %>%
   group_by(yearMonth, StartWardSite) %>%
@@ -768,7 +785,7 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
                 linetype=4, colour="black")
 ```
 
-```{r readms-chart-30hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
+```{r readms-chart-30hf, echo=FALSE, results='asis', fig.height=4, fig.width=6, cache=TRUE, include=FALSE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-05-30")) %>%
   group_by(yearMonth, StartWardSite) %>%
@@ -784,7 +801,7 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
                 linetype=4, colour="black")
 ```
    
-```{r readms-chart-90hf, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=FALSE}
+```{r readms-chart-90hf, echo=FALSE, results='asis', fig.height=4, fig.width=6, cache=TRUE, include=FALSE}
 HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   filter(HF.any.code == TRUE, yearMonth >= as.Date("2014-04-01"), yearMonth <= as.Date("2017-03-30")) %>%
   group_by(yearMonth, StartWardSite) %>%
