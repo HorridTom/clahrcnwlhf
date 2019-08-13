@@ -1,0 +1,193 @@
+---
+title: "Interrupted Time Series Analysis"
+author: "Tom Woodcock"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = TRUE
+)
+```
+
+```{r dependencies, include = FALSE}
+library(magrittr)
+library(pglm)
+library(lme4)
+library(tidyverse)
+```
+
+
+```{r load-data}
+load("../data-raw/hf_its_data.rda")
+hf_its_data <- hf_its_data %>% dplyr::select(X_t, X_x, X_x_t, X_z, X_z_t, X_z_x, X_z_x_t,
+                                             pseudoid, HF_primary, HF_any, sex, non_white,
+                                             ln_age, ward_2, ward_3, ward_4, ward_5,
+                                             dplyr::starts_with("month_"), -month_12,
+                                             hospital, imd_q,
+                                             dplyr::starts_with("allcausereadmission_"),
+                                             dplyr::starts_with("hfreadmission_"), death,
+                                             los_dd, total_HF, wardsite, id_time, count)
+hf_its_data <- hf_its_data %>% dplyr::mutate(sex = factor(sex),
+                                             non_white = factor(non_white))
+```
+
+```{r sense-check, include=FALSE}
+hf_its_data <- hf_its_data %>% dplyr::filter(wardsite != "CMH")
+
+table(hf_its_data$id_time >= 43, hf_its_data$X_x , useNA = "always")
+
+table(hf_its_data$id_time > 43, hf_its_data$X_x_t , useNA = "always")
+
+table(hf_its_data$wardsite, hf_its_data$X_z , useNA = "always")
+
+table(hf_its_data$id_time >= 43, hf_its_data$X_z_t , useNA = "always")
+
+table(hf_its_data$id_time >= 43, hf_its_data$X_z_x , useNA = "always")
+
+table(hf_its_data$id_time >= 43, hf_its_data$X_z_x_t , useNA = "always")
+
+```
+
+Discharges with HF as primary diagnosis, no control
+```{r hf-prim-nocont, warning=FALSE, message=FALSE}
+
+hf_prim_data <- hf_its_data %>% dplyr::filter(wardsite == "NPH")
+hf_prim_data <- plm::pdata.frame(hf_prim_data, "pseudoid")
+
+hf_prim_form <- Formula::Formula(HF_primary ~ offset(log(count)) + X_t + X_x + X_x_t + sex + non_white + ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11)
+
+hf_prim_model <- pglm(formula = hf_prim_form, family = poisson(link = "log"), data = hf_prim_data, effect = "individual", model = "random")
+
+summary(hf_prim_model)
+
+knitr::kable(exp(hf_prim_model$estimate), col.names = c("IRR"))
+```
+
+Discharges with HF as primary diagnosis, with control
+```{r hf-prim-cont, warning=T, message=T, include=FALSE}
+
+hf_prim_data <- hf_its_data %>% dplyr::filter(wardsite != "CMH")
+hf_prim_data <- plm::pdata.frame(hf_prim_data, "pseudoid")
+
+hf_prim_form_cont <- Formula::Formula(HF_primary ~ offset(log(count)) + X_t + X_x + X_x_t + 
+                                        X_z + X_z_t + X_z_x + X_z_x_t + sex + non_white + 
+                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+                                        month_1 + month_2 + month_3 + month_4 + month_5 + 
+                                        month_6 + month_7 + month_8 + month_9 + month_10 +
+                                        month_11)
+
+hf_prim_model_cont <- pglm(formula = hf_prim_form_cont, family = poisson(link = "log"), data = hf_prim_data, effect = "individual", model = "random")
+
+summary(hf_prim_model_cont)
+
+knitr::kable(exp(hf_prim_model_cont$estimate), col.names = c("IRR"))
+```
+
+Discharges with HF as any diagnosis, no control
+```{r hf-any-nocont, warning=FALSE, message=FALSE, include=FALSE}
+
+hf_any_data <- hf_its_data %>% dplyr::filter(wardsite == "NPH")
+hf_any_data <- plm::pdata.frame(hf_any_data, "pseudoid")
+
+hf_any_form <- Formula::Formula(HF_any ~ offset(log(count)) + X_t + X_x + X_x_t + sex + non_white + ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11)
+
+hf_any_model <- pglm(formula = hf_any_form, family = poisson(link = "log"), data = hf_any_data, effect = "individual", model = "random")
+
+summary(hf_any_model)
+
+knitr::kable(exp(hf_any_model$estimate), col.names = c("IRR"))
+```
+
+Discharges with HF as any diagnosis, with control
+```{r hf-any-cont, warning=T, message=T, include=FALSE}
+
+hf_any_data <- hf_its_data %>% dplyr::filter(wardsite != "CMH")
+hf_any_data <- plm::pdata.frame(hf_any_data, "pseudoid")
+
+hf_any_form_cont <- Formula::Formula(HF_any ~ offset(log(count)) + X_t + X_x + X_x_t + 
+                                        X_z + X_z_t + X_z_x + X_z_x_t + sex + non_white + 
+                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+                                        month_1 + month_2 + month_3 + month_4 + month_5 + 
+                                        month_6 + month_7 + month_8 + month_9 + month_10 +
+                                        month_11)
+
+hf_any_model_cont <- pglm(formula = hf_any_form_cont, family = poisson(link = "log"), data = hf_any_data, effect = "individual", model = "random")
+
+summary(hf_any_model_cont)
+
+knitr::kable(exp(hf_any_model_cont$estimate), col.names = c("IRR"))
+```
+
+7-day all cause readmission rate, following discharge with HF as any diagnosis, no control
+```{r read7-all-nocont, warning=FALSE, message=FALSE}
+
+hf_any_data_oc_nc <- hf_its_data %>% dplyr::filter(wardsite == "NPH", HF_any == 1)
+#hf_any_data_oc_nc <- plm::pdata.frame(hf_any_data_oc_nc, "pseudoid")
+
+#hf_read7_all_form <- Formula::Formula(allcausereadmission_7 ~ offset(log(total_HF)) + X_t + X_x + X_x_t + sex + non_white + ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11)
+
+#hf_read7_all_model <- pglm(formula = hf_read7_all_form, family = poisson(link = "log"), data = hf_any_data_oc_nc, effect = "individual", model = "random")
+
+hf_read7_all_nc_model_glmer <- glmer(allcausereadmission_7 ~ offset(log(total_HF)) + X_t + X_x + X_x_t + sex + non_white + ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11 + (1 | pseudoid), hf_any_data_oc_nc, family = poisson, control=glmerControl(optimizer="bobyqa"))
+
+summary(hf_read7_all_nc_model_glmer)
+
+knitr::kable(exp(fixef(hf_read7_all_nc_model_glmer)), col.names = c("IRR"))
+```
+
+
+7-day all cause readmission rate, following discharge with HF as any diagnosis, with control
+```{r read7-all-cont, warning=T, message=T}
+
+hf_any_data_oc_c <- hf_its_data %>% dplyr::filter(wardsite != "CMH", HF_any == 1)
+#hf_any_data_oc_c <- plm::pdata.frame(hf_any_data_oc_c, "pseudoid")
+
+# hf_read7_all_form_cont <- Formula::Formula(allcausereadmission_7 ~ offset(log(total_HF)) + X_t + X_x + X_x_t + 
+#                                         X_z + X_z_t + X_z_x + X_z_x_t + sex + non_white + 
+#                                         ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+#                                         month_1 + month_2 + month_3 + month_4 + month_5 + 
+#                                         month_6 + month_7 + month_8 + month_9 + month_10 +
+#                                         month_11)
+
+#hf_read7_all_model_cont <- pglm(formula = hf_read7_all_form_cont, family = poisson(link = "log"), data = hf_any_data_oc_c, effect = "individual", model = "random")
+
+hf_read7_all_c_model_glmer <- glmer(allcausereadmission_7 ~ offset(log(total_HF)) + X_t + X_x + X_x_t + 
+                                        X_z + X_z_t + X_z_x + X_z_x_t + sex + non_white +
+                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 +
+                                        month_1 + month_2 + month_3 + month_4 + month_5 +
+                                        month_6 + month_7 + month_8 + month_9 + month_10 +
+                                        month_11 + (1 | pseudoid), hf_any_data_oc_c, family = poisson, 
+                                     control=glmerControl(optimizer="bobyqa"))
+
+summary(hf_read7_all_c_model_glmer)
+
+knitr::kable(exp(fixef(hf_read7_all_c_model_glmer)), col.names = c("IRR"))
+```
+
+
+```{r plot-7read}
+covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% dplyr::select(-dplyr::starts_with("allcausereadmission_"), 
+                                                                 -dplyr::starts_with("hfreadmission_"), -death, 
+                                                                 -los_dd)
+
+
+prediction_output_7d <- predict(hf_read7_all_nc_model_glmer, newdata = covariates_data_any_oc_nc, type = "response", allow.new.levels = TRUE)
+
+read7_pred_vs_act <- cbind(covariates_data_any_oc_nc, prediction_output_7d, allcausereadmission_7 = hf_any_data_oc_nc$hfreadmission_7)
+
+read7_pred_vs_act %>% dplyr::group_by(id_time) %>% dplyr::summarise(pred = sum(prediction_output_7d), act = sum(allcausereadmission_7)) %>% tidyr::gather(key = "type", value = "count", -id_time) %>% ggplot2::ggplot(aes(x=id_time, colour = type)) + ggplot2::geom_line(aes(y=count))
+
+```
+
+
+
+
+
+
+
+
+
