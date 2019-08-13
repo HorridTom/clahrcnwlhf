@@ -164,7 +164,7 @@ pop_summary <- list(
   #   "mean (sd)" = ~ qwraps2::mean_sd(time.to.next.spell, na_rm = TRUE , denote_sd = "paren")
   # ),
   "Any-Cause Re-admission Category" = list(
-    "No re-admission within 90 days" = ~ qwraps2::n_perc(is.na(all.cause.readmission.cat)),
+    "No re-admission < 90 days" = ~ qwraps2::n_perc(is.na(all.cause.readmission.cat)),
     "< 7 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
     ">= 7, < 30 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '30', na_rm = TRUE, show_denom = "always"),
     ">= 30, < 90 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
@@ -177,7 +177,7 @@ pop_summary <- list(
   #   "mean (sd)" = ~ qwraps2::mean_sd(time.to.next.hf.spell, na_rm = TRUE , denote_sd = "paren")
   # ),
   "HF Re-admission Category" = list(
-    "No re-admission within 90 days" = ~ qwraps2::n_perc(is.na(hf.readmission.cat)),
+    "No re-admission < 90 days" = ~ qwraps2::n_perc(is.na(hf.readmission.cat)),
     "< 7 days" = ~ qwraps2::n_perc(hf.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
     ">= 7, < 30 days" = ~ qwraps2::n_perc(hf.readmission.cat == '30', na_rm = TRUE, show_denom = "always"),
     ">= 30, < 90 days" = ~ qwraps2::n_perc(hf.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
@@ -445,7 +445,7 @@ pop_summary <- list(
     #"mean (sd)" = ~ qwraps2::mean_sd(time.to.next.spell, na_rm = TRUE , denote_sd = "paren")
   #),
   "Any-Cause Re-admission Category" = list(
-    "No re-admission within 90 days" = ~ qwraps2::n_perc(is.na(all.cause.readmission.cat)),
+    "No re-admission < 90 days" = ~ qwraps2::n_perc(is.na(all.cause.readmission.cat)),
     "< 7 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
     ">= 7, < 30 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '30', na_rm = TRUE, show_denom = "always"),
     ">= 30, < 90 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
@@ -458,7 +458,7 @@ pop_summary <- list(
     #"mean (sd)" = ~ qwraps2::mean_sd(time.to.next.hf.spell, na_rm = TRUE , denote_sd = "paren")
   #),
   "HF Re-admission Category" = list(
-    "No re-admission within 90 days" = ~ qwraps2::n_perc(is.na(hf.readmission.cat)),
+    "No re-admission < 90 days" = ~ qwraps2::n_perc(is.na(hf.readmission.cat)),
     "< 7 days" = ~ qwraps2::n_perc(hf.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
     ">= 7, < 30 days" = ~ qwraps2::n_perc(hf.readmission.cat == '30', na_rm = TRUE, show_denom = "always"),
     ">= 30, < 90 days" = ~ qwraps2::n_perc(hf.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
