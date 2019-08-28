@@ -53,95 +53,118 @@ table(hf_its_data$id_time >= 43, hf_its_data$X_z_x_t , useNA = "always")
 ```
 
 Discharges with HF as primary diagnosis, no control
-```{r hf-prim-nocont, warning=FALSE, message=FALSE}
-
-hf_prim_data <- hf_its_data %>% dplyr::filter(wardsite == "NPH")
-hf_prim_data <- plm::pdata.frame(hf_prim_data, "pseudoid")
-
-hf_prim_form <- Formula::Formula(HF_primary ~ offset(log(count)) + X_t + X_x + X_x_t + sex + non_white + ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11)
-
-hf_prim_model <- pglm(formula = hf_prim_form, family = poisson(link = "log"), data = hf_prim_data, effect = "individual", model = "random")
-
-summary(hf_prim_model)
-
-knitr::kable(exp(hf_prim_model$estimate), col.names = c("IRR"))
+```{r hf-prim-nocont, warning=FALSE, message=FALSE, include=F}
+# 
+# hf_prim_data <- hf_its_data %>% dplyr::filter(wardsite == "NPH")
+# hf_prim_data <- plm::pdata.frame(hf_prim_data, "pseudoid")
+# 
+# hf_prim_form <- Formula::Formula(HF_primary ~ offset(log(count)) + X_t + X_x + X_x_t + sex + non_white + ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11)
+# 
+# hf_prim_model <- pglm(formula = hf_prim_form, family = poisson(link = "log"), data = hf_prim_data, effect = "individual", model = "random")
+# 
+# summary(hf_prim_model)
+# 
+# knitr::kable(exp(hf_prim_model$estimate), col.names = c("IRR"))
 ```
 
 Discharges with HF as primary diagnosis, with control
 ```{r hf-prim-cont, warning=T, message=T, include=FALSE}
-
-hf_prim_data <- hf_its_data %>% dplyr::filter(wardsite != "CMH")
-hf_prim_data <- plm::pdata.frame(hf_prim_data, "pseudoid")
-
-hf_prim_form_cont <- Formula::Formula(HF_primary ~ offset(log(count)) + X_t + X_x + X_x_t + 
-                                        X_z + X_z_t + X_z_x + X_z_x_t + sex + non_white + 
-                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
-                                        month_1 + month_2 + month_3 + month_4 + month_5 + 
-                                        month_6 + month_7 + month_8 + month_9 + month_10 +
-                                        month_11)
-
-hf_prim_model_cont <- pglm(formula = hf_prim_form_cont, family = poisson(link = "log"), data = hf_prim_data, effect = "individual", model = "random")
-
-summary(hf_prim_model_cont)
-
-knitr::kable(exp(hf_prim_model_cont$estimate), col.names = c("IRR"))
+# 
+# hf_prim_data <- hf_its_data %>% dplyr::filter(wardsite != "CMH")
+# hf_prim_data <- plm::pdata.frame(hf_prim_data, "pseudoid")
+# 
+# hf_prim_form_cont <- Formula::Formula(HF_primary ~ offset(log(count)) + X_t + X_x + X_x_t + 
+#                                         X_z + X_z_t + X_z_x + X_z_x_t + sex + non_white + 
+#                                         ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+#                                         month_1 + month_2 + month_3 + month_4 + month_5 + 
+#                                         month_6 + month_7 + month_8 + month_9 + month_10 +
+#                                         month_11)
+# 
+# hf_prim_model_cont <- pglm(formula = hf_prim_form_cont, family = poisson(link = "log"), data = hf_prim_data, effect = "individual", model = "random")
+# 
+# summary(hf_prim_model_cont)
+# 
+# knitr::kable(exp(hf_prim_model_cont$estimate), col.names = c("IRR"))
 ```
 
 Discharges with HF as any diagnosis, no control
 ```{r hf-any-nocont, warning=FALSE, message=FALSE, include=FALSE}
-
-hf_any_data <- hf_its_data %>% dplyr::filter(wardsite == "NPH")
-hf_any_data <- plm::pdata.frame(hf_any_data, "pseudoid")
-
-hf_any_form <- Formula::Formula(HF_any ~ offset(log(count)) + X_t + X_x + X_x_t + sex + non_white + ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11)
-
-hf_any_model <- pglm(formula = hf_any_form, family = poisson(link = "log"), data = hf_any_data, effect = "individual", model = "random")
-
-summary(hf_any_model)
-
-knitr::kable(exp(hf_any_model$estimate), col.names = c("IRR"))
+# 
+# hf_any_data <- hf_its_data %>% dplyr::filter(wardsite == "NPH")
+# hf_any_data <- plm::pdata.frame(hf_any_data, "pseudoid")
+# 
+# hf_any_form <- Formula::Formula(HF_any ~ offset(log(count)) + X_t + X_x + X_x_t + sex + non_white + ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11)
+# 
+# hf_any_model <- pglm(formula = hf_any_form, family = poisson(link = "log"), data = hf_any_data, effect = "individual", model = "random")
+# 
+# summary(hf_any_model)
+# 
+# knitr::kable(exp(hf_any_model$estimate), col.names = c("IRR"))
 ```
 
 Discharges with HF as any diagnosis, with control
 ```{r hf-any-cont, warning=T, message=T, include=FALSE}
-
-hf_any_data <- hf_its_data %>% dplyr::filter(wardsite != "CMH")
-hf_any_data <- plm::pdata.frame(hf_any_data, "pseudoid")
-
-hf_any_form_cont <- Formula::Formula(HF_any ~ offset(log(count)) + X_t + X_x + X_x_t + 
-                                        X_z + X_z_t + X_z_x + X_z_x_t + sex + non_white + 
-                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
-                                        month_1 + month_2 + month_3 + month_4 + month_5 + 
-                                        month_6 + month_7 + month_8 + month_9 + month_10 +
-                                        month_11)
-
-hf_any_model_cont <- pglm(formula = hf_any_form_cont, family = poisson(link = "log"), data = hf_any_data, effect = "individual", model = "random")
-
-summary(hf_any_model_cont)
-
-knitr::kable(exp(hf_any_model_cont$estimate), col.names = c("IRR"))
+# 
+# hf_any_data <- hf_its_data %>% dplyr::filter(wardsite != "CMH")
+# hf_any_data <- plm::pdata.frame(hf_any_data, "pseudoid")
+# 
+# hf_any_form_cont <- Formula::Formula(HF_any ~ offset(log(count)) + X_t + X_x + X_x_t + 
+#                                         X_z + X_z_t + X_z_x + X_z_x_t +
+#                                         sex + non_white + 
+#                                         ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+#                                         month_1 + month_2 + month_3 + month_4 + month_5 + 
+#                                         month_6 + month_7 + month_8 + month_9 + month_10 +
+#                                         month_11)
+# 
+# hf_any_model_cont <- pglm(formula = hf_any_form_cont, family = poisson(link = "log"), data = hf_any_data, effect = "individual", model = "random")
+# 
+# summary(hf_any_model_cont)
+# 
+# knitr::kable(exp(hf_any_model_cont$estimate), col.names = c("IRR"))
 ```
 
 7-day all cause readmission rate, following discharge with HF as any diagnosis, no control
 ```{r read7-all-nocont, warning=FALSE, message=FALSE}
 
-hf_any_data_oc_nc <- hf_its_data %>% dplyr::filter(wardsite == "NPH", HF_any == 1)
+hf_any_data_oc_nc <- hf_its_data %>% dplyr::filter(wardsite == "NPH", HF_any == 1) %>%
+  dplyr::mutate(sexM = if_else(sex=="M",1,0),
+                non_white1 = if_else(non_white=="1",1,0),
+                total_HF = 1)
 #hf_any_data_oc_nc <- plm::pdata.frame(hf_any_data_oc_nc, "pseudoid")
 
 #hf_read7_all_form <- Formula::Formula(allcausereadmission_7 ~ offset(log(total_HF)) + X_t + X_x + X_x_t + sex + non_white + ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11)
 
 #hf_read7_all_model <- pglm(formula = hf_read7_all_form, family = poisson(link = "log"), data = hf_any_data_oc_nc, effect = "individual", model = "random")
 
-hf_read7_all_nc_model_glmer <- glmer(allcausereadmission_7 ~ offset(log(total_HF)) + X_t + X_x + X_x_t + sex + non_white + ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11 + (1 | pseudoid), hf_any_data_oc_nc, family = poisson, control=glmerControl(optimizer="bobyqa"))
+
+hf_read7_all_nc_model_glm <- glm(allcausereadmission_7 ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
+                                       sexM + non_white1 +
+                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11, hf_any_data_oc_nc, family = poisson(link = "log"))
+
+#
+hf_read7_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_7) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
+                                       sexM + non_white1 +
+                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11 + (1 | pseudoid), hf_any_data_oc_nc, family = poisson(link = "log"), control=glmerControl(optimizer="bobyqa"))
 
 summary(hf_read7_all_nc_model_glmer)
+
+overdisp_fun <- function(model) {
+    rdf <- df.residual(model)
+    rp <- residuals(model,type="pearson")
+    Pearson.chisq <- sum(rp^2)
+    prat <- Pearson.chisq/rdf
+    pval <- pchisq(Pearson.chisq, df=rdf, lower.tail=FALSE)
+    c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
+}
+
+overdisp_fun(hf_read7_all_nc_model_glmer)
 
 knitr::kable(exp(fixef(hf_read7_all_nc_model_glmer)), col.names = c("IRR"))
 ```
 
 
 7-day all cause readmission rate, following discharge with HF as any diagnosis, with control
-```{r read7-all-cont, warning=T, message=T}
+```{r read7-all-cont, warning=T, message=T, include=F}
 
 hf_any_data_oc_c <- hf_its_data %>% dplyr::filter(wardsite != "CMH", HF_any == 1)
 #hf_any_data_oc_c <- plm::pdata.frame(hf_any_data_oc_c, "pseudoid")
@@ -154,40 +177,169 @@ hf_any_data_oc_c <- hf_its_data %>% dplyr::filter(wardsite != "CMH", HF_any == 1
 #                                         month_11)
 
 #hf_read7_all_model_cont <- pglm(formula = hf_read7_all_form_cont, family = poisson(link = "log"), data = hf_any_data_oc_c, effect = "individual", model = "random")
-
-hf_read7_all_c_model_glmer <- glmer(allcausereadmission_7 ~ offset(log(total_HF)) + X_t + X_x + X_x_t + 
-                                        X_z + X_z_t + X_z_x + X_z_x_t + sex + non_white +
-                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 +
-                                        month_1 + month_2 + month_3 + month_4 + month_5 +
-                                        month_6 + month_7 + month_8 + month_9 + month_10 +
-                                        month_11 + (1 | pseudoid), hf_any_data_oc_c, family = poisson, 
-                                     control=glmerControl(optimizer="bobyqa"))
-
-summary(hf_read7_all_c_model_glmer)
-
-knitr::kable(exp(fixef(hf_read7_all_c_model_glmer)), col.names = c("IRR"))
+# 
+# hf_read7_all_c_model_glmer <- glmer(allcausereadmission_7 ~ offset(log(total_HF)) + X_t + X_x + X_x_t + 
+#                                         X_z + X_z_t + X_z_x + X_z_x_t +
+#                                         sex + non_white +
+#                                         ln_age + ward_2 + ward_3 + ward_4 + ward_5 +
+#                                         month_1 + month_2 + month_3 + month_4 + month_5 +
+#                                         month_6 + month_7 + month_8 + month_9 + month_10 +
+#                                         month_11 + (1 | pseudoid), hf_any_data_oc_c, family = poisson, 
+#                                      control=glmerControl(optimizer="bobyqa"))
+# 
+# summary(hf_read7_all_c_model_glmer)
+# 
+# knitr::kable(exp(fixef(hf_read7_all_c_model_glmer)), col.names = c("IRR"))
 ```
 
 
 ```{r plot-7read}
-covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% dplyr::select(-dplyr::starts_with("allcausereadmission_"), 
-                                                                 -dplyr::starts_with("hfreadmission_"), -death, 
-                                                                 -los_dd)
+covariates_data_any_oc_nc <- hf_any_data_oc_nc
+
+av_tot <- covariates_data_any_oc_nc %>% dplyr::group_by(id_time) %>% dplyr::summarize(total_HF = mean(total_HF)) %>% dplyr::summarize(av_tot = mean(total_HF)) %>% dplyr::pull(av_tot)
+
+num_months <- max(covariates_data_any_oc_nc$id_time)
+month_lkp <- covariates_data_any_oc_nc %>% dplyr::select(id_time, dplyr::starts_with("month")) %>% dplyr::distinct(id_time, .keep_all = TRUE)
+
+data_new <- covariates_data_any_oc_nc %>% 
+  dplyr::mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+
+# data_new <- data.frame(id_time = 1:num_months,
+#                        total_HF = rep(floor(av_tot), num_months),
+#                        wardsite = rep("NPH", num_months),
+#                        ward_2 = rep(mean(covariates_data_any_oc_nc$ward_2), num_months),
+#                        ward_3 = rep(mean(covariates_data_any_oc_nc$ward_3), num_months),
+#                        ward_4 = rep(mean(covariates_data_any_oc_nc$ward_4), num_months),
+#                        ward_5 = rep(mean(covariates_data_any_oc_nc$ward_5), num_months),
+#                        ln_age = rep(mean(covariates_data_any_oc_nc$ln_age), num_months),
+#                        sexM = rep(mean(covariates_data_any_oc_nc$sexM), num_months),
+#                        non_white1 = rep(mean(covariates_data_any_oc_nc$non_white1), num_months))
+# 
+# data_new <- data_new %>% dplyr::mutate(X_x = dplyr::if_else(id_time >= 43, 1, 0),
+#                                        X_t = id_time,
+#                                        X_x_t = if_else(id_time >= 43, X_t - 43, 0)) %>%
+#   dplyr::left_join(month_lkp) %>% dplyr::mutate(month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11))
+
+prediction_output_7d <- predict(hf_read7_all_nc_model_glmer, newdata = data_new %>% dplyr::select(-allcausereadmission_7), type = "response", allow.new.levels = TRUE, re.form=~0)
+
+read7_acts_preds <- data_new %>% cbind(prediction_output_7d) %>% dplyr::group_by(id_time) %>% dplyr::summarise(allcausereadmission_7 = sum(allcausereadmission_7), total_HF = n(), pred_out_7d = mean(prediction_output_7d)) %>% dplyr::mutate(act_rate = allcausereadmission_7/total_HF)
+
+# read7_pred_vs_act <- cbind(data_new, prediction_output_7d) %>% dplyr::left_join(read7_acts, by = c("id_time" = "id_time"))
+#read7_pred_vs_act <- read7_pred_vs_act %>% dplyr::mutate(prediction_output_7d = prediction_output_7d)
+
+read7_acts_preds %>% dplyr::select(id_time, allcausereadmission_7, act_rate, pred_out_7d) %>% 
+  #tidyr::gather(key = "type", value = "count", -id_time) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) + ggplot2::geom_line(ggplot2::aes(y=pred_out_7d), colour = "blue") + ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black") #+ ggplot2::geom_line(ggplot2::aes(y=act_rate), colour = "black")
+
+```
 
 
-prediction_output_7d <- predict(hf_read7_all_nc_model_glmer, newdata = covariates_data_any_oc_nc, type = "response", allow.new.levels = TRUE)
+Mortality, following discharge with HF as any diagnosis, no control - without the ward variables
+```{r mort-nocont-noward, warning=TRUE, message=TRUE}
+hf_any_data_oc_nc <- hf_its_data %>% dplyr::filter(wardsite == "NPH", HF_any == 1) %>%
+  dplyr::mutate(sexM = if_else(sex=="M",1,0),
+                non_white1 = if_else(non_white=="1",1,0),
+                total_HF = 1)
 
-read7_pred_vs_act <- cbind(covariates_data_any_oc_nc, prediction_output_7d, allcausereadmission_7 = hf_any_data_oc_nc$hfreadmission_7)
+death_nc_model_glm <- glm(as.integer(death) ~ offset(log(total_HF)) + X_t + X_x + 
+                            X_x_t +
+                                       sexM + 
+                            non_white1 +
+                                       ln_age  + #ward_2 + ward_3 + ward_4 + ward_5 +
+                            month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11,
+                            hf_any_data_oc_nc, family = poisson(link = "log"))
 
-read7_pred_vs_act %>% dplyr::group_by(id_time) %>% dplyr::summarise(pred = sum(prediction_output_7d), act = sum(allcausereadmission_7)) %>% tidyr::gather(key = "type", value = "count", -id_time) %>% ggplot2::ggplot(aes(x=id_time, colour = type)) + ggplot2::geom_line(aes(y=count))
+#
+# death_nc_model_glmer <- glmer(death ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
+#                                        sexM + non_white1 +
+#                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11 + (1 | pseudoid), hf_any_data_oc_nc, family = poisson(link = "log"), control=glmerControl(optimizer="bobyqa"))
+
+summary(death_nc_model_glm)
+summary(death_nc_model_glm)$dispersion
+overdisp_fun(death_nc_model_glm)
+
+knitr::kable(Epi::ci.lin(death_nc_model_glm, Exp=T))
+```
+
+
+```{r plot-death-noward}
+covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% 
+  dplyr::select(-dplyr::starts_with("allcausereadmission_"),
+                -dplyr::starts_with("hfreadmission_"),
+                -death,
+                -los_dd)
+
+# av_tot <- covariates_data_any_oc_nc %>% dplyr::group_by(id_time) %>% dplyr::summarize(total_HF = mean(total_HF)) %>% dplyr::summarize(av_tot = mean(total_HF)) %>% dplyr::pull(av_tot)
+# 
+# num_months <- max(covariates_data_any_oc_nc$id_time)
+# month_lkp <- covariates_data_any_oc_nc %>% dplyr::select(id_time, dplyr::starts_with("month")) %>% dplyr::distinct(id_time, .keep_all = TRUE)
+
+prediction_output_death <- predict(death_nc_model_glm, type = "response", data_new %>% dplyr::select(-death))
+
+death_acts_preds <- data_new %>% cbind(prediction_output_death) %>% dplyr::group_by(X_t) %>% dplyr::summarise(death = sum(death), total_HF = n(), pred_out_death = mean(prediction_output_death)) %>% dplyr::mutate(act_rate = death/total_HF)
+
+# read7_pred_vs_act <- cbind(data_new, prediction_output_7d) %>% dplyr::left_join(read7_acts, by = c("id_time" = "id_time"))
+#read7_pred_vs_act <- read7_pred_vs_act %>% dplyr::mutate(prediction_output_7d = prediction_output_7d)
+
+death_acts_preds %>% dplyr::select(X_t, death, act_rate, pred_out_death) %>% 
+  #tidyr::gather(key = "type", value = "count", -id_time) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=X_t)) + ggplot2::geom_line(ggplot2::aes(y=pred_out_death), colour = "blue") + ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black") + ggplot2::geom_line(ggplot2::aes(y=act_rate), colour = "black")
 
 ```
 
 
 
+Mortality, following discharge with HF as any diagnosis, no control - with the ward variables
+```{r mort-nocont, warning=TRUE, message=TRUE}
+hf_any_data_oc_nc <- hf_its_data %>% dplyr::filter(wardsite == "NPH", HF_any == 1) %>%
+  dplyr::mutate(sexM = if_else(sex=="M",1,0),
+                non_white1 = if_else(non_white=="1",1,0),
+                total_HF = 1)
+
+death_nc_model_glm <- glm(as.integer(death) ~ offset(log(total_HF)) +
+                            X_t + X_x + X_x_t +
+                            sexM + 
+                            non_white1 +
+                            ln_age +
+                            ward_2 + ward_3 + ward_4 + ward_5 +
+                            month_1 + month_2 + month_3 + month_4 + month_5 + month_6 +
+                            month_7 + month_8 + month_9 + month_10 + month_11,
+                          hf_any_data_oc_nc, family = poisson(link = "log"))
+
+#
+# death_nc_model_glmer <- glmer(death ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
+#                                        sexM + non_white1 +
+#                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 + month_3 + month_4 + month_5 + month_6 + month_7 + month_8 + month_9 + month_10 + month_11 + (1 | pseudoid), hf_any_data_oc_nc, family = poisson(link = "log"), control=glmerControl(optimizer="bobyqa"))
+
+summary(death_nc_model_glm)
+summary(death_nc_model_glm)$dispersion
+overdisp_fun(death_nc_model_glm)
+
+knitr::kable(Epi::ci.lin(death_nc_model_glm, Exp=T))
+```
 
 
+```{r plot-death}
+covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% 
+  dplyr::select(-dplyr::starts_with("allcausereadmission_"),
+                -dplyr::starts_with("hfreadmission_"),
+                -death,
+                -los_dd)
 
+# av_tot <- covariates_data_any_oc_nc %>% dplyr::group_by(id_time) %>% dplyr::summarize(total_HF = mean(total_HF)) %>% dplyr::summarize(av_tot = mean(total_HF)) %>% dplyr::pull(av_tot)
+# 
+# num_months <- max(covariates_data_any_oc_nc$id_time)
+# month_lkp <- covariates_data_any_oc_nc %>% dplyr::select(id_time, dplyr::starts_with("month")) %>% dplyr::distinct(id_time, .keep_all = TRUE)
 
+prediction_output_death <- predict(death_nc_model_glm, type = "response", data_new %>% dplyr::select(-death))
 
+death_acts_preds <- data_new %>% cbind(prediction_output_death) %>% dplyr::group_by(X_t) %>% dplyr::summarise(death = sum(death), total_HF = n(), pred_out_death = mean(prediction_output_death)) %>% dplyr::mutate(act_rate = death/total_HF)
 
+# read7_pred_vs_act <- cbind(data_new, prediction_output_7d) %>% dplyr::left_join(read7_acts, by = c("id_time" = "id_time"))
+#read7_pred_vs_act <- read7_pred_vs_act %>% dplyr::mutate(prediction_output_7d = prediction_output_7d)
+
+death_acts_preds %>% dplyr::select(X_t, death, act_rate, pred_out_death) %>% 
+  #tidyr::gather(key = "type", value = "count", -id_time) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=X_t)) + ggplot2::geom_line(ggplot2::aes(y=pred_out_death), colour = "blue") + ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black") + ggplot2::geom_line(ggplot2::aes(y=act_rate), colour = "black")
+
+```
