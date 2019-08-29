@@ -243,7 +243,7 @@ hf_read30_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_30) ~ offse
                                        month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
                                        month_9 + month_10 + month_11 +
                                        (1 | pseudoid),
-                                     hf_any_data_oc_nc,
+                                     hf_any_data_oc_nc %>% filter(X_t <= 67 - 1),
                                      family = poisson(link = "log"),
                                      control=glmerControl(optimizer="bobyqa"))
 
@@ -269,7 +269,7 @@ knitr::kable(exp(fixef(hf_read30_all_nc_model_glmer)), col.names = c("IRR"))
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-30read}
 # Make a copy of the data
-covariates_data_any_oc_nc <- hf_any_data_oc_nc
+covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 1)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% 
@@ -310,7 +310,7 @@ hf_read90_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_90) ~ offse
                                        month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
                                        month_9 + month_10 + month_11 +
                                        (1 | pseudoid),
-                                     hf_any_data_oc_nc,
+                                     hf_any_data_oc_nc %>% filter(X_t <= 67 - 3),
                                      family = poisson(link = "log"),
                                      control=glmerControl(optimizer="bobyqa"))
 
@@ -336,7 +336,7 @@ knitr::kable(exp(fixef(hf_read90_all_nc_model_glmer)), col.names = c("IRR"))
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-90read}
 # Make a copy of the data
-covariates_data_any_oc_nc <- hf_any_data_oc_nc
+covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 3)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% 
