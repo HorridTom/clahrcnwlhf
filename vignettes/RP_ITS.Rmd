@@ -931,7 +931,7 @@ outcomes_predictions_tidy_2_eh %>% ggplot(aes(x = id_time)) + geom_point(aes(y =
 
 # Comparison NPH EH
 
-```{r comparison, fig.height=8, fig.width=5}
+```{r comparison, fig.height=8, fig.width=7}
 outcomes_predictions_tidy_2_eh <- outcomes_predictions_tidy_2_eh %>% mutate(site = "Control")
 outcomes_predictions_tidy_2 <- outcomes_predictions_tidy_2 %>% mutate(site = "Intervention")
 
