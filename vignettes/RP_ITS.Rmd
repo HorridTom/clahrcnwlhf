@@ -127,7 +127,7 @@ table(hf_its_data$id_time >= 43, hf_its_data$X_z_x_t , useNA = "always")
 # knitr::kable(exp(hf_any_model_cont$estimate), col.names = c("IRR"))
 ```
 
-7-day all cause readmission rate, following discharge with HF as any diagnosis, no control
+## 7-day all cause readmission rate, following discharge with HF as any diagnosis, no control
 ```{r read7-all-nocont, warning=FALSE, message=FALSE}
 
 
@@ -198,7 +198,7 @@ knitr::kable(exp(fixef(hf_read7_all_nc_model_glmer)), col.names = c("IRR"))
 # knitr::kable(exp(fixef(hf_read7_all_c_model_glmer)), col.names = c("IRR"))
 ```
 
-Plot model predictions for averaged covariates as linear trends, along with the data
+### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-7read}
 # Make a copy of the data
 covariates_data_any_oc_nc <- hf_any_data_oc_nc
@@ -224,7 +224,141 @@ read7_acts_preds %>% select(id_time, allcausereadmission_7, act_rate, pred_out_7
 ```
 
 
-Mortality, following discharge with HF as any diagnosis, no control - without the ward variables
+## 30-day all cause readmission rate, following discharge with HF as any diagnosis, no control
+```{r read30-all-nocont, warning=FALSE, message=FALSE}
+
+
+# Create a dataset of all spells with HF diagnosis in any position, just for NPH,
+# encode sex and non_white as dummy variables,
+# set the count of number of spells to 1 for each row
+hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
+  mutate(sexM = if_else(sex=="M",1,0),
+                non_white1 = if_else(non_white=="1",1,0),
+                total_HF = 1)
+
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read30_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_30) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
+                                       sexM + non_white1 +
+                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                       month_9 + month_10 + month_11 +
+                                       (1 | pseudoid),
+                                     hf_any_data_oc_nc,
+                                     family = poisson(link = "log"),
+                                     control=glmerControl(optimizer="bobyqa"))
+
+summary(hf_read30_all_nc_model_glmer)
+
+# Check dispersion
+overdisp_fun <- function(model) {
+    rdf <- df.residual(model)
+    rp <- residuals(model,type="pearson")
+    Pearson.chisq <- sum(rp^2)
+    prat <- Pearson.chisq/rdf
+    pval <- pchisq(Pearson.chisq, df=rdf, lower.tail=FALSE)
+    c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
+}
+
+overdisp_fun(hf_read30_all_nc_model_glmer)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read30_all_nc_model_glmer)), col.names = c("IRR"))
+```
+
+
+### Plot model predictions for averaged covariates as linear trends, along with the data
+```{r plot-30read}
+# Make a copy of the data
+covariates_data_any_oc_nc <- hf_any_data_oc_nc
+
+# Create new dataset with averaged values of all covariates
+data_new <- covariates_data_any_oc_nc %>% 
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+
+# Run model predictions on this averaged data
+prediction_output_30d <- predict(hf_read30_all_nc_model_glmer, newdata = data_new %>% select(-allcausereadmission_30), type = "response", allow.new.levels = TRUE, re.form=~0)
+
+# Add the predicted outcomes as a column to the averaged dataset,
+# and summarise this data by month.
+# Create a new column for the actual monthly readmission rate
+read30_acts_preds <- data_new %>% cbind(prediction_output_30d) %>% group_by(id_time) %>% summarise(allcausereadmission_30 = sum(allcausereadmission_30), total_HF = n(), pred_out_30d = mean(prediction_output_30d)) %>% mutate(act_rate = allcausereadmission_30/total_HF)
+
+# Plot the chart
+read30_acts_preds %>% select(id_time, allcausereadmission_30, act_rate, pred_out_30d) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=pred_out_30d), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
+
+```
+
+## 90-day all cause readmission rate, following discharge with HF as any diagnosis, no control
+```{r read90-all-nocont, warning=FALSE, message=FALSE}
+
+
+# Create a dataset of all spells with HF diagnosis in any position, just for NPH,
+# encode sex and non_white as dummy variables,
+# set the count of number of spells to 1 for each row
+hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
+  mutate(sexM = if_else(sex=="M",1,0),
+                non_white1 = if_else(non_white=="1",1,0),
+                total_HF = 1)
+
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read90_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_90) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
+                                       sexM + non_white1 +
+                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                       month_9 + month_10 + month_11 +
+                                       (1 | pseudoid),
+                                     hf_any_data_oc_nc,
+                                     family = poisson(link = "log"),
+                                     control=glmerControl(optimizer="bobyqa"))
+
+summary(hf_read90_all_nc_model_glmer)
+
+# Check dispersion
+overdisp_fun <- function(model) {
+    rdf <- df.residual(model)
+    rp <- residuals(model,type="pearson")
+    Pearson.chisq <- sum(rp^2)
+    prat <- Pearson.chisq/rdf
+    pval <- pchisq(Pearson.chisq, df=rdf, lower.tail=FALSE)
+    c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
+}
+
+overdisp_fun(hf_read90_all_nc_model_glmer)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read90_all_nc_model_glmer)), col.names = c("IRR"))
+```
+
+
+### Plot model predictions for averaged covariates as linear trends, along with the data
+```{r plot-90read}
+# Make a copy of the data
+covariates_data_any_oc_nc <- hf_any_data_oc_nc
+
+# Create new dataset with averaged values of all covariates
+data_new <- covariates_data_any_oc_nc %>% 
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+
+# Run model predictions on this averaged data
+prediction_output_90d <- predict(hf_read90_all_nc_model_glmer, newdata = data_new %>% select(-allcausereadmission_90), type = "response", allow.new.levels = TRUE, re.form=~0)
+
+# Add the predicted outcomes as a column to the averaged dataset,
+# and summarise this data by month.
+# Create a new column for the actual monthly readmission rate
+read90_acts_preds <- data_new %>% cbind(prediction_output_90d) %>% group_by(id_time) %>% summarise(allcausereadmission_90 = sum(allcausereadmission_90), total_HF = n(), pred_out_90d = mean(prediction_output_90d)) %>% mutate(act_rate = allcausereadmission_90/total_HF)
+
+# Plot the chart
+read90_acts_preds %>% select(id_time, allcausereadmission_90, act_rate, pred_out_90d) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=pred_out_90d), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
+
+```
+
+## Mortality, following discharge with HF as any diagnosis, no control - without the ward variables
 ```{r mort-nocont-noward, warning=TRUE, message=TRUE}
 # Create dataset for the regression analysis
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
@@ -319,4 +453,56 @@ ward_death_data <- hf_any_data_oc_nc %>% select(death, starts_with("ward")) %>%
 knitr::kable(table(ward_death_data$death, ward_death_data$ward, useNA = "always"))
 ```
 
+## LOS with HF as any diagnosis, no control
+```{r los-nocont, warning=FALSE, message=FALSE}
+
+
+# Create a dataset of all spells with HF diagnosis in any position, just for NPH,
+# encode sex and non_white as dummy variables,
+# set the count of number of spells to 1 for each row
+hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
+  mutate(sexM = if_else(sex=="M",1,0),
+                non_white1 = if_else(non_white=="1",1,0),
+                total_HF = 1)
+
+# Mixed-effects poisson model: random effects for pseudoid
+hf_los_nc_model_lmer <- lmer(los_dd ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
+                                       sexM + non_white1 +
+                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                       month_9 + month_10 + month_11 +
+                                       (1 | pseudoid),
+                                     hf_any_data_oc_nc)
+
+summary(hf_los_nc_model_lmer)
+
+
+# Display coefficients
+knitr::kable(fixef(hf_los_nc_model_lmer), col.names = c("coeffs"))
+```
+
+### Plot model predictions for averaged covariates as linear trends, along with the data
+```{r plot-los}
+# Make a copy of the data
+covariates_data_any_oc_nc <- hf_any_data_oc_nc
+
+# Create new dataset with averaged values of all covariates
+data_new <- covariates_data_any_oc_nc %>% 
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+
+# Run model predictions on this averaged data
+prediction_output_los <- predict(hf_los_nc_model_lmer, newdata = data_new %>% select(-los_dd), type = "response", allow.new.levels = TRUE, re.form=~0)
+
+# Add the predicted outcomes as a column to the averaged dataset,
+# and summarise this data by month.
+# Create a new column for the actual monthly readmission rate
+los_acts_preds <- data_new %>% cbind(prediction_output_los) %>% group_by(id_time) %>% summarise(los_tot = sum(los_dd), total_HF = n(), pred_out_los = mean(prediction_output_los)) %>% mutate(act_los = los_tot/total_HF)
+
+# Plot the chart
+los_acts_preds %>% select(id_time, los_tot, act_los, pred_out_los) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=pred_out_los), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=act_los), colour = "black")
+
+```
 
