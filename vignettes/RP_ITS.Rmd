@@ -7,9 +7,11 @@ output: pdf_document
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
+  cache = TRUE,
   collapse = TRUE,
   comment = "#>",
-  echo = TRUE
+  echo = FALSE,
+  fig.path = "RP_ITS_Images/"
 )
 ```
 
@@ -206,8 +208,15 @@ knitr::kable(exp(fixef(hf_read7_all_nc_model_glmer)), col.names = c("IRR"))
 covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 # Run model predictions on this averaged data
 prediction_output_7d <- predict(hf_read7_all_nc_model_glmer, newdata = data_new %>% select(-allcausereadmission_7), type = "response", allow.new.levels = TRUE, re.form=~0)
@@ -225,7 +234,7 @@ read7_acts_preds %>% select(id_time, allcausereadmission_7, act_rate, pred_out_7
 
 ```
 
-
+\newpage
 ## 30-day all cause readmission rate, following discharge with HF as any diagnosis, no control
 ```{r read30-all-nocont, warning=FALSE, message=FALSE}
 
@@ -274,8 +283,15 @@ knitr::kable(exp(fixef(hf_read30_all_nc_model_glmer)), col.names = c("IRR"))
 covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 1)
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 # Run model predictions on this averaged data
 prediction_output_30d <- predict(hf_read30_all_nc_model_glmer, newdata = data_new %>% select(-allcausereadmission_30), type = "response", allow.new.levels = TRUE, re.form=~0)
@@ -293,6 +309,7 @@ read30_acts_preds %>% select(id_time, allcausereadmission_30, act_rate, pred_out
 
 ```
 
+\newpage
 ## 90-day all cause readmission rate, following discharge with HF as any diagnosis, no control
 ```{r read90-all-nocont, warning=FALSE, message=FALSE}
 
@@ -341,8 +358,15 @@ knitr::kable(exp(fixef(hf_read90_all_nc_model_glmer)), col.names = c("IRR"))
 covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 3)
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 # Run model predictions on this averaged data
 prediction_output_90d <- predict(hf_read90_all_nc_model_glmer, newdata = data_new %>% select(-allcausereadmission_90), type = "response", allow.new.levels = TRUE, re.form=~0)
@@ -360,6 +384,7 @@ read90_acts_preds %>% select(id_time, allcausereadmission_90, act_rate, pred_out
 
 ```
 
+\newpage
 ## Mortality, following discharge with HF as any diagnosis, no control - without the ward variables
 ```{r mort-nocont-noward, warning=TRUE, message=TRUE}
 # Create dataset for the regression analysis
@@ -385,12 +410,20 @@ knitr::kable(Epi::ci.lin(death_nc_model_glm_nw, Exp=T))
 ```
 
 Plot for the mortality model with no ward covariates
+
 ```{r plot-death-noward}
 covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 prediction_output_death_nw <- predict(death_nc_model_glm_nw, type = "response", data_new %>% select(-death))
 
@@ -401,8 +434,8 @@ death_acts_preds_nw %>% select(id_time, death, act_rate, pred_out_death) %>%
 ```
 
 
-
-Mortality, following discharge with HF as any diagnosis, no control - with the ward variables
+\newpage
+## Mortality, following discharge with HF as any diagnosis, no control - with the ward variables
 ```{r mort-nocont, warning=TRUE, message=TRUE}
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
@@ -430,8 +463,15 @@ knitr::kable(Epi::ci.lin(death_nc_model_glm, Exp=T))
 covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 prediction_output_death <- predict(death_nc_model_glm, type = "response", data_new %>% select(-death))
 
@@ -441,21 +481,36 @@ death_acts_preds %>% select(id_time, death, act_rate, pred_out_death) %>%
   ggplot2::ggplot(ggplot2::aes(x=id_time)) + ggplot2::geom_line(ggplot2::aes(y=pred_out_death), colour = "blue") + ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
 ```
 
-I don't understand why the prediction line is so off for the model including the ward variables. Unless it is to do with the following: ward5 perfectly predicts death = 0.
+The problem with the fit is likely due to the following: death = 0 whenever ward_5 = 1, and ward_5 = 0 identically before the intervention (i.e. when X_x = 0). This is shown in the following tables.
 
 ```{r ward-mortality-table}
-ward_death_data <- hf_any_data_oc_nc %>% select(death, starts_with("ward")) %>%
-  mutate(ward = case_when(
+ward_death_data <- hf_any_data_oc_nc %>% select(death, starts_with("ward"), X_x) %>%
+  mutate(ward = factor(case_when(
     ward_2 == 1 ~ 2,
     ward_3 == 1 ~ 3,
     ward_4 == 1 ~ 4,
     ward_5 == 1 ~ 5,
     TRUE ~ 1
-  ))
-knitr::kable(table(ward_death_data$death, ward_death_data$ward, useNA = "always"))
+  )))
+
+
+tab1 <- expss::cro(ward_death_data %>% filter(X_x == 0) %>% pull(ward),
+                        ward_death_data %>% filter(X_x == 0) %>% pull(death))
+tab1 <- set_colnames(tab1, c("row_labels", "Did not die", "Died"))
+tab1$row_labels <- c("ward 1", "ward 2", "ward 3", "ward 4", "ward 5", "total")
+tab1[is.na(tab1)] <- 0
+knitr::kable(tab1, caption = "Before intervention")
+
+tab2 <- expss::cro(ward_death_data %>% filter(X_x == 1) %>% pull(ward),
+                        ward_death_data %>% filter(X_x == 1) %>% pull(death))
+tab2 <- set_colnames(tab2, c("row_labels", "Did not die", "Died"))
+tab2$row_labels <- c("ward 1", "ward 2", "ward 3", "ward 4", "ward 5", "total")
+tab2[is.na(tab2)] <- 0
+knitr::kable(tab2, caption = "After intervention")
 ```
 
-Mortality, following discharge with HF as any diagnosis, no control - with the ward 5 spells removed
+\newpage
+## Mortality, following discharge with HF as any diagnosis, no control - with the ward 5 spells removed
 ```{r mort-nocont-nw5, warning=TRUE, message=TRUE}
 hf_any_data_oc_nc_nw5 <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1, ward_5 == 0) %>%
   mutate(sexM = if_else(sex=="M",1,0),
@@ -483,8 +538,15 @@ knitr::kable(Epi::ci.lin(death_nc_model_glm_nw5, Exp=T))
 covariates_data_any_oc_nc_nw5 <- hf_any_data_oc_nc_nw5
 
 # Create new dataset with averaged values of all covariates
-data_new_nw5 <- covariates_data_any_oc_nc_nw5 %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new_nw5 <- covariates_data_any_oc_nc_nw5 %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 prediction_output_death_nw5 <- predict(death_nc_model_glm_nw5, type = "response", data_new_nw5 %>% select(-death))
 
@@ -495,7 +557,55 @@ death_acts_preds_nw5 %>% select(id_time, death, act_rate, pred_out_death) %>%
 ```
 
 
+\newpage
+## Mortality, following discharge with HF as any diagnosis, no control - with ward 5 (Other) merged with 4 (Medicine)
+```{r mort-nocont-wm, warning=TRUE, message=TRUE}
+hf_any_data_oc_nc_wm <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
+  mutate(sexM = if_else(sex=="M",1,0),
+                non_white1 = if_else(non_white=="1",1,0),
+                total_HF = 1,
+                ward_4 = if_else(ward_5 == 1, 1L, ward_4))
 
+death_nc_model_glm_wm <- glm(as.integer(death) ~ offset(log(total_HF)) +
+                            X_t + X_x + X_x_t +
+                            sexM + non_white1 + ln_age +
+                            ward_2 + ward_3 + ward_4 +
+                            month_1 + month_2 + month_3 + month_4 + month_5 + month_6 +
+                            month_7 + month_8 + month_9 + month_10 + month_11,
+                          hf_any_data_oc_nc,
+                          family = poisson(link = "log"))
+
+summary(death_nc_model_glm_wm)
+summary(death_nc_model_glm_wm)$dispersion
+overdisp_fun(death_nc_model_glm_wm)
+
+knitr::kable(Epi::ci.lin(death_nc_model_glm_wm, Exp=T))
+```
+
+
+```{r plot-death-wm}
+covariates_data_any_oc_nc_wm <- hf_any_data_oc_nc_wm
+
+# Create new dataset with averaged values of all covariates
+data_new_wm <- covariates_data_any_oc_nc_wm %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4)) %>%
+  ungroup()
+
+prediction_output_death_wm <- predict(death_nc_model_glm_wm, type = "response", data_new_wm %>% select(-death))
+
+death_acts_preds_wm <- data_new_wm %>% cbind(prediction_output_death_wm) %>% group_by(id_time) %>% summarise(death = sum(death), total_HF = n(), pred_out_death = mean(prediction_output_death_wm)) %>% mutate(act_rate = death/total_HF)
+
+death_acts_preds_wm %>% select(id_time, death, act_rate, pred_out_death) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) + ggplot2::geom_line(ggplot2::aes(y=pred_out_death), colour = "blue") + ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
+```
+
+
+\newpage
 ## LOS with HF as any diagnosis, no control
 ```{r los-nocont, warning=FALSE, message=FALSE}
 
@@ -530,8 +640,15 @@ knitr::kable(fixef(hf_los_nc_model_lmer), col.names = c("coeffs"))
 covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 # Run model predictions on this averaged data
 prediction_output_los <- predict(hf_los_nc_model_lmer, newdata = data_new %>% select(-los_dd), type = "response", allow.new.levels = TRUE, re.form=~0)
@@ -548,7 +665,7 @@ los_acts_preds %>% select(id_time, los_tot, act_los, pred_out_los) %>%
   ggplot2::geom_point(ggplot2::aes(y=act_los), colour = "black")
 
 ```
-
+\newpage
 ## Facet plot
 
 ```{r join-data, fig.height=8, fig.width=5}
@@ -583,6 +700,7 @@ outcomes_predictions_tidy_2 <- outcomes_predictions_tidy_1 %>% mutate(prediction
 outcomes_predictions_tidy_2 %>% ggplot(aes(x = id_time)) + geom_point(aes(y = actual)) + geom_line(aes(y = prediction)) + facet_grid(rows = vars(measure_type), scales = "free")
 ```
 
+\newpage
 # Ealing Outcomes
 
 ## 7-day all cause readmission rate, following discharge with HF as any diagnosis, no control
@@ -626,15 +744,21 @@ overdisp_fun(hf_read7_all_nc_model_glmer)
 knitr::kable(exp(fixef(hf_read7_all_nc_model_glmer)), col.names = c("IRR"))
 ```
 
-
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r eh-plot-7read}
 # Make a copy of the data
 covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 # Run model predictions on this averaged data
 prediction_output_7d <- predict(hf_read7_all_nc_model_glmer, newdata = data_new %>% select(-allcausereadmission_7), type = "response", allow.new.levels = TRUE, re.form=~0)
@@ -652,7 +776,7 @@ read7_acts_preds %>% select(id_time, allcausereadmission_7, act_rate, pred_out_7
 
 ```
 
-
+\newpage
 ## 30-day all cause readmission rate, following discharge with HF as any diagnosis, no control
 ```{r eh-read30-all-nocont, warning=FALSE, message=FALSE}
 
@@ -701,8 +825,15 @@ knitr::kable(exp(fixef(hf_read30_all_nc_model_glmer)), col.names = c("IRR"))
 covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 1)
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 # Run model predictions on this averaged data
 prediction_output_30d <- predict(hf_read30_all_nc_model_glmer, newdata = data_new %>% select(-allcausereadmission_30), type = "response", allow.new.levels = TRUE, re.form=~0)
@@ -720,6 +851,7 @@ read30_acts_preds %>% select(id_time, allcausereadmission_30, act_rate, pred_out
 
 ```
 
+\newpage
 ## 90-day all cause readmission rate, following discharge with HF as any diagnosis, no control
 ```{r eh-read90-all-nocont, warning=FALSE, message=FALSE}
 
@@ -768,8 +900,15 @@ knitr::kable(exp(fixef(hf_read90_all_nc_model_glmer)), col.names = c("IRR"))
 covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 3)
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 # Run model predictions on this averaged data
 prediction_output_90d <- predict(hf_read90_all_nc_model_glmer, newdata = data_new %>% select(-allcausereadmission_90), type = "response", allow.new.levels = TRUE, re.form=~0)
@@ -787,6 +926,7 @@ read90_acts_preds %>% select(id_time, allcausereadmission_90, act_rate, pred_out
 
 ```
 
+\newpage
 ## Mortality, following discharge with HF as any diagnosis, no control - without the ward variables
 ```{r eh-mort-nocont-noward, warning=TRUE, message=TRUE}
 # Create dataset for the regression analysis
@@ -816,8 +956,15 @@ Plot for the mortality model with no ward covariates
 covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 prediction_output_death_nw <- predict(death_nc_model_glm_nw, type = "response", data_new %>% select(-death))
 
@@ -827,9 +974,8 @@ death_acts_preds_nw %>% select(id_time, death, act_rate, pred_out_death) %>%
   ggplot2::ggplot(ggplot2::aes(x=id_time)) + ggplot2::geom_line(ggplot2::aes(y=pred_out_death), colour = "blue") + ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
 ```
 
-
-
-Mortality, following discharge with HF as any diagnosis, no control - with the ward variables
+\newpage
+## Mortality, following discharge with HF as any diagnosis, no control - with the ward variables
 ```{r eh-mort-nocont, warning=TRUE, message=TRUE}
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "EH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
@@ -857,8 +1003,15 @@ knitr::kable(Epi::ci.lin(death_nc_model_glm, Exp=T))
 covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 prediction_output_death <- predict(death_nc_model_glm, type = "response", data_new %>% select(-death))
 
@@ -882,7 +1035,8 @@ ward_death_data <- hf_any_data_oc_nc %>% select(death, starts_with("ward")) %>%
 knitr::kable(table(ward_death_data$death, ward_death_data$ward, useNA = "always"))
 ```
 
-Mortality, following discharge with HF as any diagnosis, no control - with the ward 5 spells removed
+\newpage
+## Mortality, following discharge with HF as any diagnosis, no control - with the ward 5 spells removed
 ```{r eh-mort-nocont-nw5, warning=TRUE, message=TRUE}
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1, ward_5 == 0) %>%
   mutate(sexM = if_else(sex=="M",1,0),
@@ -910,8 +1064,15 @@ knitr::kable(Epi::ci.lin(death_nc_model_glm_nw5, Exp=T))
 covariates_data_any_oc_nc_nw5 <- hf_any_data_oc_nc_nw5
 
 # Create new dataset with averaged values of all covariates
-data_new_nw5 <- covariates_data_any_oc_nc_nw5 %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new_nw5 <- covariates_data_any_oc_nc_nw5 %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 prediction_output_death_nw5 <- predict(death_nc_model_glm_nw5, type = "response", data_new_nw5 %>% select(-death))
 
@@ -921,6 +1082,7 @@ death_acts_preds_nw5 %>% select(id_time, death, act_rate, pred_out_death) %>%
   ggplot2::ggplot(ggplot2::aes(x=id_time)) + ggplot2::geom_line(ggplot2::aes(y=pred_out_death), colour = "blue") + ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
 ```
 
+\newpage
 ## LOS with HF as any diagnosis, no control
 ```{r eh-los-nocont, warning=FALSE, message=FALSE}
 
@@ -955,8 +1117,15 @@ knitr::kable(fixef(hf_los_nc_model_lmer), col.names = c("coeffs"))
 covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% 
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age), month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3), month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6), month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9), month_10 = mean(month_10), month_11 = mean(month_11), ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4), ward_5 = mean(ward_5))
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
 
 # Run model predictions on this averaged data
 prediction_output_los <- predict(hf_los_nc_model_lmer, newdata = data_new %>% select(-los_dd), type = "response", allow.new.levels = TRUE, re.form=~0)
@@ -974,6 +1143,7 @@ los_acts_preds %>% select(id_time, los_tot, act_los, pred_out_los) %>%
 
 ```
 
+\newpage
 ## Facet plot
 
 ```{r eh-join-data, fig.height=8, fig.width=5}
@@ -1009,6 +1179,7 @@ outcomes_predictions_tidy_2_eh %>% ggplot(aes(x = id_time)) + geom_point(aes(y =
 ```
 
 
+\newpage
 # Comparison NPH EH
 
 ```{r comparison, fig.height=8, fig.width=7}
