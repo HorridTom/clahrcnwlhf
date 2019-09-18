@@ -674,7 +674,7 @@ outcome_predictions <- read7_acts_preds %>% rename (act_rate_7dr = act_rate) %>%
             by = c("id_time" = "id_time")) %>%
   left_join(read90_acts_preds %>% select(-total_HF) %>% rename(act_rate_90dr = act_rate),
             by = c("id_time" = "id_time")) %>%
-  left_join(death_acts_preds %>% select(-total_HF) %>% rename(act_rate_death = act_rate),
+  left_join(death_acts_preds_wm %>% select(-total_HF) %>% rename(act_rate_death = act_rate),
             by = c("id_time" = "id_time")) %>%
   left_join(los_acts_preds %>% select(-total_HF),
             by = c("id_time" = "id_time"))
@@ -693,6 +693,10 @@ outcomes_predictions_tidy_2 <- outcomes_predictions_tidy_1 %>% mutate(prediction
   str_detect(measure, "death") ~ "Mortality rate",
   str_detect(measure, "los") ~ "Length of stay",
 )) %>%
+  mutate(measure_type = factor(measure_type,
+                               levels = c("7 day readmission rate", "30 day readmission rate",
+                                          "90 day readmission rate", "Mortality rate",
+                                          "Length of stay"))) %>%
   select(-measure) %>%
   spread(prediction, outcome) %>% rename(actual = `FALSE`, prediction = `TRUE`)
 
@@ -1217,7 +1221,7 @@ outcome_predictions_eh <- read7_acts_preds %>% rename (act_rate_7dr = act_rate) 
             by = c("id_time" = "id_time")) %>%
   left_join(read90_acts_preds %>% select(-total_HF) %>% rename(act_rate_90dr = act_rate),
             by = c("id_time" = "id_time")) %>%
-  left_join(death_acts_preds %>% select(-total_HF) %>% rename(act_rate_death = act_rate),
+  left_join(death_acts_preds_wm %>% select(-total_HF) %>% rename(act_rate_death = act_rate),
             by = c("id_time" = "id_time")) %>%
   left_join(los_acts_preds %>% select(-total_HF),
             by = c("id_time" = "id_time"))
@@ -1236,6 +1240,10 @@ outcomes_predictions_tidy_2_eh <- outcomes_predictions_tidy_1_eh %>% mutate(pred
   str_detect(measure, "death") ~ "Mortality rate",
   str_detect(measure, "los") ~ "Length of stay",
 )) %>%
+  mutate(measure_type = factor(measure_type,
+                               levels = c("7 day readmission rate", "30 day readmission rate",
+                                          "90 day readmission rate", "Mortality rate",
+                                          "Length of stay"))) %>%
   select(-measure) %>%
   spread(prediction, outcome) %>% rename(actual = `FALSE`, prediction = `TRUE`)
 
