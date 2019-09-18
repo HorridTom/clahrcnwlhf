@@ -684,21 +684,23 @@ outcomes_predictions_tidy_1 <- outcome_predictions %>% select(id_time, pred_out_
                                                             pred_out_90d, act_rate_90dr,
                                                             pred_out_death, act_rate_death,
                                                             pred_out_los, act_los) %>%
-  gather(key = "measure", value = "outcome", -id_time)
+  gather(key = "measure", value = "outcome", -id_time) %>%
+  mutate(outcome = if_else(!str_detect(measure, "los"), outcome*100, outcome))
 
 outcomes_predictions_tidy_2 <- outcomes_predictions_tidy_1 %>% mutate(prediction = str_detect(measure, "pred"), measure_type = case_when(
-  str_detect(measure, "7d") ~ "7 day readmission rate",
-  str_detect(measure, "30d") ~ "30 day readmission rate",
-  str_detect(measure, "90d") ~ "90 day readmission rate",
-  str_detect(measure, "death") ~ "Mortality rate",
-  str_detect(measure, "los") ~ "Length of stay",
+  str_detect(measure, "7d") ~ "7 day readmission (%)",
+  str_detect(measure, "30d") ~ "30 day readmission (%)",
+  str_detect(measure, "90d") ~ "90 day readmission (%)",
+  str_detect(measure, "death") ~ "Mortality (%)",
+  str_detect(measure, "los") ~ "Length of stay (days)",
 )) %>%
   mutate(measure_type = factor(measure_type,
-                               levels = c("7 day readmission rate", "30 day readmission rate",
-                                          "90 day readmission rate", "Mortality rate",
-                                          "Length of stay"))) %>%
+                               levels = c("7 day readmission (%)", "30 day readmission (%)",
+                                          "90 day readmission (%)", "Mortality (%)",
+                                          "Length of stay (days)"))) %>%
   select(-measure) %>%
-  spread(prediction, outcome) %>% rename(actual = `FALSE`, prediction = `TRUE`)
+  spread(prediction, outcome) %>% rename(actual = `FALSE`, prediction = `TRUE`) %>%
+  filter(!is.na(actual))
 
 
 outcomes_predictions_tidy_2 %>% ggplot(aes(x = id_time)) + geom_point(aes(y = actual)) + geom_line(aes(y = prediction)) + facet_grid(rows = vars(measure_type), scales = "free")
@@ -1231,21 +1233,23 @@ outcomes_predictions_tidy_1_eh <- outcome_predictions_eh %>% select(id_time, pre
                                                             pred_out_90d, act_rate_90dr,
                                                             pred_out_death, act_rate_death,
                                                             pred_out_los, act_los) %>%
-  gather(key = "measure", value = "outcome", -id_time)
+  gather(key = "measure", value = "outcome", -id_time) %>%
+  mutate(outcome = if_else(!str_detect(measure, "los"), outcome*100, outcome))
 
 outcomes_predictions_tidy_2_eh <- outcomes_predictions_tidy_1_eh %>% mutate(prediction = str_detect(measure, "pred"), measure_type = case_when(
-  str_detect(measure, "7d") ~ "7 day readmission rate",
-  str_detect(measure, "30d") ~ "30 day readmission rate",
-  str_detect(measure, "90d") ~ "90 day readmission rate",
-  str_detect(measure, "death") ~ "Mortality rate",
-  str_detect(measure, "los") ~ "Length of stay",
+  str_detect(measure, "7d") ~ "7 day readmission (%)",
+  str_detect(measure, "30d") ~ "30 day readmission (%)",
+  str_detect(measure, "90d") ~ "90 day readmission (%)",
+  str_detect(measure, "death") ~ "Mortality (%)",
+  str_detect(measure, "los") ~ "Length of stay (days)",
 )) %>%
   mutate(measure_type = factor(measure_type,
-                               levels = c("7 day readmission rate", "30 day readmission rate",
-                                          "90 day readmission rate", "Mortality rate",
-                                          "Length of stay"))) %>%
+                               levels = c("7 day readmission (%)", "30 day readmission (%)",
+                                          "90 day readmission (%)", "Mortality (%)",
+                                          "Length of stay (days)"))) %>%
   select(-measure) %>%
-  spread(prediction, outcome) %>% rename(actual = `FALSE`, prediction = `TRUE`)
+  spread(prediction, outcome) %>% rename(actual = `FALSE`, prediction = `TRUE`) %>%
+  filter(!is.na(actual))
 
 
 outcomes_predictions_tidy_2_eh %>% ggplot(aes(x = id_time)) + geom_point(aes(y = actual)) + geom_line(aes(y = prediction)) + facet_grid(rows = vars(measure_type), scales = "free")
@@ -1262,6 +1266,12 @@ outcomes_predictions_tidy_2 <- outcomes_predictions_tidy_2 %>% mutate(site = "In
 outcome_predictions <- bind_rows(outcomes_predictions_tidy_2_eh, outcomes_predictions_tidy_2)
 
 
-outcome_predictions %>% ggplot(aes(x = id_time)) + geom_point(aes(y = actual)) + geom_line(aes(y = prediction)) + facet_grid(rows = vars(measure_type), cols = vars(site), scales = "free")
+outcome_predictions %>% ggplot(aes(x = id_time)) +
+  geom_point(aes(y = actual)) +
+  geom_line(aes(y = prediction)) +
+  facet_grid(rows = vars(measure_type), cols = vars(site), scales = "free") +
+  labs(title = "Interupted Time Series Analysis Results",
+       subtitle = "Time Series with trends pre- and post-intervention",
+       x = "Time (months)", y = NULL)
 ```
 
