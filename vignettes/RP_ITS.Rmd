@@ -1269,7 +1269,9 @@ outcome_predictions <- bind_rows(outcomes_predictions_tidy_2_eh, outcomes_predic
 outcome_predictions %>% ggplot(aes(x = id_time)) +
   geom_point(aes(y = actual)) +
   geom_line(aes(y = prediction)) +
-  facet_grid(rows = vars(measure_type), cols = vars(site), scales = "free") +
+  facet_grid(rows = vars(measure_type), cols = vars(site), scales = "free_y") +
+  theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank()) +
+  geom_vline(xintercept = 42.5, linetype="dotted") +
   labs(title = "Interupted Time Series Analysis Results",
        subtitle = "Time Series with trends pre- and post-intervention",
        x = "Time (months)", y = NULL)
