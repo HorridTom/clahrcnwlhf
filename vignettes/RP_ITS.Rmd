@@ -688,15 +688,15 @@ outcomes_predictions_tidy_1 <- outcome_predictions %>% select(id_time, pred_out_
   mutate(outcome = if_else(!str_detect(measure, "los"), outcome*100, outcome))
 
 outcomes_predictions_tidy_2 <- outcomes_predictions_tidy_1 %>% mutate(prediction = str_detect(measure, "pred"), measure_type = case_when(
-  str_detect(measure, "7d") ~ "7 day readmission (%)",
-  str_detect(measure, "30d") ~ "30 day readmission (%)",
-  str_detect(measure, "90d") ~ "90 day readmission (%)",
+  str_detect(measure, "7d") ~ "7d readmission (%)",
+  str_detect(measure, "30d") ~ "30d readmission (%)",
+  str_detect(measure, "90d") ~ "90d readmission (%)",
   str_detect(measure, "death") ~ "Mortality (%)",
   str_detect(measure, "los") ~ "Length of stay (days)",
 )) %>%
   mutate(measure_type = factor(measure_type,
-                               levels = c("7 day readmission (%)", "30 day readmission (%)",
-                                          "90 day readmission (%)", "Mortality (%)",
+                               levels = c("7d readmission (%)", "30d readmission (%)",
+                                          "90d readmission (%)", "Mortality (%)",
                                           "Length of stay (days)"))) %>%
   select(-measure) %>%
   spread(prediction, outcome) %>% rename(actual = `FALSE`, prediction = `TRUE`) %>%
@@ -1237,15 +1237,15 @@ outcomes_predictions_tidy_1_eh <- outcome_predictions_eh %>% select(id_time, pre
   mutate(outcome = if_else(!str_detect(measure, "los"), outcome*100, outcome))
 
 outcomes_predictions_tidy_2_eh <- outcomes_predictions_tidy_1_eh %>% mutate(prediction = str_detect(measure, "pred"), measure_type = case_when(
-  str_detect(measure, "7d") ~ "7 day readmission (%)",
-  str_detect(measure, "30d") ~ "30 day readmission (%)",
-  str_detect(measure, "90d") ~ "90 day readmission (%)",
+  str_detect(measure, "7d") ~ "7d readmission (%)",
+  str_detect(measure, "30d") ~ "30d readmission (%)",
+  str_detect(measure, "90d") ~ "90d readmission (%)",
   str_detect(measure, "death") ~ "Mortality (%)",
   str_detect(measure, "los") ~ "Length of stay (days)",
 )) %>%
   mutate(measure_type = factor(measure_type,
-                               levels = c("7 day readmission (%)", "30 day readmission (%)",
-                                          "90 day readmission (%)", "Mortality (%)",
+                               levels = c("7d readmission (%)", "30d readmission (%)",
+                                          "90d readmission (%)", "Mortality (%)",
                                           "Length of stay (days)"))) %>%
   select(-measure) %>%
   spread(prediction, outcome) %>% rename(actual = `FALSE`, prediction = `TRUE`) %>%
@@ -1260,20 +1260,33 @@ outcomes_predictions_tidy_2_eh %>% ggplot(aes(x = id_time)) + geom_point(aes(y =
 # Comparison NPH EH
 
 ```{r comparison, fig.height=8, fig.width=7}
-outcomes_predictions_tidy_2_eh <- outcomes_predictions_tidy_2_eh %>% mutate(site = "Control")
-outcomes_predictions_tidy_2 <- outcomes_predictions_tidy_2 %>% mutate(site = "Intervention")
+outcomes_predictions_tidy_2_eh <- outcomes_predictions_tidy_2_eh %>% mutate(site = "Control Hospital")
+outcomes_predictions_tidy_2 <- outcomes_predictions_tidy_2 %>% mutate(site = "Intervention Hospital")
 
 outcome_predictions <- bind_rows(outcomes_predictions_tidy_2_eh, outcomes_predictions_tidy_2)
 
+# Back to real time
+year_month <- seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "month")
+year_month <- tibble::tibble(year_month) %>% tibble::rowid_to_column(var = "id_time") 
+outcome_predictions <- outcome_predictions %>% left_join(year_month)
+# Position for intervention line on plot - halfway between two months
+intervention_month <- year_month %>% filter(id_time == 42) %>% pull(year_month) + 15
 
-outcome_predictions %>% ggplot(aes(x = id_time)) +
+outcome_predictions %>% ggplot(aes(x = year_month)) +
   geom_point(aes(y = actual)) +
   geom_line(aes(y = prediction)) +
   facet_grid(rows = vars(measure_type), cols = vars(site), scales = "free_y") +
-  theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank()) +
-  geom_vline(xintercept = 42.5, linetype="dotted") +
-  labs(title = "Interupted Time Series Analysis Results",
-       subtitle = "Time Series with trends pre- and post-intervention",
+  ylim(0, NA) +
+  theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_vline(xintercept = intervention_month, linetype="dotted") +
+  scale_x_date(breaks = seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "6 months"),
+               labels = scales::date_format("%b %Y")) +
+  labs(title = "Interupted Time Series Analysis: Heart Failure Admission Outcomes",
+       subtitle = "Time series with trends pre- and post-intervention (heart failure care bundle)",
        x = "Time (months)", y = NULL)
 ```
+
+
+
 
