@@ -1282,7 +1282,7 @@ outcome_predictions %>% ggplot(aes(x = year_month)) +
   geom_vline(xintercept = intervention_month, linetype="dotted") +
   scale_x_date(breaks = seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "6 months"),
                labels = scales::date_format("%b %Y")) +
-  labs(title = "Interupted Time Series Analysis: Heart Failure Admission Outcomes",
+  labs(title = "Figure 1: Interupted Time Series Analysis of Heart Failure Admission Outcomes",
        subtitle = "Time series with trends pre- and post-intervention (heart failure care bundle)",
        x = "Time (months)", y = NULL)
 ```
