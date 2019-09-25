@@ -1382,6 +1382,21 @@ knitr::kable(exp(fixef(hf_read30_all_model_glmer)), col.names = c("IRR"))
 
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-30read-ic}
+# Make a copy of the data
+covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 1)
+
+# Create new dataset with averaged values of all covariates
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x, X_z) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
+
+
 # Run model predictions on the averaged data
 prediction_output_30d <- predict(hf_read30_all_model_glmer, newdata = data_new %>% select(-allcausereadmission_30), type = "response", allow.new.levels = TRUE, re.form=~0)
 
@@ -1424,6 +1439,21 @@ knitr::kable(exp(fixef(hf_read90_all_model_glmer)), col.names = c("IRR"))
 
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-90read-ic}
+# Make a copy of the data
+covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 3)
+
+# Create new dataset with averaged values of all covariates
+data_new <- covariates_data_any_oc_nc %>% group_by(X_x, X_z) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
+
+
 # Run model predictions on the averaged data
 prediction_output_90d <- predict(hf_read90_all_model_glmer, newdata = data_new %>% select(-allcausereadmission_90), type = "response", allow.new.levels = TRUE, re.form=~0)
 
