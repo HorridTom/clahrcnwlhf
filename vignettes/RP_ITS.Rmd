@@ -572,7 +572,7 @@ death_nc_model_glm_wm <- glm(as.integer(death) ~ offset(log(total_HF)) +
                             ward_2 + ward_3 + ward_4 +
                             month_1 + month_2 + month_3 + month_4 + month_5 + month_6 +
                             month_7 + month_8 + month_9 + month_10 + month_11,
-                          hf_any_data_oc_nc,
+                          hf_any_data_oc_nc_wm,
                           family = poisson(link = "log"))
 
 summary(death_nc_model_glm_wm)
@@ -1121,7 +1121,7 @@ death_nc_model_glm_wm <- glm(as.integer(death) ~ offset(log(total_HF)) +
                             ward_2 + ward_3 + ward_4 +
                             month_1 + month_2 + month_3 + month_4 + month_5 + month_6 +
                             month_7 + month_8 + month_9 + month_10 + month_11,
-                          hf_any_data_oc_nc,
+                          hf_any_data_oc_nc_wm,
                           family = poisson(link = "log"))
 
 summary(death_nc_model_glm_wm)
@@ -1289,4 +1289,332 @@ outcome_predictions %>% ggplot(aes(x = year_month)) +
 
 
 
+\newpage
+# Combined models: intervention and control
 
+```{r combined-dataset}
+hf_any_data_oc <- hf_its_data %>% filter(wardsite %in% c("NPH", "EH"),
+                                         HF_any == 1,
+                                         X_t >= 28) %>% # 28 is the first month with data for both sites
+  mutate(sexM = if_else(sex=="M",1,0),
+                non_white1 = if_else(non_white=="1",1,0),
+                total_HF = 1)
+```
+
+## 7-day readmissions
+
+```{r read7-all}
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read7_all_model_glmer <- glmer(as.integer(allcausereadmission_7) ~ offset(log(total_HF)) + 
+                                       X_t + X_x + X_x_t + X_z + X_z_t + X_z_x + X_z_x_t +
+                                       sexM + non_white1 +
+                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                       month_9 + month_10 + month_11 +
+                                       (1 | pseudoid),
+                                     hf_any_data_oc,
+                                     family = poisson(link = "log"),
+                                     control=glmerControl(optimizer="bobyqa"))
+
+summary(hf_read7_all_model_glmer)
+
+overdisp_fun(hf_read7_all_model_glmer)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read7_all_model_glmer)), col.names = c("IRR"))
+```
+
+### Plot model predictions for averaged covariates as linear trends, along with the data
+```{r plot-7read-ic}
+# Make a copy of the data
+covariates_data_any_oc <- hf_any_data_oc
+
+# Create new dataset with averaged values of all covariates
+data_new <- covariates_data_any_oc %>% group_by(X_x, X_z) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+         ward_5 = mean(ward_5)) %>%
+  ungroup()
+
+# Run model predictions on this averaged data
+prediction_output_7d <- predict(hf_read7_all_model_glmer, newdata = data_new %>% select(-allcausereadmission_7), type = "response", allow.new.levels = TRUE, re.form=~0)
+
+# Add the predicted outcomes as a column to the averaged dataset,
+# and summarise this data by month.
+# Create a new column for the actual monthly readmission rate
+read7_acts_preds <- data_new %>% cbind(prediction_output_7d) %>% group_by(id_time, X_z) %>% summarise(allcausereadmission_7 = sum(allcausereadmission_7), total_HF = n(), pred_out_7d = mean(prediction_output_7d)) %>% mutate(act_rate = allcausereadmission_7/total_HF)
+
+# Plot the chart
+read7_acts_preds %>% select(id_time, X_z, allcausereadmission_7, act_rate, pred_out_7d) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=pred_out_7d), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black") +
+  facet_grid(rows = vars(X_z))
+
+```
+
+## 30-day readmissions
+
+```{r read30-all}
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read30_all_model_glmer <- glmer(as.integer(allcausereadmission_30) ~ offset(log(total_HF)) + 
+                                       X_t + X_x + X_x_t + X_z + X_z_t + X_z_x + X_z_x_t +
+                                       sexM + non_white1 +
+                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                       month_9 + month_10 + month_11 +
+                                       (1 | pseudoid),
+                                     hf_any_data_oc,
+                                     family = poisson(link = "log"),
+                                     control=glmerControl(optimizer="bobyqa"))
+
+summary(hf_read30_all_model_glmer)
+
+overdisp_fun(hf_read30_all_model_glmer)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read30_all_model_glmer)), col.names = c("IRR"))
+```
+
+### Plot model predictions for averaged covariates as linear trends, along with the data
+```{r plot-30read-ic}
+# Run model predictions on the averaged data
+prediction_output_30d <- predict(hf_read30_all_model_glmer, newdata = data_new %>% select(-allcausereadmission_30), type = "response", allow.new.levels = TRUE, re.form=~0)
+
+# Add the predicted outcomes as a column to the averaged dataset,
+# and summarise this data by month.
+# Create a new column for the actual monthly readmission rate
+read30_acts_preds <- data_new %>% cbind(prediction_output_30d) %>% group_by(id_time, X_z) %>% summarise(allcausereadmission_30 = sum(allcausereadmission_30), total_HF = n(), pred_out_30d = mean(prediction_output_30d)) %>% mutate(act_rate = allcausereadmission_30/total_HF)
+
+# Plot the chart
+read30_acts_preds %>% select(id_time, X_z, allcausereadmission_30, act_rate, pred_out_30d) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=pred_out_30d), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black") +
+  facet_grid(rows = vars(X_z))
+
+```
+
+## 90-day readmissions
+
+```{r read90-all}
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read90_all_model_glmer <- glmer(as.integer(allcausereadmission_90) ~ offset(log(total_HF)) + 
+                                       X_t + X_x + X_x_t + X_z + X_z_t + X_z_x + X_z_x_t +
+                                       sexM + non_white1 +
+                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                       month_9 + month_10 + month_11 +
+                                       (1 | pseudoid),
+                                     hf_any_data_oc,
+                                     family = poisson(link = "log"),
+                                     control=glmerControl(optimizer="bobyqa"))
+
+summary(hf_read90_all_model_glmer)
+
+overdisp_fun(hf_read90_all_model_glmer)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read90_all_model_glmer)), col.names = c("IRR"))
+```
+
+### Plot model predictions for averaged covariates as linear trends, along with the data
+```{r plot-90read-ic}
+# Run model predictions on the averaged data
+prediction_output_90d <- predict(hf_read90_all_model_glmer, newdata = data_new %>% select(-allcausereadmission_90), type = "response", allow.new.levels = TRUE, re.form=~0)
+
+# Add the predicted outcomes as a column to the averaged dataset,
+# and summarise this data by month.
+# Create a new column for the actual monthly readmission rate
+read90_acts_preds <- data_new %>% cbind(prediction_output_90d) %>% group_by(id_time, X_z) %>% summarise(allcausereadmission_90 = sum(allcausereadmission_90), total_HF = n(), pred_out_90d = mean(prediction_output_90d)) %>% mutate(act_rate = allcausereadmission_90/total_HF)
+
+# Plot the chart
+read90_acts_preds %>% select(id_time, X_z, allcausereadmission_90, act_rate, pred_out_90d) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=pred_out_90d), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black") +
+  facet_grid(rows = vars(X_z))
+
+```
+
+\newpage
+## LOS with HF as any diagnosis
+```{r los, warning=FALSE, message=FALSE}
+# Mixed-effects poisson model: random effects for pseudoid
+hf_los_model_lmer <- lmer(los_dd ~ offset(log(total_HF)) + 
+                            X_t + X_x + X_x_t + X_z + X_z_t + X_z_x + X_z_x_t +
+                            sexM + non_white1 +
+                            ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                            month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                            month_9 + month_10 + month_11 +
+                            (1 | pseudoid),
+                          hf_any_data_oc)
+
+summary(hf_los_model_lmer)
+
+
+# Display coefficients
+knitr::kable(fixef(hf_los_model_lmer), col.names = c("coeffs"))
+```
+
+### Plot model predictions for averaged covariates as linear trends, along with the data
+```{r plot-los-ic}
+# Run model predictions on the averaged data
+prediction_output_los <- predict(hf_los_model_lmer, newdata = data_new %>% select(-los_dd),
+                                 type = "response", allow.new.levels = TRUE, re.form=~0)
+
+# Add the predicted outcomes as a column to the averaged dataset,
+# and summarise this data by month.
+# Create a new column for the actual monthly los
+los_acts_preds <- data_new %>% cbind(prediction_output_los) %>% group_by(id_time, X_z) %>% summarise(los_tot = sum(los_dd), total_HF = n(), pred_out_los = mean(prediction_output_los)) %>% mutate(act_los = los_tot/total_HF)
+
+# Plot the chart
+los_acts_preds %>% select(id_time, X_z, los_tot, act_los, pred_out_los) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=pred_out_los), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=act_los), colour = "black") +
+  facet_grid(rows = vars(X_z))
+
+```
+
+\newpage
+## Mortality, following discharge with HF as any diagnosis, with ward 5 (Other) merged with 4 (Medicine)
+```{r mort-wm, warning=TRUE, message=TRUE}
+hf_any_data_oc_wm <- hf_its_data %>% filter(wardsite %in% c("NPH", "EH"),
+                                         HF_any == 1,
+                                         X_t >= 28) %>%
+  mutate(sexM = if_else(sex=="M",1,0),
+                non_white1 = if_else(non_white=="1",1,0),
+                total_HF = 1,
+                ward_4 = if_else(ward_5 == 1, 1L, ward_4))
+
+death_model_glm_wm <- glm(as.integer(death) ~ offset(log(total_HF)) +
+                            X_t + X_x + X_x_t + X_z + X_z_t + X_z_x + X_z_x_t +
+                            sexM + non_white1 + ln_age +
+                            ward_2 + ward_3 + ward_4 +
+                            month_1 + month_2 + month_3 + month_4 + month_5 + month_6 +
+                            month_7 + month_8 + month_9 + month_10 + month_11,
+                          hf_any_data_oc_wm,
+                          family = poisson(link = "log"))
+
+summary(death_model_glm_wm)
+summary(death_model_glm_wm)$dispersion
+overdisp_fun(death_model_glm_wm)
+
+knitr::kable(Epi::ci.lin(death_model_glm_wm, Exp=T))
+```
+
+
+```{r eh-plot-death-wm}
+covariates_data_any_oc_wm <- hf_any_data_oc_wm
+
+# Create new dataset with averaged values of all covariates
+data_new_wm <- covariates_data_any_oc_wm %>% group_by(X_x, X_z) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4)) %>%
+  ungroup()
+
+prediction_output_death_wm <- predict(death_model_glm_wm, type = "response", data_new_wm %>% select(-death))
+
+death_acts_preds_wm <- data_new_wm %>% cbind(prediction_output_death_wm) %>% group_by(id_time, X_z) %>% summarise(death = sum(death), total_HF = n(), pred_out_death = mean(prediction_output_death_wm)) %>% mutate(act_rate = death/total_HF)
+
+# Plot the chart
+death_acts_preds_wm %>% select(id_time, X_z, death, act_rate, pred_out_death) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=pred_out_death), colour = "blue") + 
+  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black") +
+  facet_grid(rows = vars(X_z))
+```
+
+\newpage
+# Comparison NPH EH
+
+```{r oin-data-ic, fig.height=8, fig.width=5}
+outcome_predictions_ic <- read7_acts_preds %>% ungroup() %>% rename (act_rate_7dr = act_rate) %>%
+  left_join(read30_acts_preds %>% ungroup() %>% select(-total_HF) %>% rename(act_rate_30dr = act_rate),
+            by = c("id_time" = "id_time", "X_z" = "X_z")) %>%
+  left_join(read90_acts_preds %>% ungroup() %>% select(-total_HF) %>% rename(act_rate_90dr = act_rate),
+            by = c("id_time" = "id_time", "X_z" = "X_z")) %>%
+  left_join(death_acts_preds_wm %>% ungroup() %>% select(-total_HF) %>% rename(act_rate_death = act_rate),
+            by = c("id_time" = "id_time", "X_z" = "X_z")) %>%
+  left_join(los_acts_preds %>% ungroup() %>% select(-total_HF),
+            by = c("id_time" = "id_time", "X_z" = "X_z"))
+
+outcomes_predictions_tidy_1_ic <- outcome_predictions_ic %>% select(id_time, X_z, pred_out_7d, act_rate_7dr,
+                                                            pred_out_30d, act_rate_30dr,
+                                                            pred_out_90d, act_rate_90dr,
+                                                            pred_out_death, act_rate_death,
+                                                            pred_out_los, act_los) %>%
+  gather(key = "measure", value = "outcome", -id_time, -X_z) %>%
+  mutate(outcome = if_else(!str_detect(measure, "los"), outcome*100, outcome))
+
+outcomes_predictions_tidy_2_ic <- outcomes_predictions_tidy_1_ic %>% mutate(prediction = str_detect(measure, "pred"), measure_type = case_when(
+  str_detect(measure, "7d") ~ "7d readmission (%)",
+  str_detect(measure, "30d") ~ "30d readmission (%)",
+  str_detect(measure, "90d") ~ "90d readmission (%)",
+  str_detect(measure, "death") ~ "Mortality (%)",
+  str_detect(measure, "los") ~ "Length of stay (days)",
+)) %>%
+  mutate(measure_type = factor(measure_type,
+                               levels = c("7d readmission (%)", "30d readmission (%)",
+                                          "90d readmission (%)", "Mortality (%)",
+                                          "Length of stay (days)"))) %>%
+  select(-measure) %>%
+ spread(prediction, outcome) %>% rename(actual = `FALSE`, prediction = `TRUE`) %>%
+  filter(!is.na(actual)) %>%
+  mutate(site = factor(if_else(X_z == 0, "Control Hospital", "Intervention Hospital")))
+
+# Back to real time
+year_month <- seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "month")
+year_month <- tibble::tibble(year_month) %>% tibble::rowid_to_column(var = "id_time") 
+outcomes_predictions_tidy_2_ic <- outcomes_predictions_tidy_2_ic %>% left_join(year_month)
+# Position for intervention line on plot - halfway between two months
+intervention_month <- year_month %>% filter(id_time == 42) %>% pull(year_month) + 15
+
+outcomes_predictions_tidy_2_ic %>% ggplot(aes(x = year_month)) + geom_point(aes(y = actual)) + geom_line(aes(y = prediction)) + facet_grid(rows = vars(measure_type), cols = vars(site), scales = "free") +
+  ylim(0, NA) +
+  theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_vline(xintercept = intervention_month, linetype="dotted") +
+  scale_x_date(breaks = seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "6 months"),
+               labels = scales::date_format("%b %Y")) +
+  labs(title = "Figure 1: Interupted Time Series Analysis of Heart Failure Admission Outcomes",
+       subtitle = "Time series with trends pre- and post-intervention (heart failure care bundle)",
+       x = "Time (months)", y = NULL)
+```
+
+```{r comparison-ic, fig.height=8, fig.width=7}
+outcomes_predictions_tidy_2_eh <- outcomes_predictions_tidy_2_eh %>% mutate(site = "Control Hospital")
+outcomes_predictions_tidy_2 <- outcomes_predictions_tidy_2 %>% mutate(site = "Intervention Hospital")
+
+outcome_predictions <- bind_rows(outcomes_predictions_tidy_2_eh, outcomes_predictions_tidy_2)
+
+# Back to real time
+year_month <- seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "month")
+year_month <- tibble::tibble(year_month) %>% tibble::rowid_to_column(var = "id_time") 
+outcome_predictions <- outcome_predictions %>% left_join(year_month)
+# Position for intervention line on plot - halfway between two months
+intervention_month <- year_month %>% filter(id_time == 42) %>% pull(year_month) + 15
+
+outcome_predictions %>% ggplot(aes(x = year_month)) +
+  geom_point(aes(y = actual)) +
+  geom_line(aes(y = prediction)) +
+  facet_grid(rows = vars(measure_type), cols = vars(site), scales = "free_y") +
+  ylim(0, NA) +
+  theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_vline(xintercept = intervention_month, linetype="dotted") +
+  scale_x_date(breaks = seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "6 months"),
+               labels = scales::date_format("%b %Y")) +
+  labs(title = "Figure 1: Interupted Time Series Analysis of Heart Failure Admission Outcomes",
+       subtitle = "Time series with trends pre- and post-intervention (heart failure care bundle)",
+       x = "Time (months)", y = NULL)
+```
