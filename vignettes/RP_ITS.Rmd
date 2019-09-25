@@ -1567,7 +1567,7 @@ death_acts_preds_wm %>% select(id_time, X_z, death, act_rate, pred_out_death) %>
 \newpage
 # Comparison NPH EH
 
-```{r oin-data-ic, fig.height=8, fig.width=5}
+```{r oin-data-ic, fig.height=8, fig.width=7}
 outcome_predictions_ic <- read7_acts_preds %>% ungroup() %>% rename (act_rate_7dr = act_rate) %>%
   left_join(read30_acts_preds %>% ungroup() %>% select(-total_HF) %>% rename(act_rate_30dr = act_rate),
             by = c("id_time" = "id_time", "X_z" = "X_z")) %>%
