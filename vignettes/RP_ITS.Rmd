@@ -1509,7 +1509,7 @@ knitr::kable(Epi::ci.lin(death_model_glm_wm, Exp=T))
 ```
 
 
-```{r eh-plot-death-wm}
+```{r plot-death-wm-ic}
 covariates_data_any_oc_wm <- hf_any_data_oc_wm
 
 # Create new dataset with averaged values of all covariates
@@ -1580,34 +1580,6 @@ outcomes_predictions_tidy_2_ic <- outcomes_predictions_tidy_2_ic %>% left_join(y
 intervention_month <- year_month %>% filter(id_time == 42) %>% pull(year_month) + 15
 
 outcomes_predictions_tidy_2_ic %>% ggplot(aes(x = year_month)) + geom_point(aes(y = actual)) + geom_line(aes(y = prediction)) + facet_grid(rows = vars(measure_type), cols = vars(site), scales = "free") +
-  ylim(0, NA) +
-  theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1)) +
-  geom_vline(xintercept = intervention_month, linetype="dotted") +
-  scale_x_date(breaks = seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "6 months"),
-               labels = scales::date_format("%b %Y")) +
-  labs(title = "Figure 1: Interupted Time Series Analysis of Heart Failure Admission Outcomes",
-       subtitle = "Time series with trends pre- and post-intervention (heart failure care bundle)",
-       x = "Time (months)", y = NULL)
-```
-
-```{r comparison-ic, fig.height=8, fig.width=7}
-outcomes_predictions_tidy_2_eh <- outcomes_predictions_tidy_2_eh %>% mutate(site = "Control Hospital")
-outcomes_predictions_tidy_2 <- outcomes_predictions_tidy_2 %>% mutate(site = "Intervention Hospital")
-
-outcome_predictions <- bind_rows(outcomes_predictions_tidy_2_eh, outcomes_predictions_tidy_2)
-
-# Back to real time
-year_month <- seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "month")
-year_month <- tibble::tibble(year_month) %>% tibble::rowid_to_column(var = "id_time") 
-outcome_predictions <- outcome_predictions %>% left_join(year_month)
-# Position for intervention line on plot - halfway between two months
-intervention_month <- year_month %>% filter(id_time == 42) %>% pull(year_month) + 15
-
-outcome_predictions %>% ggplot(aes(x = year_month)) +
-  geom_point(aes(y = actual)) +
-  geom_line(aes(y = prediction)) +
-  facet_grid(rows = vars(measure_type), cols = vars(site), scales = "free_y") +
   ylim(0, NA) +
   theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1)) +
