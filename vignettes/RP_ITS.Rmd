@@ -175,6 +175,31 @@ overdisp_fun(hf_read7_all_nc_model_glmer)
 knitr::kable(exp(fixef(hf_read7_all_nc_model_glmer)), col.names = c("IRR"))
 ```
 
+```{r read7-all-nocont-tmb, warning=FALSE, message=FALSE}
+
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read7_all_nc_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_7) ~
+                                                  offset(log(total_HF)) +
+                                                  X_t + X_x + X_x_t +
+                                                  sexM + non_white1 +
+                                                  ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+                                                  month_1 + month_2 + month_3 + month_4 +
+                                                  month_5 + month_6 + month_7 + month_8 +
+                                                  month_9 + month_10 + month_11 +
+                                                  (1 | pseudoid),
+                                                hf_any_data_oc_nc,
+                                                family = poisson(link = "log")#,
+                                                #control=glmerControl(optimizer="bobyqa")
+                                                )
+
+summary(hf_read7_all_nc_model_glmmTMB)
+
+overdisp_fun(hf_read7_all_nc_model_glmmTMB)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read7_all_nc_model_glmmTMB)$cond), col.names = c("IRR"))
+```
+
 
 <!-- 7-day all cause readmission rate, following discharge with HF as any diagnosis, with control -->
 ```{r read7-all-cont, warning=T, message=T, include=F}
@@ -281,6 +306,30 @@ overdisp_fun(hf_read30_all_nc_model_glmer)
 knitr::kable(exp(fixef(hf_read30_all_nc_model_glmer)), col.names = c("IRR"))
 ```
 
+```{r read30-all-nocont-tmb, warning=FALSE, message=FALSE}
+
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read30_all_nc_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_30) ~
+                                                  offset(log(total_HF)) +
+                                                  X_t + X_x + X_x_t +
+                                                  sexM + non_white1 +
+                                                  ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+                                                  month_1 + month_2 + month_3 + month_4 +
+                                                  month_5 + month_6 + month_7 + month_8 +
+                                                  month_9 + month_10 + month_11 +
+                                                  (1 | pseudoid),
+                                                hf_any_data_oc_nc,
+                                                family = poisson(link = "log")#,
+                                                #control=glmerControl(optimizer="bobyqa")
+                                                )
+
+summary(hf_read30_all_nc_model_glmmTMB)
+
+overdisp_fun(hf_read30_all_nc_model_glmmTMB)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read30_all_nc_model_glmmTMB)$cond), col.names = c("IRR"))
+```
 
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-30read}
@@ -360,6 +409,30 @@ overdisp_fun(hf_read90_all_nc_model_glmer)
 knitr::kable(exp(fixef(hf_read90_all_nc_model_glmer)), col.names = c("IRR"))
 ```
 
+```{r read90-all-nocont-tmb, warning=FALSE, message=FALSE}
+
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read90_all_nc_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_90) ~
+                                                  offset(log(total_HF)) +
+                                                  X_t + X_x + X_x_t +
+                                                  sexM + non_white1 +
+                                                  ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+                                                  month_1 + month_2 + month_3 + month_4 +
+                                                  month_5 + month_6 + month_7 + month_8 +
+                                                  month_9 + month_10 + month_11 +
+                                                  (1 | pseudoid),
+                                                hf_any_data_oc_nc,
+                                                family = poisson(link = "log")#,
+                                                #control=glmerControl(optimizer="bobyqa")
+                                                )
+
+summary(hf_read90_all_nc_model_glmmTMB)
+
+overdisp_fun(hf_read90_all_nc_model_glmmTMB)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read90_all_nc_model_glmmTMB)$cond), col.names = c("IRR"))
+```
 
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-90read}
@@ -770,6 +843,31 @@ overdisp_fun(hf_read7_all_nc_model_glmer)
 knitr::kable(exp(fixef(hf_read7_all_nc_model_glmer)), col.names = c("IRR"))
 ```
 
+```{r eh-read7-all-nocont-tmb, warning=FALSE, message=FALSE}
+
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read7_all_nc_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_7) ~
+                                                  offset(log(total_HF)) +
+                                                  X_t + X_x + X_x_t +
+                                                  sexM + non_white1 +
+                                                  ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+                                                  month_1 + month_2 + month_3 + month_4 +
+                                                  month_5 + month_6 + month_7 + month_8 +
+                                                  month_9 + month_10 + month_11 +
+                                                  (1 | pseudoid),
+                                                hf_any_data_oc_nc,
+                                                family = poisson(link = "log")#,
+                                                #control=glmerControl(optimizer="bobyqa")
+                                                )
+
+summary(hf_read7_all_nc_model_glmmTMB)
+
+overdisp_fun(hf_read7_all_nc_model_glmmTMB)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read7_all_nc_model_glmmTMB)$cond), col.names = c("IRR"))
+```
+
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r eh-plot-7read}
 # Make a copy of the data
@@ -846,6 +944,30 @@ overdisp_fun(hf_read30_all_nc_model_glmer)
 knitr::kable(exp(fixef(hf_read30_all_nc_model_glmer)), col.names = c("IRR"))
 ```
 
+```{r eh-read30-all-nocont-tmb, warning=FALSE, message=FALSE}
+
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read7_all_nc_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_30) ~
+                                                  offset(log(total_HF)) +
+                                                  X_t + X_x + X_x_t +
+                                                  sexM + non_white1 +
+                                                  ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+                                                  month_1 + month_2 + month_3 + month_4 +
+                                                  month_5 + month_6 + month_7 + month_8 +
+                                                  month_9 + month_10 + month_11 +
+                                                  (1 | pseudoid),
+                                                hf_any_data_oc_nc,
+                                                family = poisson(link = "log")#,
+                                                #control=glmerControl(optimizer="bobyqa")
+                                                )
+
+summary(hf_read30_all_nc_model_glmmTMB)
+
+overdisp_fun(hf_read30_all_nc_model_glmmTMB)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read30_all_nc_model_glmmTMB)$cond), col.names = c("IRR"))
+```
 
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r eh-plot-30read}
@@ -925,6 +1047,30 @@ overdisp_fun(hf_read90_all_nc_model_glmer)
 knitr::kable(exp(fixef(hf_read90_all_nc_model_glmer)), col.names = c("IRR"))
 ```
 
+```{r eh-read90-all-nocont-tmb, warning=FALSE, message=FALSE}
+
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read90_all_nc_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_90) ~
+                                                  offset(log(total_HF)) +
+                                                  X_t + X_x + X_x_t +
+                                                  sexM + non_white1 +
+                                                  ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+                                                  month_1 + month_2 + month_3 + month_4 +
+                                                  month_5 + month_6 + month_7 + month_8 +
+                                                  month_9 + month_10 + month_11 +
+                                                  (1 | pseudoid),
+                                                hf_any_data_oc_nc,
+                                                family = poisson(link = "log")#,
+                                                #control=glmerControl(optimizer="bobyqa")
+                                                )
+
+summary(hf_read90_all_nc_model_glmmTMB)
+
+overdisp_fun(hf_read90_all_nc_model_glmmTMB)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read90_all_nc_model_glmmTMB)$cond), col.names = c("IRR"))
+```
 
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r eh-plot-90read}
