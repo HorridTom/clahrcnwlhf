@@ -5,6 +5,8 @@ date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
+Package repo commit: `r stringr::str_sub(system("git rev-parse HEAD", intern=TRUE), 1, 8)`
+
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   cache = TRUE,
@@ -140,8 +142,9 @@ table(hf_its_data$id_time >= 43, hf_its_data$X_z_x_t , useNA = "always")
 # set the count of number of spells to 1 for each row
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+         )
 
 # Mixed-effects poisson model: random effects for pseudoid
 hf_read7_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_7) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
@@ -209,7 +212,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -244,8 +248,9 @@ read7_acts_preds %>% select(id_time, allcausereadmission_7, act_rate, pred_out_7
 # set the count of number of spells to 1 for each row
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+         )
 
 # Mixed-effects poisson model: random effects for pseudoid
 hf_read30_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_30) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
@@ -284,7 +289,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 1)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -319,19 +325,22 @@ read30_acts_preds %>% select(id_time, allcausereadmission_30, act_rate, pred_out
 # set the count of number of spells to 1 for each row
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+                )
 
 # Mixed-effects poisson model: random effects for pseudoid
-hf_read90_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_90) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
-                                       sexM + non_white1 +
-                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
-                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
-                                       month_9 + month_10 + month_11 +
-                                       (1 | pseudoid),
-                                     hf_any_data_oc_nc %>% filter(X_t <= 67 - 3),
-                                     family = poisson(link = "log"),
-                                     control=glmerControl(optimizer="bobyqa"))
+hf_read90_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_90) ~ offset(log(total_HF)) + 
+                                        X_t + X_x + X_x_t +
+                                        sexM + non_white1 +
+                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 +
+                                        month_2 +
+                                        month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                        month_9 + month_10 + month_11 +
+                                        (1 | pseudoid),
+                                      hf_any_data_oc_nc %>% filter(X_t <= 67 - 3),
+                                      family = poisson(link = "log"),
+                                      control=glmerControl(optimizer="bobyqa"))
 
 summary(hf_read90_all_nc_model_glmer)
 
@@ -359,7 +368,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 3)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -390,8 +400,9 @@ read90_acts_preds %>% select(id_time, allcausereadmission_90, act_rate, pred_out
 # Create dataset for the regression analysis
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+         )
 
 # Fixed-effects poisson model
 death_nc_model_glm_nw <- glm(as.integer(death) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
@@ -416,7 +427,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -439,8 +451,9 @@ death_acts_preds_nw %>% select(id_time, death, act_rate, pred_out_death) %>%
 ```{r mort-nocont, warning=TRUE, message=TRUE}
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+                )
 
 death_nc_model_glm <- glm(as.integer(death) ~ offset(log(total_HF)) +
                             X_t + X_x + X_x_t +
@@ -464,7 +477,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -514,8 +528,9 @@ knitr::kable(tab2, caption = "After intervention")
 ```{r mort-nocont-nw5, warning=TRUE, message=TRUE}
 hf_any_data_oc_nc_nw5 <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1, ward_5 == 0) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+                )
 
 death_nc_model_glm_nw5 <- glm(as.integer(death) ~ offset(log(total_HF)) +
                             X_t + X_x + X_x_t +
@@ -539,7 +554,8 @@ covariates_data_any_oc_nc_nw5 <- hf_any_data_oc_nc_nw5
 
 # Create new dataset with averaged values of all covariates
 data_new_nw5 <- covariates_data_any_oc_nc_nw5 %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -563,7 +579,7 @@ death_acts_preds_nw5 %>% select(id_time, death, act_rate, pred_out_death) %>%
 hf_any_data_oc_nc_wm <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
                 non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1,
+                #total_HF = 1,
                 ward_4 = if_else(ward_5 == 1, 1L, ward_4))
 
 death_nc_model_glm_wm <- glm(as.integer(death) ~ offset(log(total_HF)) +
@@ -588,7 +604,8 @@ covariates_data_any_oc_nc_wm <- hf_any_data_oc_nc_wm
 
 # Create new dataset with averaged values of all covariates
 data_new_wm <- covariates_data_any_oc_nc_wm %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -615,8 +632,9 @@ death_acts_preds_wm %>% select(id_time, death, act_rate, pred_out_death) %>%
 # set the count of number of spells to 1 for each row
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+                )
 
 # Mixed-effects poisson model: random effects for pseudoid
 hf_los_nc_model_lmer <- lmer(los_dd ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
@@ -641,7 +659,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -718,8 +737,9 @@ outcomes_predictions_tidy_2 %>% ggplot(aes(x = id_time)) + geom_point(aes(y = ac
 # set the count of number of spells to 1 for each row
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "EH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+         )
 
 # Mixed-effects poisson model: random effects for pseudoid
 hf_read7_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_7) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
@@ -757,7 +777,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -792,8 +813,9 @@ read7_acts_preds %>% select(id_time, allcausereadmission_7, act_rate, pred_out_7
 # set the count of number of spells to 1 for each row
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "EH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+         )
 
 # Mixed-effects poisson model: random effects for pseudoid
 hf_read30_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_30) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
@@ -832,7 +854,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 1)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -867,19 +890,22 @@ read30_acts_preds %>% select(id_time, allcausereadmission_30, act_rate, pred_out
 # set the count of number of spells to 1 for each row
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "EH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+                )
 
 # Mixed-effects poisson model: random effects for pseudoid
-hf_read90_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_90) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
-                                       sexM + non_white1 +
-                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
-                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
-                                       month_9 + month_10 + month_11 +
-                                       (1 | pseudoid),
-                                     hf_any_data_oc_nc %>% filter(X_t <= 67 - 3),
-                                     family = poisson(link = "log"),
-                                     control=glmerControl(optimizer="bobyqa"))
+hf_read90_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_90) ~ offset(log(total_HF)) +
+                                        X_t + X_x + X_x_t +
+                                        sexM + non_white1 +
+                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
+                                        month_1 + month_2 + month_3 + month_4 +
+                                        month_5 + month_6 + month_7 + month_8 +
+                                        month_9 + month_10 + month_11 +
+                                        (1 | pseudoid),
+                                      hf_any_data_oc_nc %>% filter(X_t <= 67 - 3),
+                                      family = poisson(link = "log"),
+                                      control=glmerControl(optimizer="bobyqa"))
 
 summary(hf_read90_all_nc_model_glmer)
 
@@ -907,7 +933,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 3)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -938,8 +965,9 @@ read90_acts_preds %>% select(id_time, allcausereadmission_90, act_rate, pred_out
 # Create dataset for the regression analysis
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "EH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+                )
 
 # Fixed-effects poisson model
 death_nc_model_glm_nw <- glm(as.integer(death) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
@@ -964,7 +992,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -986,8 +1015,9 @@ death_acts_preds_nw %>% select(id_time, death, act_rate, pred_out_death) %>%
 ```{r eh-mort-nocont, warning=TRUE, message=TRUE}
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "EH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+                )
 
 death_nc_model_glm <- glm(as.integer(death) ~ offset(log(total_HF)) +
                             X_t + X_x + X_x_t +
@@ -1011,7 +1041,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -1063,8 +1094,9 @@ knitr::kable(tab2, caption = "After intervention")
 ```{r eh-mort-nocont-nw5, warning=TRUE, message=TRUE}
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "EH", HF_any == 1, ward_5 == 0) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+         )
 
 death_nc_model_glm_nw5 <- glm(as.integer(death) ~ offset(log(total_HF)) +
                             X_t + X_x + X_x_t +
@@ -1088,7 +1120,8 @@ covariates_data_any_oc_nc_nw5 <- hf_any_data_oc_nc_nw5
 
 # Create new dataset with averaged values of all covariates
 data_new_nw5 <- covariates_data_any_oc_nc_nw5 %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -1112,7 +1145,7 @@ death_acts_preds_nw5 %>% select(id_time, death, act_rate, pred_out_death) %>%
 hf_any_data_oc_nc_wm <- hf_its_data %>% filter(wardsite == "EH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
                 non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1,
+                #total_HF = 1,
                 ward_4 = if_else(ward_5 == 1, 1L, ward_4))
 
 death_nc_model_glm_wm <- glm(as.integer(death) ~ offset(log(total_HF)) +
@@ -1137,7 +1170,8 @@ covariates_data_any_oc_nc_wm <- hf_any_data_oc_nc_wm
 
 # Create new dataset with averaged values of all covariates
 data_new_wm <- covariates_data_any_oc_nc_wm %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -1163,8 +1197,9 @@ death_acts_preds_wm %>% select(id_time, death, act_rate, pred_out_death) %>%
 # set the count of number of spells to 1 for each row
 hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "EH", HF_any == 1) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+         )
 
 # Mixed-effects poisson model: random effects for pseudoid
 hf_los_nc_model_lmer <- lmer(los_dd ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
@@ -1189,7 +1224,8 @@ covariates_data_any_oc_nc <- hf_any_data_oc_nc
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -1295,10 +1331,12 @@ outcome_predictions %>% ggplot(aes(x = year_month)) +
 ```{r combined-dataset}
 hf_any_data_oc <- hf_its_data %>% filter(wardsite %in% c("NPH", "EH"),
                                          HF_any == 1,
-                                         X_t >= 28) %>% # 28 is the first month with data for both sites
+                                         X_t >= 28 # 28 is the first month with data for both sites
+                                         ) %>%
   mutate(sexM = if_else(sex=="M",1,0),
-                non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1)
+         non_white1 = if_else(non_white=="1",1,0)#,
+         #total_HF = 1
+         )
 ```
 
 ## 7-day readmissions
@@ -1306,15 +1344,17 @@ hf_any_data_oc <- hf_its_data %>% filter(wardsite %in% c("NPH", "EH"),
 ```{r read7-all}
 # Mixed-effects poisson model: random effects for pseudoid
 hf_read7_all_model_glmer <- glmer(as.integer(allcausereadmission_7) ~ offset(log(total_HF)) + 
-                                       X_t + X_x + X_x_t + X_z + X_z_t + X_z_x + X_z_x_t +
-                                       sexM + non_white1 +
-                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
-                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
-                                       month_9 + month_10 + month_11 +
-                                       (1 | pseudoid),
-                                     hf_any_data_oc,
-                                     family = poisson(link = "log"),
-                                     control=glmerControl(optimizer="bobyqa"))
+                                    X_t + X_x + X_x_t + X_z + X_z_t + X_z_x + X_z_x_t +
+                                    sexM + non_white1 +
+                                    ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                    month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                    month_9 + month_10 + month_11 +
+                                    (1 | pseudoid),
+                                  hf_any_data_oc,
+                                  family = poisson(link = "log"),
+                                  control=glmerControl(optimizer="bobyqa"),
+                                  nAGQ = 14
+                                  )
 
 summary(hf_read7_all_model_glmer)
 
@@ -1324,6 +1364,28 @@ overdisp_fun(hf_read7_all_model_glmer)
 knitr::kable(exp(fixef(hf_read7_all_model_glmer)), col.names = c("IRR"))
 ```
 
+```{r read7-all-tmb}
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read7_all_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_7) ~ offset(log(total_HF)) + 
+                                       X_t + X_x + X_x_t + X_z + X_z_t + X_z_x + X_z_x_t +
+                                       sexM + non_white1 +
+                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                       month_9 + month_10 + month_11 +
+                                       (1 | pseudoid),
+                                     hf_any_data_oc,
+                                     family = poisson(link = "log")#,
+                                     #control=glmerControl(optimizer="bobyqa")
+                                     )
+
+summary(hf_read7_all_model_glmmTMB)
+
+overdisp_fun(hf_read7_all_model_glmmTMB)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read7_all_model_glmmTMB)$cond), col.names = c("IRR"))
+```
+
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-7read-ic}
 # Make a copy of the data
@@ -1331,7 +1393,8 @@ covariates_data_any_oc <- hf_any_data_oc
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc %>% group_by(X_x, X_z) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -1387,7 +1450,8 @@ covariates_data_any_oc <- hf_any_data_oc %>% filter(X_t <= 67 - 1)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc %>% group_by(X_x, X_z) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -1444,7 +1508,8 @@ covariates_data_any_oc <- hf_any_data_oc %>% filter(X_t <= 67 - 3)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc %>% group_by(X_x, X_z) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
@@ -1519,7 +1584,7 @@ hf_any_data_oc_wm <- hf_its_data %>% filter(wardsite %in% c("NPH", "EH"),
                                          X_t >= 28) %>%
   mutate(sexM = if_else(sex=="M",1,0),
                 non_white1 = if_else(non_white=="1",1,0),
-                total_HF = 1,
+                #total_HF = 1,
                 ward_4 = if_else(ward_5 == 1, 1L, ward_4))
 
 death_model_glm_wm <- glm(as.integer(death) ~ offset(log(total_HF)) +
@@ -1544,7 +1609,8 @@ covariates_data_any_oc_wm <- hf_any_data_oc_wm
 
 # Create new dataset with averaged values of all covariates
 data_new_wm <- covariates_data_any_oc_wm %>% group_by(X_x, X_z) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = 1, ln_age = mean(ln_age),
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
          month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
          month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
