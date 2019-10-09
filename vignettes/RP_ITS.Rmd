@@ -12,7 +12,7 @@ knitr::opts_chunk$set(
   cache = TRUE,
   collapse = TRUE,
   comment = "#>",
-  echo = FALSE,
+  echo = TRUE,
   fig.path = "RP_ITS_Images/"
 )
 ```
@@ -1476,8 +1476,8 @@ outcome_predictions %>% ggplot(aes(x = year_month)) +
 
 ```{r combined-dataset}
 hf_any_data_oc <- hf_its_data %>% filter(wardsite %in% c("NPH", "EH"),
-                                         HF_any == 1#,
-                                         #X_t >= 28 # 28 is the first month with data for both sites
+                                         HF_any == 1,
+                                         X_t >= 28 # 28 is the first month with data for both sites
                                          ) %>%
   mutate(sexM = if_else(sex=="M",1,0),
          non_white1 = if_else(non_white=="1",1,0)#,
