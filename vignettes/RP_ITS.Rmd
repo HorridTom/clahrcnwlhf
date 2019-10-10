@@ -709,8 +709,8 @@ hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
                 #total_HF = 1
                 )
 
-# Mixed-effects poisson model: random effects for pseudoid
-hf_los_nc_model_lmer <- lmer(los_dd ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
+# Mixed-effects linear model: random effects for pseudoid
+hf_los_nc_model_lmer <- lmer(los_dd ~ X_t + X_x + X_x_t +
                                        sexM + non_white1 +
                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
                                        month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
@@ -1347,8 +1347,8 @@ hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "EH", HF_any == 1) %>%
                 #total_HF = 1
          )
 
-# Mixed-effects poisson model: random effects for pseudoid
-hf_los_nc_model_lmer <- lmer(los_dd ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
+# Mixed-effects linear model: random effects for pseudoid
+hf_los_nc_model_lmer <- lmer(los_dd ~ X_t + X_x + X_x_t +
                                        sexM + non_white1 +
                                        ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
                                        month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
@@ -1736,8 +1736,8 @@ read90_acts_preds %>% select(id_time, X_z, allcausereadmission_90, act_rate, pre
 \newpage
 ## LOS with HF as any diagnosis
 ```{r los, warning=FALSE, message=FALSE}
-# Mixed-effects poisson model: random effects for pseudoid
-hf_los_model_lmer <- lmer(los_dd ~ offset(log(total_HF)) + 
+# Mixed-effects linear model: random effects for pseudoid
+hf_los_model_lmer <- lmer(los_dd ~ 
                             X_t + X_x + X_x_t + X_z + X_z_t + X_z_x + X_z_x_t +
                             sexM + non_white1 +
                             ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
