@@ -1577,7 +1577,7 @@ hf_read30_all_model_glmer <- glmer(as.integer(allcausereadmission_30) ~ offset(l
                                        month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
                                        month_9 + month_10 + month_11 +
                                        (1 | pseudoid),
-                                     hf_any_data_oc,
+                                     hf_any_data_oc %>% filter(X_t <= 67 - 1),
                                      family = poisson(link = "log"),
                                      control=glmerControl(optimizer="bobyqa"))
 
@@ -1600,7 +1600,7 @@ hf_read30_all_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_3
                                                   month_5 + month_6 + month_7 + month_8 +
                                                   month_9 + month_10 + month_11 +
                                                   (1 | pseudoid),
-                                                hf_any_data_oc,
+                                                hf_any_data_oc %>% filter(X_t <= 67 - 1),
                                                 family = poisson(link = "log")#,
                                                 #control=glmerControl(optimizer="bobyqa")
                                                 )
@@ -1659,7 +1659,7 @@ hf_read90_all_model_glmer <- glmer(as.integer(allcausereadmission_90) ~ offset(l
                                        month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
                                        month_9 + month_10 + month_11 +
                                        (1 | pseudoid),
-                                     hf_any_data_oc,
+                                     hf_any_data_oc %>% filter(X_t <= 67 - 3),
                                      family = poisson(link = "log"),
                                      control=glmerControl(optimizer="bobyqa"))
 
@@ -1682,7 +1682,7 @@ hf_read90_all_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_9
                                                   month_5 + month_6 + month_7 + month_8 +
                                                   month_9 + month_10 + month_11 +
                                                   (1 | pseudoid),
-                                                hf_any_data_oc,
+                                                hf_any_data_oc %>% filter(X_t <= 67 - 3),
                                                 family = poisson(link = "log")#,
                                                 #control=glmerControl(optimizer="bobyqa")
                                                 )
