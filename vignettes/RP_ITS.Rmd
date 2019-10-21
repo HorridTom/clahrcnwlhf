@@ -1619,7 +1619,7 @@ knitr::kable(exp(fixef(hf_read30_all_model_glmmTMB)$cond), col.names = c("IRR"))
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-30read-ic}
 # Make a copy of the data
-covariates_data_any_oc <- hf_any_data_oc %>% filter(X_t <= 67 - 1)
+covariates_data_any_oc <- hf_any_data_oc #%>% filter(X_t <= 67 - 1)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc %>% group_by(X_x, X_z) %>%
@@ -1701,7 +1701,7 @@ knitr::kable(exp(fixef(hf_read90_all_model_glmmTMB)$cond), col.names = c("IRR"))
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-90read-ic}
 # Make a copy of the data
-covariates_data_any_oc <- hf_any_data_oc %>% filter(X_t <= 67 - 3)
+covariates_data_any_oc <- hf_any_data_oc #%>% filter(X_t <= 67 - 3)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc %>% group_by(X_x, X_z) %>%
