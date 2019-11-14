@@ -581,17 +581,17 @@ ward_death_data <- hf_any_data_oc_nc %>% select(death, starts_with("ward"), X_x)
   )))
 
 
-tab1 <- expss::cro(ward_death_data %>% filter(X_x == 0) %>% pull(ward),
+tab1 <- table(ward_death_data %>% filter(X_x == 0) %>% pull(ward),
                         ward_death_data %>% filter(X_x == 0) %>% pull(death))
-tab1 <- set_colnames(tab1, c("row_labels", "Did not die", "Died"))
-tab1$row_labels <- c("ward 1", "ward 2", "ward 3", "ward 4", "ward 5", "total")
+#tab1 <- set_colnames(tab1, c("row_labels", "Did not die", "Died"))
+#tab1$row_labels <- c("ward 1", "ward 2", "ward 3", "ward 4", "ward 5", "total")
 tab1[is.na(tab1)] <- 0
 knitr::kable(tab1, caption = "Before intervention")
 
-tab2 <- expss::cro(ward_death_data %>% filter(X_x == 1) %>% pull(ward),
+tab2 <- table(ward_death_data %>% filter(X_x == 1) %>% pull(ward),
                         ward_death_data %>% filter(X_x == 1) %>% pull(death))
-tab2 <- set_colnames(tab2, c("row_labels", "Did not die", "Died"))
-tab2$row_labels <- c("ward 1", "ward 2", "ward 3", "ward 4", "ward 5", "total")
+#tab2 <- set_colnames(tab2, c("row_labels", "Did not die", "Died"))
+#tab2$row_labels <- c("ward 1", "ward 2", "ward 3", "ward 4", "ward 5", "total")
 tab2[is.na(tab2)] <- 0
 knitr::kable(tab2, caption = "After intervention")
 ```
@@ -1219,17 +1219,17 @@ ward_death_data <- hf_any_data_oc_nc %>% select(death, starts_with("ward"), X_x)
   )))
 
 
-tab1 <- expss::cro(ward_death_data %>% filter(X_x == 0) %>% pull(ward),
+tab1 <- table(ward_death_data %>% filter(X_x == 0) %>% pull(ward),
                         ward_death_data %>% filter(X_x == 0) %>% pull(death))
-tab1 <- set_colnames(tab1, c("row_labels", "Did not die", "Died"))
-tab1$row_labels <- c("ward 1", "ward 2", "ward 3", "ward 4", "ward 5", "total")
+#tab1 <- set_colnames(tab1, c("row_labels", "Did not die", "Died"))
+#tab1$row_labels <- c("ward 1", "ward 2", "ward 3", "ward 4", "ward 5", "total")
 tab1[is.na(tab1)] <- 0
 knitr::kable(tab1, caption = "Before intervention")
 
-tab2 <- expss::cro(ward_death_data %>% filter(X_x == 1) %>% pull(ward),
+tab2 <- table(ward_death_data %>% filter(X_x == 1) %>% pull(ward),
                         ward_death_data %>% filter(X_x == 1) %>% pull(death))
-tab2 <- set_colnames(tab2, c("row_labels", "Did not die", "Died"))
-tab2$row_labels <- c("ward 1", "ward 2", "ward 3", "ward 4", "ward 5", "total")
+#tab2 <- set_colnames(tab2, c("row_labels", "Did not die", "Died"))
+#tab2$row_labels <- c("ward 1", "ward 2", "ward 3", "ward 4", "ward 5", "total")
 tab2[is.na(tab2)] <- 0
 knitr::kable(tab2, caption = "After intervention")
 ```
