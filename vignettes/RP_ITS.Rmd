@@ -15,6 +15,24 @@ knitr::opts_chunk$set(
   echo = TRUE,
   fig.path = "RP_ITS_Images/"
 )
+
+trim_readmission_analysis = FALSE
+crop_readmission_analysis = TRUE
+if(trim_readmission_analysis) {
+  trim_30_day <- 1
+  trim_90_day <- 3
+} else {
+  trim_30_day <- 0
+  trim_90_day <- 0
+}
+if(crop_readmission_analysis) {
+  crop_30_day <- 1
+  crop_90_day <- 3
+} else {
+  crop_30_day <- 0
+  crop_90_day <- 0
+}
+
 ```
 
 ```{r dependencies, include = FALSE}
@@ -284,7 +302,7 @@ hf_read30_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_30) ~ offse
                                        month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
                                        month_9 + month_10 + month_11 +
                                        (1 | pseudoid),
-                                     hf_any_data_oc_nc %>% filter(X_t <= 67 - 1),
+                                     hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_30_day),
                                      family = poisson(link = "log"),
                                      control=glmerControl(optimizer="bobyqa"))
 
@@ -334,7 +352,7 @@ knitr::kable(exp(fixef(hf_read30_all_nc_model_glmmTMB)$cond), col.names = c("IRR
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-30read}
 # Make a copy of the data
-covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 1)
+covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_30_day)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
@@ -387,7 +405,7 @@ hf_read90_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_90) ~ offse
                                         month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
                                         month_9 + month_10 + month_11 +
                                         (1 | pseudoid),
-                                      hf_any_data_oc_nc %>% filter(X_t <= 67 - 3),
+                                      hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_90_day),
                                       family = poisson(link = "log"),
                                       control=glmerControl(optimizer="bobyqa"))
 
@@ -437,7 +455,7 @@ knitr::kable(exp(fixef(hf_read90_all_nc_model_glmmTMB)$cond), col.names = c("IRR
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-90read}
 # Make a copy of the data
-covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 3)
+covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_90_day)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
@@ -922,7 +940,7 @@ hf_read30_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_30) ~ offse
                                        month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
                                        month_9 + month_10 + month_11 +
                                        (1 | pseudoid),
-                                     hf_any_data_oc_nc %>% filter(X_t <= 67 - 1),
+                                     hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_30_day),
                                      family = poisson(link = "log"),
                                      control=glmerControl(optimizer="bobyqa"))
 
@@ -972,7 +990,7 @@ knitr::kable(exp(fixef(hf_read30_all_nc_model_glmmTMB)$cond), col.names = c("IRR
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r eh-plot-30read}
 # Make a copy of the data
-covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 1)
+covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_30_day)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
@@ -1025,7 +1043,7 @@ hf_read90_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_90) ~ offse
                                         month_5 + month_6 + month_7 + month_8 +
                                         month_9 + month_10 + month_11 +
                                         (1 | pseudoid),
-                                      hf_any_data_oc_nc %>% filter(X_t <= 67 - 3),
+                                      hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_90_day),
                                       family = poisson(link = "log"),
                                       control=glmerControl(optimizer="bobyqa"))
 
@@ -1075,7 +1093,7 @@ knitr::kable(exp(fixef(hf_read90_all_nc_model_glmmTMB)$cond), col.names = c("IRR
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r eh-plot-90read}
 # Make a copy of the data
-covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - 3)
+covariates_data_any_oc_nc <- hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_90_day)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
@@ -1577,7 +1595,7 @@ hf_read30_all_model_glmer <- glmer(as.integer(allcausereadmission_30) ~ offset(l
                                        month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
                                        month_9 + month_10 + month_11 +
                                        (1 | pseudoid),
-                                     hf_any_data_oc %>% filter(X_t <= 67 - 1),
+                                     hf_any_data_oc %>% filter(X_t <= 67 - trim_30_day),
                                      family = poisson(link = "log"),
                                      control=glmerControl(optimizer="bobyqa"))
 
@@ -1600,7 +1618,7 @@ hf_read30_all_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_3
                                                   month_5 + month_6 + month_7 + month_8 +
                                                   month_9 + month_10 + month_11 +
                                                   (1 | pseudoid),
-                                                hf_any_data_oc %>% filter(X_t <= 67 - 1),
+                                                hf_any_data_oc %>% filter(X_t <= 67 - trim_30_day),
                                                 family = poisson(link = "log"),
                                                 control=glmmTMB::glmmTMBControl(optCtrl =
                                                                          list(iter.max = 1e3,
@@ -1619,7 +1637,7 @@ knitr::kable(exp(fixef(hf_read30_all_model_glmmTMB)$cond), col.names = c("IRR"))
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-30read-ic}
 # Make a copy of the data
-covariates_data_any_oc <- hf_any_data_oc %>% filter(X_t <= 67 - 1)
+covariates_data_any_oc <- hf_any_data_oc %>% filter(X_t <= 67 - trim_30_day)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc %>% group_by(X_x, X_z) %>%
@@ -1662,7 +1680,7 @@ hf_read90_all_model_glmer <- glmer(as.integer(allcausereadmission_90) ~ offset(l
                                        month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
                                        month_9 + month_10 + month_11 +
                                        (1 | pseudoid),
-                                     hf_any_data_oc %>% filter(X_t <= 67 - 3),
+                                     hf_any_data_oc %>% filter(X_t <= 67 - trim_90_day),
                                      family = poisson(link = "log"),
                                      control=glmerControl(optimizer="bobyqa"))
 
@@ -1685,7 +1703,7 @@ hf_read90_all_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_9
                                                   month_5 + month_6 + month_7 + month_8 +
                                                   month_9 + month_10 + month_11 +
                                                   (1 | pseudoid),
-                                                hf_any_data_oc %>% filter(X_t <= 67 - 3),
+                                                hf_any_data_oc %>% filter(X_t <= 67 - trim_90_day),
                                                 family = poisson(link = "log")#,
                                                 #control=glmerControl(optimizer="bobyqa")
                                                 )
@@ -1701,7 +1719,7 @@ knitr::kable(exp(fixef(hf_read90_all_model_glmmTMB)$cond), col.names = c("IRR"))
 ### Plot model predictions for averaged covariates as linear trends, along with the data
 ```{r plot-90read-ic}
 # Make a copy of the data
-covariates_data_any_oc <- hf_any_data_oc %>% filter(X_t <= 67 - 3)
+covariates_data_any_oc <- hf_any_data_oc %>% filter(X_t <= 67 - trim_90_day)
 
 # Create new dataset with averaged values of all covariates
 data_new <- covariates_data_any_oc %>% group_by(X_x, X_z) %>%
@@ -1841,6 +1859,16 @@ outcome_predictions_ic <- read7_acts_preds %>% ungroup() %>% rename (act_rate_7d
             by = c("id_time" = "id_time", "X_z" = "X_z")) %>%
   left_join(los_acts_preds %>% ungroup() %>% select(-total_HF),
             by = c("id_time" = "id_time", "X_z" = "X_z"))
+
+outcome_predictions_ic <- outcome_predictions_ic %>% 
+  dplyr::mutate(pred_out_30d = 
+                  if_else(id_time > 67 - crop_30_day, NA_real_, pred_out_30d),
+                act_rate_30dr = 
+                  if_else(id_time > 67 - crop_30_day, NA_real_, act_rate_30dr),
+                pred_out_90d = 
+                  if_else(id_time > 67 - crop_90_day, NA_real_, pred_out_90d),
+                act_rate_90dr = 
+                  if_else(id_time > 67 - crop_90_day, NA_real_, act_rate_90dr))
 
 outcomes_predictions_tidy_1_ic <- outcome_predictions_ic %>% select(id_time, X_z, pred_out_7d, act_rate_7dr,
                                                             pred_out_30d, act_rate_30dr,
