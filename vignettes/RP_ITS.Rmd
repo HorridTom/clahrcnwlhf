@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
   fig.path = "RP_ITS_Images/"
 )
 
-trim_readmission_analysis = FALSE
+trim_readmission_analysis = TRUE
 crop_readmission_analysis = TRUE
 if(trim_readmission_analysis) {
   trim_30_day <- 1
