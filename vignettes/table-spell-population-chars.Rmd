@@ -1,0 +1,290 @@
+---
+title: "Population Characteristics: ARC/CLAHRC NWL Heart Failure Admission Care Bundle"
+author: ""
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE
+)
+```
+
+```{r load_data, echo=FALSE, results='asis', cache=TRUE, include=FALSE}
+library(magrittr)
+library(tidyverse)
+library(knitr)
+library(pander)
+library(tidyverse)
+library(qwraps2)
+library(lubridate)
+library(broom)
+options(qwraps2_markup = "markdown")
+
+ward_hf_types <- read.csv(file = "../data-raw/wardhftypes.csv", stringsAsFactors = FALSE)
+ward_sites <- read.csv(file = "../data-raw/wardsites.csv", stringsAsFactors = FALSE)
+imd_lookup <- read.csv(file = "../data-raw/imd-indices.csv", stringsAsFactors = FALSE)
+
+#its_wide <- clahrcnwlhf::its_aggregate_wide(from.vignette = TRUE, ward_hf_types = ward_hf_types, ward_sites = ward_sites, imd_lookup = imd_lookup)
+
+emergency_spells <- clahrcnwlhf::create_new_vars(from.vignette = TRUE, ward_hf_types = ward_hf_types,
+                                                 ward_sites = ward_sites, imd_lookup = imd_lookup)
+emergency_spells_NPHEH_disch_pre_aug17 <- emergency_spells %>%
+  filter(CSPDischargeTime <= as.Date("2017-07-31"), StartWardSite %in% c('NPH', 'EH'))
+emergency_spells_reduced <- clahrcnwlhf::drop_unnecessary_cols(emergency_spells_NPHEH_disch_pre_aug17)
+emergency_spells_reduced$EthnicGroupComp <- forcats::fct_collapse(emergency_spells_reduced$EthnicGroupComp, "XV" = c("X", "V"))
+
+timestamp <- gsub(":","-",paste(strsplit(x = toString(Sys.time()),split = " ")[[1]], collapse="-"))
+readr::write_csv(emergency_spells_reduced, path = paste0("../data-out/clahrcnwlhf_np_eh_emerg_spells_", timestamp, ".csv"))
+```
+
+## Exclusions
+
+Initially `r nrow(emergency_spells_reduced)` spells. `r nrow(emergency_spells_reduced %>% filter(!(StartWardSite %in% c('NPH', 'EH'))))` not from NPH or EH.
+```{r exc1}
+study_dataset <- emergency_spells_reduced %>% dplyr::filter(!is.na(los)) 
+inc_exc <- c(nrow(study_dataset), nrow(emergency_spells_reduced) - nrow(study_dataset))
+```
+After removing those with missing length of stay: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r exc2}
+study_dataset <- study_dataset %>% dplyr::filter(!is.na(AgeBand))
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those with missing age: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r exc3}
+study_dataset <- study_dataset %>% dplyr::filter(Age.est >= 20)
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those below the age of 20: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r exc4}
+study_dataset <- study_dataset %>% dplyr::filter(!((Ward_hf_type %in% c('A&E', 'Ambulatory Care ', 'Community', 'Maternity') | is.na(Ward_hf_type))))
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those spells at NPH discharged from ward types with no care bundles: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r exc5}
+study_dataset <- study_dataset %>% dplyr::mutate(disch_day = as.Date(CSPDischargeTime)) %>%
+  dplyr::distinct(PseudoID, disch_day, StartWardSite, .keep_all = TRUE)
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing any duplicates based on PseudoID, StartWardSite and disch_day: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r exc6}
+study_dataset <- study_dataset %>% dplyr::filter(Sex %in% c('F', 'M'))
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those with missing gender: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r exc7}
+study_dataset <- study_dataset %>% dplyr::filter(WardSite %in% c('NPH','EH'))
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those discharged from a CMH ward: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+
+```{r exc8}
+study_dataset <- study_dataset %>% dplyr::filter(HF.any.code == TRUE)
+inc_exc <- c(nrow(study_dataset), inc_exc[1] - nrow(study_dataset))
+```
+After removing those without heart failure diagnosis: `r inc_exc[1]` (removed `r inc_exc[2]`).
+
+```{r dupe-test}
+#Test for any duplicated PseudoID & CSPDischargeTime: `r !all(!duplicated(study_dataset %>% dplyr::select(PseudoID, disch_day)))`.
+```
+
+## Study population
+
+```{r popnchars_prep, echo=FALSE, results='asis', cache=TRUE}
+# Spells are exactly the study dataset
+HF_spells <- study_dataset
+
+# Form new table for patients first HF episode during the study
+patients_first_HF_episode <- study_dataset %>% 
+  group_by(PseudoID) %>% 
+  slice(which.min(CSPDischargeTime)) %>% 
+  ungroup()
+
+units(patients_first_HF_episode$los) <- 'days'
+```
+Population: `r nrow(patients_first_HF_episode)` patients with a diagnosis of heart failure, for whom there were `r nrow(HF_spells)` spells in hospital during the study period. All analysis that follows is at spell level rather than patient level, consistent with the bundle intervention itself, and the ITS analysis.
+
+```{r sex-diffdiff-spells, include=FALSE}
+sex_diff_in_diff_data <- HF_spells %>% dplyr::select(StartWardSite, period.date, Sex) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B", male = Sex == "M") %>% dplyr::select(intervention_site, intervention_period, male)
+
+model <- glm(male ~. + intervention_site * intervention_period, family=binomial(link='logit'), data=sex_diff_in_diff_data)
+
+cbind(OR = exp(coef(model)), exp(confint(model)), p = tidy(model) %>% pull(p.value))
+sex_did_or_sp <- paste(format(exp(coef(model)[4]), digits = 3), " (", format(exp(confint(model)[4,1]), digits = 3), ", ", format(exp(confint(model)[4,2]), digits = 3),")", sep = "")
+sex_did_or_sp
+```
+
+
+```{r age-diffdiff-spells, include = FALSE}
+age_diff_in_diff_data <- HF_spells %>% dplyr::select(StartWardSite, period.date, AgeBand) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, AgeBand)
+
+# Need to collapse age bands due to small numbers in lower bands
+age_diff_in_diff_data$AgeBand <- forcats::fct_collapse(age_diff_in_diff_data$AgeBand, "0 to 39" = c("0", "1 to 4", "5 to 9", "10 to 14", "15 to 19", "20 to 24", "25 to 29", "30 to 34", "35 to 39"))
+
+model <- MASS::polr(AgeBand ~. + intervention_site * intervention_period, data=age_diff_in_diff_data, method = "logistic", Hess = TRUE)
+summary(model)
+
+exp(cbind(OR = coef(model), confint.default(model)))
+age_did_or_sp <- paste(format(exp(coef(model)[3]), digits = 3), " (", format(exp(confint.default(model)[3,1]), digits = 3), ", ", format(exp(confint.default(model)[3,2]), digits = 3),")", sep = "")
+age_did_or_sp
+```
+
+```{r eth-diffdiff-spells, include = FALSE}
+ethnicity_diff_in_diff_data <- HF_spells %>% dplyr::select(StartWardSite, period.date, EthnicGroupComp) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, EthnicGroupComp)
+
+ethnicity_diff_in_diff_data$EthnicGroupComp <- relevel(ethnicity_diff_in_diff_data$EthnicGroupComp, ref = "W")
+model <- nnet::multinom(EthnicGroupComp ~. + intervention_site * intervention_period, data=ethnicity_diff_in_diff_data)
+summary(model)
+exp(coef(model))
+exp(confint(model))
+
+eth_did_or_XV_sp <- paste(format(exp(coef(model)[1,4]), digits = 3), " (", format(exp(confint(model)[4,1,1]), digits = 3), ", ", format(exp(confint(model)[4,2,1]), digits = 3),")", sep = "")
+eth_did_or_XV_sp
+eth_did_or_U_sp <- paste(format(exp(coef(model)[2,4]), digits = 3), " (", format(exp(confint(model)[4,1,2]), digits = 3), ", ", format(exp(confint(model)[4,2,2]), digits = 3),")", sep = "")
+eth_did_or_U_sp
+eth_did_or_Y_sp <- paste(format(exp(coef(model)[3,4]), digits = 3), " (", format(exp(confint(model)[4,1,3]), digits = 3), ", ", format(exp(confint(model)[4,2,3]), digits = 3),")", sep = "")
+eth_did_or_Y_sp
+
+```
+
+```{r imd-diffdiff-spells, include=FALSE}
+imd_diff_in_diff_data <- HF_spells %>% dplyr::select(StartWardSite, period.date, IMD) %>% mutate(intervention_site = StartWardSite == "NPH", intervention_period = period.date == "B") %>% dplyr::select(intervention_site, intervention_period, IMD)
+
+patients_first_HF_episode %>% ggplot(aes(x = IMD)) + geom_histogram() + facet_wrap(StartWardSite ~ period.date)
+
+model <- glm(IMD~.+ intervention_site * intervention_period, data = imd_diff_in_diff_data)
+
+bcmod <- MASS::boxcox(model, optimise = TRUE)
+bcresults <- data.frame(x = bcmod$x, y = bcmod$y)
+bc_exp <- bcresults %>% arrange(-y) %>% top_n(1) %>% pull(x)
+bc_model <- glm(((IMD^bc_exp - 1) / bc_exp ) ~.+ intervention_site * intervention_period, data = imd_diff_in_diff_data)
+
+plot(fitted(bc_model), residuals(bc_model)) #qq plot also checked and fine
+
+summary(bc_model)
+
+cbind(Coeffs = coef(bc_model), confint(bc_model))
+imd_did_or_sp <- paste(format((bc_exp*coef(bc_model)[4] + 1)^(1/bc_exp), digits = 3), " (", format((bc_exp*confint(bc_model)[4,1]+1)^(1/bc_exp), digits = 3), ", ", format((bc_exp*confint(bc_model)[4,2] + 1)^(1/bc_exp), digits = 3),")", sep = "")
+imd_did_or_sp
+```
+
+## Hospital Spell Patient Characteristics and Outcomes
+
+```{r spchars, echo=FALSE, results='asis', cache=TRUE, include=TRUE}
+units(HF_spells$los) <- 'days'
+
+pop_summary <- list(
+  "Age" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(Age.est)),
+    #"min" = ~ min(Age.est, na.rm = TRUE),
+    #"max" = ~ max(Age.est, na.rm = TRUE),
+    "median (iqr) : band midpoints" = ~ qwraps2::median_iqr(Age.est, na_rm = TRUE)#,
+    #"mean (sd)" = ~ qwraps2::mean_sd(Age.est,na_rm = TRUE , denote_sd = "paren")
+  ),
+  "Gender" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(Sex)),
+    "Female" = ~ qwraps2::n_perc(Sex == "F", na_rm = TRUE, show_denom = "ifNA"),
+    "Male" = ~ qwraps2::n_perc(Sex == "M", na_rm = TRUE, show_denom = "ifNA")
+  ),
+  "Ethnicity" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(EthnicGroupComp)),
+    "Black or Black British" = ~ qwraps2::n_perc(EthnicGroupComp == "U", na_rm = TRUE, show_denom = "always"),
+    "Mixed / Other Ethnic Groups / Not Stated" = ~ qwraps2::n_perc(EthnicGroupComp == "XV", na_rm = TRUE, show_denom = "always"),
+    "White" = ~ qwraps2::n_perc(EthnicGroupComp == "W", na_rm = TRUE, show_denom = "always"),
+    "Asian or Asian British" = ~ qwraps2::n_perc(EthnicGroupComp == "Y", na_rm = TRUE, show_denom = "always")
+  ),
+  "Index of Multiple Deprivation" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(IMD)),
+    #"min" = ~ min(IMD, na.rm = TRUE),
+    #"max" = ~ max(IMD, na.rm = TRUE),
+    "n; median (iqr)" = ~ qwraps2::median_iqr(IMD, na_rm = TRUE),
+    "mean (sd)" = ~ qwraps2::mean_sd(IMD,na_rm = TRUE , denote_sd = "paren")
+  ),
+  "Length of Stay" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(los)),
+    #"min" = ~ frmt(min(los, na.rm = TRUE), digits = 2),
+    #"max" = ~ frmt(max(los, na.rm = TRUE), digits = 2),
+    "median (iqr)" = ~ qwraps2::median_iqr(los, na_rm = TRUE)#,
+    #"mean (sd)" = ~ qwraps2::mean_sd(los,na_rm = TRUE , denote_sd = "paren")
+  ),
+  "Mortality" = list(
+    "Missing" = ~ qwraps2::n_perc(is.na(died)),
+    "In-hospital Mortality" = ~ qwraps2::n_perc(died, na_rm = TRUE, show_denom = "ifNA")
+  ),
+  #"Time to next Any-Cause Re-admission" = list(
+    #"No re-admission" = ~ qwraps2::n_perc(is.na(time.to.next.spell)),
+    #"min" = ~ min(time.to.next.spell, na.rm = TRUE),
+    #"max" = ~ max(time.to.next.spell, na.rm = TRUE),
+    #"median (iqr)" = ~ qwraps2::median_iqr(time.to.next.spell, na_rm = TRUE),
+    #"mean (sd)" = ~ qwraps2::mean_sd(time.to.next.spell, na_rm = TRUE , denote_sd = "paren")
+  #),
+  "Any-Cause Re-admission Category" = list(
+    "No re-admission < 90 days" = ~ qwraps2::n_perc(is.na(all.cause.readmission.cat)),
+    "< 7 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
+    ">= 7, < 30 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '30', na_rm = TRUE, show_denom = "always"),
+    ">= 30, < 90 days" = ~ qwraps2::n_perc(all.cause.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
+  ),
+  #"Time to next HF Re-admission" = list(
+    #"No re-admission" = ~ qwraps2::n_perc(is.na(time.to.next.hf.spell)),
+    #"min" = ~ min(time.to.next.hf.spell, na.rm = TRUE),
+    #"max" = ~ max(time.to.next.hf.spell, na.rm = TRUE),
+    #"median (iqr)" = ~ qwraps2::median_iqr(time.to.next.hf.spell, na_rm = TRUE),
+    #"mean (sd)" = ~ qwraps2::mean_sd(time.to.next.hf.spell, na_rm = TRUE , denote_sd = "paren")
+  #),
+  "HF Re-admission Category" = list(
+    "No re-admission < 90 days" = ~ qwraps2::n_perc(is.na(hf.readmission.cat)),
+    "< 7 days" = ~ qwraps2::n_perc(hf.readmission.cat == '7', na_rm = TRUE, show_denom = "always"),
+    ">= 7, < 30 days" = ~ qwraps2::n_perc(hf.readmission.cat == '30', na_rm = TRUE, show_denom = "always"),
+    ">= 30, < 90 days" = ~ qwraps2::n_perc(hf.readmission.cat == '90', na_rm = TRUE, show_denom = "always")
+  )
+)
+```
+
+```{r spell_table, results='asis', message='false'}
+
+HF_spells <- HF_spells %>% dplyr::mutate(site_period = dplyr::case_when(
+  StartWardSite == "NPH" & period.date == "A" ~ "Northwick Park, pre-intervention",
+  StartWardSite == "NPH" & period.date == "B" ~ "Northwick Park, post-intervention",
+  StartWardSite == "EH" & period.date == "A" ~ "Ealing, pre-intervention",
+  StartWardSite == "EH" & period.date == "B" ~ "Ealing, post-intervention"
+))
+
+sp_table <- qwraps2::summary_table(HF_spells %>% dplyr::group_by(site_period),
+                       pop_summary)
+colnames(sp_table) <- stringr::str_remove(colnames(sp_table), "site_period: ")
+
+# Age row 2, Sex row 4, Ethnicity 7,8,10, IMD 13
+confints <- rep("", nrow(sp_table))
+confints[[2]] <- age_did_or_sp
+confints[[4]] <- sex_did_or_sp
+confints[[7]] <- eth_did_or_U_sp
+confints[[8]] <- eth_did_or_XV_sp
+confints[[10]] <- eth_did_or_Y_sp
+confints[[13]] <- imd_did_or_sp
+
+sp_table_ci <- cbind(sp_table, "95% CI for Difference in Difference (Odds Ratio/mean)" = confints)
+
+# pop_table_ci_cap <- capture.output(print(pop_table_ci))
+# 
+# pop_table_ci_cap[grepl("Age", pop_table_ci_cap)] %<>% sub("&nbsp;&nbsp;\\ \\|$", paste(age_did_or, "|"), .)
+# pop_table_ci_cap[grepl("Gender", pop_table_ci_cap)] %<>% sub("&nbsp;&nbsp;\\ \\|$", paste(sex_did_or, "|"), .)
+# pop_table_ci_cap[grepl("Index of Multiple Deprivation", pop_table_ci_cap)] %<>% sub("&nbsp;&nbsp;\\ \\|$", paste(imd_did_or, "|"), .)
+
+#cat(pop_table_ci, sep = "\n")
+
+print(sp_table_ci)
+```
