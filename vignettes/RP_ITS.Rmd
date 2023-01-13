@@ -2,7 +2,9 @@
 title: "Interrupted Time Series Analysis"
 author: "Tom Woodcock"
 date: "`r Sys.Date()`"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 Package repo commit: `r stringr::str_sub(system("git rev-parse HEAD", intern=TRUE), 1, 8)`
@@ -13,6 +15,9 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   echo = TRUE,
+  dev = "tiff",
+  dev.args = list(compression="lzw"),
+  dpi = 300,
   fig.path = "RP_ITS_Images/"
 )
 
@@ -1901,7 +1906,7 @@ outcomes_predictions_tidy_2_ic <- outcomes_predictions_tidy_2_ic %>% left_join(y
 # Position for intervention line on plot - halfway between two months
 intervention_month <- year_month %>% filter(id_time == 42) %>% pull(year_month) + 15
 
-outcomes_predictions_tidy_2_ic %>% ggplot(aes(x = year_month)) + geom_point(aes(y = actual)) + geom_line(aes(y = prediction)) + facet_grid(rows = vars(measure_type), cols = vars(site), scales = "free") +
+outcomes_predictions_tidy_2_ic %>% ggplot(aes(x = year_month)) + geom_point(aes(y = actual)) + geom_line(aes(y = prediction)) + facet_grid(rows = vars(measure_type), cols = vars(site), scales = "free_y") +
   ylim(0, NA) +
   theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1)) +
