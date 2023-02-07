@@ -45,6 +45,46 @@ library(magrittr)
 library(pglm)
 library(lme4)
 library(tidyverse)
+library(lmerTest)
+```
+
+```{r results-table-fn}
+lmer_results_table <- function(model) {
+  
+  if(class(model) == "glmmTMB") {
+    
+    coefs <- coef(summary(model))$cond
+    confints <- confint(model, method = "uniroot")
+    
+  } else {
+    
+    if(FALSE) {
+      coefs <- coef(summary(as(model, "merModLmerTest")))
+    } else {
+      coefs <- coef(summary(model))
+    }
+    confints <- confint(model)
+  }
+  coefs_rownames <- rownames(coefs)
+  pretable <- tibble::as_tibble(coefs) %>%
+    mutate(coeff = coefs_rownames)
+
+  confints_rownames <- rownames(confints)
+  confints <- tibble::as_tibble(confints) %>% 
+    mutate(coeff = confints_rownames)
+
+  results_table <- confints %>%
+    select(coeff, "2.5 %", "97.5 %") %>% 
+    left_join(pretable, by = c("coeff" = "coeff")) %>% 
+    select(coeff, Estimate, ci_low = "2.5 %", ci_high = "97.5 %", everything()) %>% 
+    mutate(Estimate = exp(Estimate),
+           ci_low = exp(ci_low),
+           ci_high = exp(ci_high))
+  
+  return(results_table)
+}
+
+
 ```
 
 
@@ -196,6 +236,10 @@ overdisp_fun(hf_read7_all_nc_model_glmer)
 
 # Display IRRs
 knitr::kable(exp(fixef(hf_read7_all_nc_model_glmer)), col.names = c("IRR"))
+
+#read7_nc_results_table <- lmer_results_table(hf_read7_all_nc_model_glmer)
+
+#knitr::kable(read7_nc_results_table)
 ```
 
 ```{r read7-all-nocont-tmb, warning=FALSE, message=FALSE}
@@ -221,6 +265,8 @@ overdisp_fun(hf_read7_all_nc_model_glmmTMB)
 
 # Display IRRs
 knitr::kable(exp(fixef(hf_read7_all_nc_model_glmmTMB)$cond), col.names = c("IRR"))
+
+confint(hf_read7_all_nc_model_glmmTMB, method = "profile")
 ```
 
 
@@ -327,6 +373,10 @@ overdisp_fun(hf_read30_all_nc_model_glmer)
 
 # Display IRRs
 knitr::kable(exp(fixef(hf_read30_all_nc_model_glmer)), col.names = c("IRR"))
+
+#read30_nc_results_table <- lmer_results_table(hf_read30_all_nc_model_glmer)
+
+#knitr::kable(read30_nc_results_table)
 ```
 
 ```{r read30-all-nocont-tmb, warning=FALSE, message=FALSE}
@@ -341,7 +391,7 @@ hf_read30_all_nc_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmissio
                                                   month_5 + month_6 + month_7 + month_8 +
                                                   month_9 + month_10 + month_11 +
                                                   (1 | pseudoid),
-                                                hf_any_data_oc_nc,
+                                                hf_any_data_oc_nc %>% select(-imd_q),
                                                 family = poisson(link = "log")#,
                                                 #control=glmerControl(optimizer="bobyqa")
                                                 )
@@ -352,6 +402,10 @@ overdisp_fun(hf_read30_all_nc_model_glmmTMB)
 
 # Display IRRs
 knitr::kable(exp(fixef(hf_read30_all_nc_model_glmmTMB)$cond), col.names = c("IRR"))
+
+read30_nc_results_table <- lmer_results_table(hf_read30_all_nc_model_glmmTMB)
+
+knitr::kable(read30_nc_results_table)
 ```
 
 ### Plot model predictions for averaged covariates as linear trends, along with the data
@@ -430,6 +484,10 @@ overdisp_fun(hf_read90_all_nc_model_glmer)
 
 # Display IRRs
 knitr::kable(exp(fixef(hf_read90_all_nc_model_glmer)), col.names = c("IRR"))
+
+#read90_nc_results_table <- lmer_results_table(hf_read90_all_nc_model_glmer)
+
+#knitr::kable(read90_nc_results_table)
 ```
 
 ```{r read90-all-nocont-tmb, warning=FALSE, message=FALSE}
@@ -455,6 +513,12 @@ overdisp_fun(hf_read90_all_nc_model_glmmTMB)
 
 # Display IRRs
 knitr::kable(exp(fixef(hf_read90_all_nc_model_glmmTMB)$cond), col.names = c("IRR"))
+
+#confint(hf_read90_all_nc_model_glmmTMB, method = "profile")
+
+read90_nc_results_table <- lmer_results_table(hf_read90_all_nc_model_glmmTMB)
+
+knitr::kable(read90_nc_results_table)
 ```
 
 ### Plot model predictions for averaged covariates as linear trends, along with the data
@@ -780,6 +844,93 @@ los_acts_preds %>% select(id_time, los_tot, act_los, pred_out_los) %>%
   ggplot2::geom_point(ggplot2::aes(y=act_los), colour = "black")
 
 ```
+
+\newpage
+## logLOS with HF as any diagnosis, no control *********************************************************
+
+```{r loglos-nocont, warning=FALSE, message=FALSE}
+
+
+# Create a dataset of all spells with HF diagnosis in any position, just for NPH,
+# encode sex and non_white as dummy variables,
+# set the count of number of spells to 1 for each row
+hf_any_data_oc_nc <- hf_its_data %>% filter(wardsite == "NPH", HF_any == 1) %>%
+  mutate(sexM = if_else(sex=="M",1,0),
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+                )
+
+
+hf_any_data_oc_nc_ll <- hf_any_data_oc_nc %>%
+  mutate(los_dd = log(los_dd))
+
+data_new_ll <- data_new %>%
+  mutate(los_dd = log(los_dd))
+
+# Mixed-effects linear model: random effects for pseudoid
+hf_los_log_nc_model_lmer <- lmer(los_dd ~ X_t + X_x + X_x_t +
+                                       sexM + non_white1 +
+                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                       month_9 + month_10 + month_11 +
+                                       (1 | pseudoid),
+                                     hf_any_data_oc_nc_ll)
+
+summary(hf_los_log_nc_model_lmer)
+
+
+# Display coefficients
+knitr::kable(fixef(hf_los_log_nc_model_lmer), col.names = c("coeffs"))
+
+loglos_nc_results_table <- lmer_results_table(hf_los_log_nc_model_lmer)
+
+knitr::kable(loglos_nc_results_table)
+```
+
+
+### Plot model predictions for averaged covariates as linear trends, along with the data
+```{r plot-loglos-nc}
+# Run model predictions on this averaged data
+prediction_output_los_log <- predict(hf_los_log_nc_model_lmer,
+                                     newdata = data_new %>% select(-los_dd),
+                                     type = "response",
+                                     allow.new.levels = TRUE,
+                                     re.form=~0)
+
+# Add the predicted outcomes as a column to the averaged dataset,
+# and summarise this data by month.
+# Create a new column for the actual monthly readmission rate
+los_acts_preds <- data_new_ll %>%
+  cbind(prediction_output_los) %>%
+  group_by(id_time) %>%
+  summarise(los_tot = sum(los_dd),
+            total_HF = n(),
+            pred_out_los = mean(prediction_output_los)) %>%
+  mutate(act_los = los_tot/total_HF)
+
+# Plot the chart
+los_acts_preds %>% select(id_time, los_tot, act_los, pred_out_los) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=exp(pred_out_los)), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=exp(act_los)), colour = "black")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \newpage
 ## Facet plot
 
@@ -1588,6 +1739,51 @@ read7_acts_preds %>% select(id_time, X_z, allcausereadmission_7, act_rate, pred_
   facet_grid(rows = vars(X_z))
 
 ```
+```{r}
+# qqnorm(resid(hf_read7_all_model_glmer))
+# qqline(resid(hf_read7_all_model_glmer))
+
+library(DHARMa)
+hf_read7_simOut <- simulateResiduals(fittedModel = hf_read7_all_model_glmer,
+                                     plot = FALSE)
+plot(hf_read7_simOut)
+testOutliers(hf_read7_simOut, type = "bootstrap")
+```
+
+```{r}
+plotResiduals(simulationOutput = hf_read7_simOut, form = hf_any_data_oc$ln_age)
+```
+#### 7-day readmissions - age not logged
+
+```{r read7-all-age-nl}
+# Mixed-effects poisson model: random effects for pseudoid
+hf_read7_all_model_glmer_agenl <- glmer(as.integer(allcausereadmission_7) ~ offset(log(total_HF)) + 
+                                    X_t + X_x + X_x_t + X_z + X_z_t + X_z_x + X_z_x_t +
+                                    sexM + non_white1 +
+                                    exp(ln_age) + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                    month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                    month_9 + month_10 + month_11 +
+                                    (1 | pseudoid),
+                                  hf_any_data_oc,
+                                  family = poisson(link = "log"),
+                                  control=glmerControl(optimizer="bobyqa"),
+                                  nAGQ = 14
+                                  )
+
+summary(hf_read7_all_model_glmer_agenl)
+
+overdisp_fun(hf_read7_all_model_glmer_agenl)
+
+# Display IRRs
+knitr::kable(exp(fixef(hf_read7_all_model_glmer_agenl)), col.names = c("IRR"))
+```
+
+```{r}
+hf_read7_simOut_agenl <- simulateResiduals(fittedModel = hf_read7_all_model_glmer_agenl,
+                                     plot = FALSE)
+plot(hf_read7_simOut_agenl)
+testOutliers(hf_read7_simOut_agenl, type = "bootstrap")
+```
 
 ## 30-day readmissions
 
@@ -1795,6 +1991,113 @@ los_acts_preds %>% select(id_time, X_z, los_tot, act_los, pred_out_los) %>%
   facet_grid(rows = vars(X_z))
 
 ```
+### Model fit
+```{r qq-plot-los-ic}
+qqnorm(resid(hf_los_model_lmer))
+qqline(resid(hf_los_model_lmer))
+```
+```{r}
+plot(hf_los_model_lmer)
+```
+
+
+### Loglos
+```{r los-log, warning=FALSE, message=FALSE}
+hf_any_data_oc_ll <- hf_any_data_oc %>%
+  mutate(los_dd = log(los_dd))
+
+data_new_ll <- data_new %>%
+  mutate(los_dd = log(los_dd))
+
+
+# Mixed-effects linear model: random effects for pseudoid
+hf_los_log_model_lmer <- lmer(los_dd ~ 
+                            X_t + X_x + X_x_t + X_z + X_z_t + X_z_x + X_z_x_t +
+                            sexM + non_white1 +
+                            ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                            month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                            month_9 + month_10 + month_11 +
+                            (1 | pseudoid),
+                          hf_any_data_oc_ll)
+
+summary(hf_los_log_model_lmer)
+
+
+# Display coefficients
+#knitr::kable(fixef(hf_los_log_model_lmer), col.names = c("coeffs"))
+knitr::kable(exp(fixef(hf_los_log_model_lmer)), col.names = c("exp_coeffs"))
+```
+
+```{r los-log-model-out}
+los_log_table <- lmer_results_table(hf_los_log_model_lmer)
+knitr::kable(los_log_table)
+```
+```{r}
+(los_log_table %>% filter(coeff == "X_t") %>% pull(Estimate)) * (los_log_table %>% filter(coeff == "X_x_t") %>% pull(Estimate))
+```
+```{r}
+(los_log_table %>% filter(coeff == "X_z_t") %>% pull(Estimate)) * (los_log_table %>% filter(coeff == "X_z_x_t") %>% pull(Estimate))
+```
+
+```{r}
+(los_log_table %>% filter(coeff == "X_t") %>% pull(Estimate)) * (los_log_table %>% filter(coeff == "X_z_t") %>% pull(Estimate))
+```
+
+```{r}
+(los_log_table %>% filter(coeff == "X_x_t") %>% pull(Estimate)) * (los_log_table %>% filter(coeff == "X_z_x_t") %>% pull(Estimate))
+```
+```{r}
+(los_log_table %>% filter(coeff == "X_t") %>% pull(Estimate)) * (los_log_table %>% filter(coeff == "X_z_t") %>% pull(Estimate))*(los_log_table %>% filter(coeff == "X_x_t") %>% pull(Estimate)) * (los_log_table %>% filter(coeff == "X_z_x_t") %>% pull(Estimate))
+```
+
+```{r}
+(los_log_table %>% filter(coeff == "X_t") %>% pull(Estimate)) * (los_log_table %>% filter(coeff == "X_x_t") %>% pull(Estimate))*(los_log_table %>% filter(coeff == "X_z_t") %>% pull(Estimate)) * (los_log_table %>% filter(coeff == "X_z_x_t") %>% pull(Estimate))
+```
+
+### Model fit loglos
+```{r qq-plot-loglos-ic}
+qqnorm(resid(hf_los_log_model_lmer))
+qqline(resid(hf_los_log_model_lmer))
+```
+```{r}
+plot(hf_los_log_model_lmer)
+```
+```{r plot-loglos-ic}
+# Run model predictions on the averaged data
+prediction_output_los_log <- predict(hf_los_log_model_lmer,
+                                     newdata = data_new_ll %>% select(-los_dd),
+                                     type = "response",
+                                     allow.new.levels = TRUE,
+                                     re.form=~0)
+
+prediction_output_los_log <- prediction_output_los_log
+
+# Add the predicted outcomes as a column to the averaged dataset,
+# and summarise this data by month.
+# Create a new column for the actual monthly los
+los_acts_preds_log <- data_new_ll %>%
+  cbind(prediction_output_los_log) %>%
+  group_by(id_time, X_z) %>%
+  summarise(los_tot = sum(los_dd),
+            total_HF = n(),
+            pred_out_los = mean(prediction_output_los_log)) %>%
+  mutate(act_los = los_tot/total_HF)
+
+# loglos
+los_acts_preds_log %>% select(id_time, X_z, los_tot, act_los, pred_out_los) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=pred_out_los), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=act_los), colour = "black") +
+  facet_grid(rows = vars(X_z))
+
+# Plot the chart los
+los_acts_preds_log %>% select(id_time, X_z, los_tot, act_los, pred_out_los) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=exp(pred_out_los)), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=exp(act_los)), colour = "black") +
+  facet_grid(rows = vars(X_z))
+
+```
 
 \newpage
 ## Mortality, following discharge with HF as any diagnosis, with ward 5 (Other) merged with 4 (Medicine)
@@ -1862,7 +2165,8 @@ outcome_predictions_ic <- read7_acts_preds %>% ungroup() %>% rename (act_rate_7d
             by = c("id_time" = "id_time", "X_z" = "X_z")) %>%
   left_join(death_acts_preds_wm %>% ungroup() %>% select(-total_HF) %>% rename(act_rate_death = act_rate),
             by = c("id_time" = "id_time", "X_z" = "X_z")) %>%
-  left_join(los_acts_preds %>% ungroup() %>% select(-total_HF),
+  left_join(los_acts_preds_log %>% ungroup() %>% select(-total_HF) %>%
+              mutate(pred_out_los = exp(pred_out_los), act_los = exp(act_los)),
             by = c("id_time" = "id_time", "X_z" = "X_z"))
 
 outcome_predictions_ic <- outcome_predictions_ic %>% 
