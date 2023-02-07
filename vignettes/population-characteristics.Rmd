@@ -13,7 +13,11 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  echo = FALSE
+  echo = FALSE,
+  dev = "tiff",
+  dev.args = list(compression="lzw"),
+  dpi = 300,
+  fig.path = "RP_ITS_Images/"
 )
 ```
 
@@ -560,6 +564,19 @@ HF_spells %>% mutate(`Month of Discharge` = floor_date(CSPDischargeTime, 'month'
                 linetype=4, colour="black")
 ```
 
+```{r bundles-only-month, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=TRUE}
+HF_spells %>% mutate(`Month of Discharge` = floor_date(CSPDischargeTime, 'month')) %>%
+  filter(HF.any.code == TRUE) %>%
+  group_by(`Month of Discharge`) %>%
+  summarize(`Heart Failure as Any Diagnosis Code` = n(), `Heart Failure as Primary Diagnosis` = sum(Heart.Failure.Episode), `Care Bundles Administered` = sum(bundle)) %>% gather(key = "Measure", value = "Count", -`Month of Discharge`) %>%
+  filter(Measure == "Care Bundles Administered",
+         `Month of Discharge` >= as.POSIXct("2015-06-15 00:00:00", tz = "Europe/London")) %>%
+  ggplot(mapping = aes(x = `Month of Discharge`, y = Count, colour = Measure)) + geom_line() + geom_point() +
+  labs(title = 'Number of Care Bundles Administered per Month',
+    subtitle = 'Northwick Park Hospital, monthly June 2015 to July 2017 ', ylab = 'Number of care bundles administered',
+    xlab = 'Month of discharge') 
+```
+
 ```{r bundles-compliance, echo=FALSE, results='asis', fig.height=5, fig.width=7, cache=TRUE, include=TRUE}
 #TODO: Exclude BNP below X and with echo in prev. 3 months.
 #Probably need to split echo compliance into those who'd had one <6months and those having new one within 48h.
@@ -818,3 +835,16 @@ HF_spells %>% mutate(yearMonth = floor_date(CSPDischargeTime, 'month')) %>%
   geom_vline(aes(xintercept = as.POSIXct("2015-06-15 00:00:00", tz = "Europe/London")),
                 linetype=4, colour="black")
 ```
+
+```{r num_bundles}
+HF_spells_included <- HF_spells %>% mutate(`Month of Discharge` = floor_date(CSPDischargeTime, 'month')) %>%
+  filter(HF.any.code == TRUE) %>%
+  group_by(`Month of Discharge`) %>%
+  summarize(`Heart Failure as Any Diagnosis Code` = n(), `Heart Failure as Primary Diagnosis` = sum(Heart.Failure.Episode), `Care Bundles Administered` = sum(bundle)) %>% gather(key = "Measure", value = "Count", -`Month of Discharge`) %>%
+  filter(Measure == "Care Bundles Administered",
+         `Month of Discharge` >= as.POSIXct("2015-06-15 00:00:00", tz = "Europe/London"))
+
+HF_spells_included %>% summarise(total = sum(Count))
+
+```
+
