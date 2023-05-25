@@ -10,15 +10,17 @@ library(tidyverse)
 ```{r sim-data}
 set.seed(1235L)
 
+actual_slope_ratio <- 0.94
+
 timeseries_count_data <- tibble(
   month = seq.Date(from = as.Date("2021-01-01"),
                    to = as.Date("2022-12-01"),
                    by = "month"),
   num_pop = rpois(24L, lambda = 5000),
   month_no = c(1L:24L),
-  intervention = rep(c(0L,1L), each = 12L),
-  linpred = -3.5 + 0.02*month_no + 1*intervention -
-    0.06 * intervention * month_no + log(num_pop),
+  intervention = rep(c(0L,1L), times = c(13L, 11L)),
+  linpred = -3.5 + 0.02*month_no + 1*intervention +
+    log(actual_slope_ratio) * intervention * month_no + log(num_pop),
   y = rpois(24L, lambda = exp(linpred)))
 ```
 
@@ -30,6 +32,12 @@ glm1 <- glm(y ~ month_no * intervention,
 
 summary(glm1)
 ```
+
+```{r}
+exp(confint(glm1))
+exp(coefficients(glm1)["month_no:intervention"])
+```
+
 
 ```{r}
 # Create new dataset with averaged values of covariates
@@ -117,58 +125,25 @@ ggplot(data = spline_basis_df,
        aes(x = x, y = value, colour = name)) +
   geom_line()
 ```
-```{r}
-source("../R/spline_utils.R")
-```
 
 ```{r}
-RSPP <- RegSplineAsPiecePoly(glm1_spline, "bs(month_no, knots = c(13), degree = 1)")
+library(multcomp)
 
-RSPP
-```
+### define coefficients of linear function directly
+K <- matrix(c(0, -24/143, 1/11), nrow = 1L, ncol = 3L)
+#rownames(K) <- names(coef(lmod))[-1]
+K
 
-```{r}
-piecewise_poly <- function(x) {
-  pp <- dplyr::case_when(x < 13 ~ 0.04145432*(x-1),
-                   TRUE ~ 0.49745189 + (-0.02081199)*(x-13)
-                   )
-  pp <- pp + 5.027143
-  return(pp)
-}
+### set up general linear hypothesis
+glht_logslopediff <- glht(glm1_spline, linfct = K)
+summary(glht_logslopediff)
 
-aps2 <- acts_preds_spline %>%
-  mutate(pp = piecewise_poly(month_no))
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+exp(glht_logslopediff_ci$confint)
 ```
 
 
-
-
-
-
-```{r}
-# Working out why RegSplineAsPiecePoly isn't working for glm model
-# See https://github.com/ZheyuanLi/SplinesUtils/issues/3
-# NO assign element of glm model (cf lm model)
-# In lm models assign says which term of the model each column of the
-# model/design matrix came from (see ?model.matrix)
-
-# RegModel <- glm1_spline
-# SplineTerm <- "bs(month_no, knots = c(13), degree = 1)"
-# 
-# RegSpline <- ExtractSplineTerm(terms(RegModel), SplineTerm)
-
-#pos <- RegSpline$pos
-
-#RegSplineCoef <- with(RegModel, coefficients[assign == pos])
-
-# rmcoeffs <- RegModel$coefficients
-# 
-# rmcoeffs
-
-# terms(RegModel)
-# RegSplineCoef <- with(RegModel, coefficients[assign == pos])
-
-# str(RegModel)
-```
 
 
