@@ -1,0 +1,174 @@
+---
+title: "Linear splines in interrupted time series analysis"
+output: html_notebook
+---
+
+```{r libs}
+library(tidyverse)
+```
+
+```{r sim-data}
+set.seed(1235L)
+
+timeseries_count_data <- tibble(
+  month = seq.Date(from = as.Date("2021-01-01"),
+                   to = as.Date("2022-12-01"),
+                   by = "month"),
+  num_pop = rpois(24L, lambda = 5000),
+  month_no = c(1L:24L),
+  intervention = rep(c(0L,1L), each = 12L),
+  linpred = -3.5 + 0.02*month_no + 1*intervention -
+    0.06 * intervention * month_no + log(num_pop),
+  y = rpois(24L, lambda = exp(linpred)))
+```
+
+```{r fit-model}
+glm1 <- glm(y ~ month_no * intervention,
+            data = timeseries_count_data,
+            offset = log(num_pop),
+            family = poisson(link = "log"))
+
+summary(glm1)
+```
+
+```{r}
+# Create new dataset with averaged values of covariates
+data_new <- timeseries_count_data %>%
+  group_by(intervention) %>%
+  mutate(num_pop = mean(num_pop)) %>%
+  ungroup()
+```
+
+```{r}
+# Run model predictions on this averaged data
+prediction_output <- predict(glm1,
+                             newdata = data_new %>% select(-linpred, -y),
+                             type = "response",
+                             allow.new.levels = TRUE)
+```
+
+```{r}
+# Add the predicted outcomes as a column to the averaged dataset
+acts_preds <- data_new %>%
+  cbind(prediction_output)
+```
+
+```{r}
+acts_preds %>% select(month_no,
+                      y,
+                      prediction_output) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=month_no)) +
+  ggplot2::geom_line(ggplot2::aes(y=prediction_output), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=y), colour = "black")
+```
+
+# Spline regression
+
+```{r fit-spline-model}
+library(splines)
+
+glm1_spline <- glm(y ~ bs(month_no,
+                          knots = c(13),
+                          degree = 1L),
+            data = timeseries_count_data,
+            offset = log(num_pop),
+            family = poisson(link = "log")
+            )
+
+summary(glm1_spline)
+```
+
+
+```{r}
+# Run model predictions on this averaged data
+prediction_output_spline <- predict(glm1_spline,
+                             newdata = data_new %>% select(-linpred, -y),
+                             type = "response",
+                             allow.new.levels = TRUE)
+```
+
+```{r}
+# Add the predicted outcomes as a column to the averaged dataset
+acts_preds_spline <- data_new %>%
+  cbind(prediction_output_spline)
+```
+
+```{r}
+acts_preds_spline %>% select(month_no,
+                      y,
+                      prediction_output_spline) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=month_no)) +
+  ggplot2::geom_line(ggplot2::aes(y=prediction_output_spline), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=y), colour = "black")
+```
+
+
+```{r}
+spline_basis <- bs(timeseries_count_data$month_no,
+                   knots = c(13),
+                   degree = 1L)
+
+spline_basis_df <- as_tibble(spline_basis) %>%
+  mutate(x = row_number()) %>%
+  pivot_longer(cols = c(`1`,`2`)) %>% 
+  mutate(value = as.numeric(value))
+
+ggplot(data = spline_basis_df,
+       aes(x = x, y = value, colour = name)) +
+  geom_line()
+```
+```{r}
+source("../R/spline_utils.R")
+```
+
+```{r}
+RSPP <- RegSplineAsPiecePoly(glm1_spline, "bs(month_no, knots = c(13), degree = 1)")
+
+RSPP
+```
+
+```{r}
+piecewise_poly <- function(x) {
+  pp <- dplyr::case_when(x < 13 ~ 0.04145432*(x-1),
+                   TRUE ~ 0.49745189 + (-0.02081199)*(x-13)
+                   )
+  pp <- pp + 5.027143
+  return(pp)
+}
+
+aps2 <- acts_preds_spline %>%
+  mutate(pp = piecewise_poly(month_no))
+```
+
+
+
+
+
+
+```{r}
+# Working out why RegSplineAsPiecePoly isn't working for glm model
+# See https://github.com/ZheyuanLi/SplinesUtils/issues/3
+# NO assign element of glm model (cf lm model)
+# In lm models assign says which term of the model each column of the
+# model/design matrix came from (see ?model.matrix)
+
+# RegModel <- glm1_spline
+# SplineTerm <- "bs(month_no, knots = c(13), degree = 1)"
+# 
+# RegSpline <- ExtractSplineTerm(terms(RegModel), SplineTerm)
+
+#pos <- RegSpline$pos
+
+#RegSplineCoef <- with(RegModel, coefficients[assign == pos])
+
+# rmcoeffs <- RegModel$coefficients
+# 
+# rmcoeffs
+
+# terms(RegModel)
+# RegSplineCoef <- with(RegModel, coefficients[assign == pos])
+
+# str(RegModel)
+```
+
+
