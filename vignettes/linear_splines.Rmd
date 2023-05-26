@@ -7,6 +7,11 @@ output: html_notebook
 library(tidyverse)
 ```
 
+```{r source}
+source(file.path("..", "R", "spline_helpers.R"))
+```
+
+
 ```{r sim-data}
 set.seed(1235L)
 
@@ -18,7 +23,7 @@ timeseries_count_data <- tibble(
                    by = "month"),
   num_pop = rpois(24L, lambda = 5000),
   month_no = c(1L:24L),
-  intervention = rep(c(0L,1L), times = c(13L, 11L)),
+  intervention = rep(c(0L,1L), times = c(12L, 12L)),
   linpred = -3.5 + 0.02*month_no + 1*intervention +
     log(actual_slope_ratio) * intervention * month_no + log(num_pop),
   y = rpois(24L, lambda = exp(linpred)))
@@ -76,7 +81,7 @@ acts_preds %>% select(month_no,
 library(splines)
 
 glm1_spline <- glm(y ~ bs(month_no,
-                          knots = c(13),
+                          knots = c(12),
                           degree = 1L),
             data = timeseries_count_data,
             offset = log(num_pop),
@@ -113,12 +118,12 @@ acts_preds_spline %>% select(month_no,
 
 ```{r}
 spline_basis <- bs(timeseries_count_data$month_no,
-                   knots = c(13),
+                   knots = c(12),
                    degree = 1L)
 
 spline_basis_df <- as_tibble(spline_basis) %>%
   mutate(x = row_number()) %>%
-  pivot_longer(cols = c(`1`,`2`)) %>% 
+  pivot_longer(cols = -x) %>% 
   mutate(value = as.numeric(value))
 
 ggplot(data = spline_basis_df,
@@ -127,12 +132,38 @@ ggplot(data = spline_basis_df,
 ```
 
 ```{r}
-library(multcomp)
+bsfns <- get_basis_functions_for_linear_spline_with_one_knot(spline_basis)
 
-### define coefficients of linear function directly
-K <- matrix(c(0, -24/143, 1/11), nrow = 1L, ncol = 3L)
-#rownames(K) <- names(coef(lmod))[-1]
+bsfns
+
+# We can also get the y = alpha + beta * x form of the linear predictor in
+# each of the two regions (left and right of the knot)
+
+coefs <- coefficients(glm1_spline)
+names(coefs) <- NULL
+
+alpha <- coefs[1]
+beta1 <- coefs[2]
+beta2 <- coefs[3]
+
+lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
+                                        beta2 = beta2,
+                                        alpha = alpha,
+                                        basis_functions = bsfns,
+                                        intercept = TRUE)
+
+lp
+```
+
+
+```{r}
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis)
+
 K
+```
+
+```{r}
+library(multcomp)
 
 ### set up general linear hypothesis
 glht_logslopediff <- glht(glm1_spline, linfct = K)
