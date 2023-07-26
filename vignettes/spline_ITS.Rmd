@@ -466,7 +466,7 @@ simulationOutput_nb <- simulateResiduals(fittedModel = hf_read7_all_nc_model_glm
 
 ```{r}
 inf1 <- influence(hf_read7_all_nc_model_glmer_spline,
-                  maxfun = 20,
+                  maxfun = 100,
                   do.coef = FALSE)
 ```
 
