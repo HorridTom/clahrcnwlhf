@@ -3,6 +3,7 @@ title: "Spline Interrupted Time Series Analysis"
 author: "Tom Woodcock"
 date: "`r Sys.Date()`"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 ---
@@ -89,9 +90,76 @@ lmer_results_table <- function(model) {
   
   return(results_table)
 }
-
-
 ```
+
+```{r plot-its-fn}
+plot_its <- function(model,
+                     model_data,
+                     add_term = TRUE,
+                     distinct_periods = FALSE,
+                     average_covariates = TRUE) {
+  
+  # Create new dataset with averaged values of all covariates
+  data_new <- if(distinct_periods) {
+    model_data %>%
+      group_by(X_x) } else {
+        model_data
+      }
+    
+  if(average_covariates) {
+    data_new <- data_new %>%
+    mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+           ln_age = mean(ln_age),
+           month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+           month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+           month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+           month_10 = mean(month_10), month_11 = mean(month_11),
+           ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
+           ward_5 = mean(ward_5))
+  }
+  
+  data_new <- data_new %>% ungroup()
+  
+  sigma <- as.data.frame(VarCorr(model))[1, "sdcor"]
+  
+  term <- if(add_term) {0.5*sigma^2} else {0}
+  
+  # Run model predictions on this averaged data
+  prediction_output <- predict(model,
+                               newdata = data_new,
+                               type = "link",
+                               allow.new.levels = TRUE,
+                               re.form=~0
+  ) + term
+  
+  # Add the predicted outcomes as a column to the averaged dataset,
+  # and summarise this data by month.
+  # Create a new column for the actual monthly readmission rate
+  acts_preds_raw <- data_new %>%
+    cbind(prediction_output)
+  
+  outcome <- all.vars(formula(model))[1]
+  
+  acts_preds <- acts_preds_raw %>% 
+    group_by(id_time) %>%
+    summarise(act = sum(.data[[outcome]]),
+              total_HF = n(),
+              pred = sum(exp(prediction_output))) %>%
+    mutate(act_rate = act/total_HF,
+           pred_rate = pred/total_HF
+    )
+  
+  # Plot the chart
+  plt <- acts_preds %>%
+    select(id_time, act_rate, pred_rate) %>%
+    ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+    ggplot2::geom_line(ggplot2::aes(y=pred_rate), colour = "blue") +
+    ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
+  
+  return(plt)
+}
+```
+
 
 
 ```{r load-data}
@@ -172,21 +240,8 @@ table(hf_any_data_oc_nc$X_t >= intervention_X_t, hf_any_data_oc_nc$X_x , useNA =
 ```
 
 
-```{r read7-all-nocont}
-# Mixed-effects poisson model: random effects for pseudoid
-hf_read7_all_nc_model_glmer <- glmer(as.integer(allcausereadmission_7) ~ offset(log(total_HF)) + X_t + X_x + X_x_t +
-                                       sexM + non_white1 +
-                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
-                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
-                                       month_9 + month_10 + month_11 +
-                                       (1 | pseudoid),
-                                     hf_any_data_oc_nc,
-                                     family = poisson(link = "log"),
-                                     control=glmerControl(optimizer="bobyqa"))
+```{r overdispersion-fn}
 
-summary(hf_read7_all_nc_model_glmer)
-
-# Check dispersion
 overdisp_fun <- function(model) {
     rdf <- df.residual(model)
     rp <- residuals(model,type="pearson")
@@ -196,113 +251,8 @@ overdisp_fun <- function(model) {
     c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
 }
 
-overdisp_fun(hf_read7_all_nc_model_glmer)
-
-# Display IRRs
-knitr::kable(exp(fixef(hf_read7_all_nc_model_glmer)), col.names = c("IRR"))
-
-#read7_nc_results_table <- lmer_results_table(hf_read7_all_nc_model_glmer)
-
-#knitr::kable(read7_nc_results_table)
 ```
 
-```{r read7-all-nocont-tmb, warning=FALSE, message=FALSE}
-
-# Mixed-effects poisson model: random effects for pseudoid
-hf_read7_all_nc_model_glmmTMB <- glmmTMB::glmmTMB(as.integer(allcausereadmission_7) ~
-                                                  offset(log(total_HF)) +
-                                                  X_t + X_x + X_x_t +
-                                                  sexM + non_white1 +
-                                                  ln_age + ward_2 + ward_3 + ward_4 + ward_5 + 
-                                                  month_1 + month_2 + month_3 + month_4 +
-                                                  month_5 + month_6 + month_7 + month_8 +
-                                                  month_9 + month_10 + month_11 +
-                                                  (1 | pseudoid),
-                                                hf_any_data_oc_nc,
-                                                family = poisson(link = "log")#,
-                                                #control=glmerControl(optimizer="bobyqa")
-                                                )
-
-summary(hf_read7_all_nc_model_glmmTMB)
-
-overdisp_fun(hf_read7_all_nc_model_glmmTMB)
-
-# Display IRRs
-knitr::kable(exp(fixef(hf_read7_all_nc_model_glmmTMB)$cond), col.names = c("IRR"))
-
-#confint(hf_read7_all_nc_model_glmmTMB, method = "profile")
-```
-
-```{r plot-7read-tmb}
-# Make a copy of the data
-covariates_data_any_oc_nc <- hf_any_data_oc_nc
-
-# Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
-         ln_age = mean(ln_age),
-         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
-         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
-         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
-         month_10 = mean(month_10), month_11 = mean(month_11),
-         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
-         ward_5 = mean(ward_5)) %>%
-  ungroup()
-
-# Run model predictions on this averaged data
-prediction_output_7d <- predict(hf_read7_all_nc_model_glmmTMB,
-                                newdata = data_new %>%
-                                  select(-allcausereadmission_7),
-                                type = "response",
-                                allow.new.levels = TRUE,
-                                re.form=~0)
-
-# Add the predicted outcomes as a column to the averaged dataset,
-# and summarise this data by month.
-# Create a new column for the actual monthly readmission rate
-read7_acts_preds <- data_new %>% cbind(prediction_output_7d) %>% group_by(id_time) %>% summarise(allcausereadmission_7 = sum(allcausereadmission_7), total_HF = n(), pred_out_7d = mean(prediction_output_7d)) %>% mutate(act_rate = allcausereadmission_7/total_HF)
-
-# Plot the chart
-read7_acts_preds %>% select(id_time, allcausereadmission_7, act_rate, pred_out_7d) %>% 
-  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
-  ggplot2::geom_line(ggplot2::aes(y=pred_out_7d), colour = "blue") +
-  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
-
-```
-
-
-### Plot model predictions for averaged covariates as linear trends, along with the data
-```{r plot-7read}
-# Make a copy of the data
-covariates_data_any_oc_nc <- hf_any_data_oc_nc
-
-# Create new dataset with averaged values of all covariates
-data_new <- covariates_data_any_oc_nc %>% group_by(X_x) %>%
-  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
-         ln_age = mean(ln_age),
-         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
-         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
-         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
-         month_10 = mean(month_10), month_11 = mean(month_11),
-         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
-         ward_5 = mean(ward_5)) %>%
-  ungroup()
-
-# Run model predictions on this averaged data
-prediction_output_7d <- predict(hf_read7_all_nc_model_glmer, newdata = data_new %>% select(-allcausereadmission_7), type = "response", allow.new.levels = TRUE, re.form=~0)
-
-# Add the predicted outcomes as a column to the averaged dataset,
-# and summarise this data by month.
-# Create a new column for the actual monthly readmission rate
-read7_acts_preds <- data_new %>% cbind(prediction_output_7d) %>% group_by(id_time) %>% summarise(allcausereadmission_7 = sum(allcausereadmission_7), total_HF = n(), pred_out_7d = mean(prediction_output_7d)) %>% mutate(act_rate = allcausereadmission_7/total_HF)
-
-# Plot the chart
-read7_acts_preds %>% select(id_time, allcausereadmission_7, act_rate, pred_out_7d) %>% 
-  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
-  ggplot2::geom_line(ggplot2::aes(y=pred_out_7d), colour = "blue") +
-  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
-
-```
 
 ```{r fit-spline-model}
 library(splines2)
@@ -325,8 +275,44 @@ hf_read7_all_nc_model_glmer_spline <- glmer(allcausereadmission_7 ~ offset(log(t
 summary(hf_read7_all_nc_model_glmer_spline)
 ```
 
-```{r fit-spline-model-nb}
-hf_read7_all_nc_model_glmer_spline_nb <- glmer.nb(allcausereadmission_7 ~ offset(log(total_HF)) +
+```{r fit-glm-spline-model}
+# hf_read7_all_nc_model_glm_spline <- glm(allcausereadmission_7 ~ offset(log(total_HF)) +
+#                                               splines2::bSpline(X_t,
+#                                                           knots = c(3.56262),
+#                                                           degree = 1) + 
+#                                               sexM + non_white1 +
+#                                               ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+#                                               month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+#                                               month_9 + month_10 + month_11,
+#                                             data = hf_any_data_oc_nc,
+#                                             family = poisson(link = "log"))
+# 
+# 
+# summary(hf_read7_all_nc_model_glm_spline)
+```
+
+```{r plot-7read-splines}
+plot_its(hf_read7_all_nc_model_glmer_spline,
+         hf_any_data_oc_nc)
+```
+
+
+
+```{r}
+# library(DHARMa)
+# 
+# simulationOutput <- simulateResiduals(fittedModel = hf_read7_all_nc_model_glmer_spline,
+#                                       plot = F)
+
+```
+
+
+
+## 30-day all cause readmission rate, following discharge with HF as any diagnosis, no control
+
+```{r fit-spline-model-30}
+
+hf_read30_all_nc_model_glmer_spline <- glmer(allcausereadmission_30 ~ offset(log(total_HF)) +
                                               splines2::bSpline(X_t,
                                                           knots = c(3.56262),
                                                           degree = 1) + 
@@ -335,18 +321,120 @@ hf_read7_all_nc_model_glmer_spline_nb <- glmer.nb(allcausereadmission_7 ~ offset
                                               month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
                                               month_9 + month_10 + month_11 +
                                               (1 | pseudoid),
-                                            data = hf_any_data_oc_nc,
-                                            control = glmerControl(optimizer="bobyqa",
-                                                                   optCtrl = list(maxfun = 1e5))
+                                            data = hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_30_day),
+                                            family = poisson(link = "log"),
+                                            control = glmerControl(optimizer="bobyqa")
 )
 
-summary(hf_read7_all_nc_model_glmer_spline_nb)
+
+summary(hf_read30_all_nc_model_glmer_spline)
 ```
 
-```{r plot-7read-splines}
+
+```{r plot-30read-splines}
+plot_its(hf_read30_all_nc_model_glmer_spline,
+         hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_30_day),
+         add_term = TRUE,
+         distinct_periods = FALSE,
+         average_covariates = TRUE)
+```
+
+## 90-day all cause readmission rate, following discharge with HF as any diagnosis, no control
+
+```{r fit-spline-model-90}
+
+hf_read90_all_nc_model_glmer_spline <- glmer(allcausereadmission_90 ~ offset(log(total_HF)) +
+                                              splines2::bSpline(X_t,
+                                                          knots = c(3.56262),
+                                                          degree = 1) + 
+                                              sexM + non_white1 +
+                                              ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                              month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                              month_9 + month_10 + month_11 +
+                                              (1 | pseudoid),
+                                            data = hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_90_day),
+                                            family = poisson(link = "log"),
+                                            control = glmerControl(optimizer="bobyqa")
+)
+
+
+summary(hf_read90_all_nc_model_glmer_spline)
+```
+
+
+```{r plot-90read-splines}
+plot_its(hf_read90_all_nc_model_glmer_spline,
+         hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_90_day),
+         add_term = TRUE,
+         distinct_periods = FALSE,
+         average_covariates = TRUE)
+```
+
+# Mortality
+
+```{r mort-wm-oc, warning=TRUE, message=TRUE}
+hf_any_data_oc_wm <- hf_any_data_oc_nc %>%
+  mutate(ward_4 = if_else(ward_5 == max(ward_5), max(ward_4), ward_4))
+
+death_model_glm_wm_spline <- glm(as.integer(death) ~ offset(log(total_HF)) +
+                            splines2::bSpline(X_t,
+                                              knots = c(3.56262),
+                                              degree = 1)
+                          +
+                            sexM + non_white1 + ln_age +
+                            ward_2 + ward_3 + ward_4 +
+                            month_1 + month_2 + month_3 + month_4 + month_5 + month_6 +
+                            month_7 + month_8 + month_9 + month_10 + month_11,
+                          hf_any_data_oc_wm,
+                          family = poisson(link = "log"))
+
+summary(death_model_glm_wm_spline)
+summary(death_model_glm_wm_spline)$dispersion
+overdisp_fun(death_model_glm_wm_spline)
+
+knitr::kable(Epi::ci.lin(death_model_glm_wm_spline, Exp=T))
+```
+
+```{r plot-death-wm-oc-spline}
+covariates_data_any_oc_wm <- hf_any_data_oc_wm
+
 # Create new dataset with averaged values of all covariates
-data_new <- hf_any_data_oc_nc %>%
-  group_by(X_x) %>%
+data_new_wm <- covariates_data_any_oc_wm %>%
+  #group_by(X_x) %>%
+  mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
+         ln_age = mean(ln_age),
+         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
+         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
+         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
+         month_10 = mean(month_10), month_11 = mean(month_11),
+         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4)) %>%
+  ungroup()
+
+prediction_output_death_wm <- predict(death_model_glm_wm_spline,
+                                      type = "response",
+                                      data_new_wm %>% select(-death))
+
+death_acts_preds_wm <- data_new_wm %>%
+  cbind(prediction_output_death_wm) %>%
+  group_by(id_time, X_z) %>%
+  summarise(death = sum(death),
+            total_HF = n(),
+            pred_out_death = mean(prediction_output_death_wm)) %>%
+  mutate(act_rate = death/total_HF)
+
+# Plot the chart
+death_acts_preds_wm %>% select(id_time, X_z, death, act_rate, pred_out_death) %>% 
+  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
+  ggplot2::geom_line(ggplot2::aes(y=pred_out_death), colour = "blue") + 
+  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
+```
+
+### Loglos
+```{r los-log, warning=FALSE, message=FALSE}
+hf_any_data_oc_nc_ll <- hf_any_data_oc_nc %>%
+  mutate(los_dd = log(los_dd))
+
+data_new <- hf_any_data_oc_nc %>% group_by(X_x, X_z) %>%
   mutate(sexM = mean(sexM), non_white1 = mean(non_white1), total_HF = mean(total_HF),
          ln_age = mean(ln_age),
          month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
@@ -357,312 +445,61 @@ data_new <- hf_any_data_oc_nc %>%
          ward_5 = mean(ward_5)) %>%
   ungroup()
 
-# Run model predictions on this averaged data
-prediction_output_7d_splines <- predict(hf_read7_all_nc_model_glmer_spline,
-                                        newdata = data_new, #%>%
-                                          #dplyr::select(-allcausereadmission_7),
-                                        type = "response",
-                                        allow.new.levels = TRUE,
-                                        re.form=~0
-                                        )
 
-# prediction_output_7d_splines <- merTools::predictInterval(hf_read7_all_nc_model_glmer_spline,
-#                                                           newdata = data_new,
-#                                                           n.sims = 2000,
-#                                                           stat = "mean",
-#                                                           type = "linear.prediction"#,
-#                                                           #allow.new.levels = TRUE,
-#                                                           #re.form=~0
-#                                          )
+data_new_ll <- data_new %>%
+  mutate(los_dd = log(los_dd))
+
+
+# Mixed-effects linear model: random effects for pseudoid
+hf_los_log_model_lmer_spline <- lmer(los_dd ~ splines2::bSpline(X_t,
+                                                         knots = c(3.56262),
+                                                         degree = 1) +
+                                sexM + non_white1 +
+                                ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                month_9 + month_10 + month_11 +
+                                (1 | pseudoid),
+                              hf_any_data_oc_nc_ll)
+
+summary(hf_los_log_model_lmer_spline)
+
+
+# Display coefficients
+#knitr::kable(fixef(hf_los_log_model_lmer), col.names = c("coeffs"))
+knitr::kable(exp(fixef(hf_los_log_model_lmer_spline)), col.names = c("exp_coeffs"))
+```
+
+
+```{r plot-loglos-ic}
+# Run model predictions on the averaged data
+prediction_output_los_log <- predict(hf_los_log_model_lmer_spline,
+                                     newdata = data_new_ll %>% select(-los_dd),
+                                     type = "response",
+                                     allow.new.levels = TRUE,
+                                     re.form=~0)
 
 
 # Add the predicted outcomes as a column to the averaged dataset,
 # and summarise this data by month.
-# Create a new column for the actual monthly readmission rate
-read7_acts_preds_splines <- data_new %>%
-  cbind(prediction_output_7d_splines) %>%
-  group_by(id_time) %>%
-  summarise(allcausereadmission_7 = sum(allcausereadmission_7),
+# Create a new column for the actual monthly los
+los_acts_preds_log <- data_new_ll %>%
+  cbind(prediction_output_los_log) %>%
+  group_by(id_time, X_z) %>%
+  summarise(los_tot = sum(los_dd),
             total_HF = n(),
-            pred_out_7d = sum(prediction_output_7d_splines)) %>%
-  mutate(act_rate = allcausereadmission_7/total_HF,
-         pred_out_7d = pred_out_7d/total_HF
-         )
+            pred_out_los = mean(prediction_output_los_log)) %>%
+  mutate(act_los = los_tot/total_HF)
 
-# Plot the chart
-read7_acts_preds_splines %>%
-  select(id_time, allcausereadmission_7, act_rate, pred_out_7d) %>%
+# loglos
+los_acts_preds_log %>% select(id_time, X_z, los_tot, act_los, pred_out_los) %>% 
   ggplot2::ggplot(ggplot2::aes(x=id_time)) +
-  ggplot2::geom_line(ggplot2::aes(y=pred_out_7d), colour = "blue") +
-  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
+  ggplot2::geom_line(ggplot2::aes(y=pred_out_los), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=act_los), colour = "black")
 
-```
-
-
-```{r}
-plot(effect("splines2::bSpline(X_t, knots = c(3.56262), degree = 1)",
-            partial.residuals=TRUE,
-            hf_read7_all_nc_model_glmer_spline))
-
-```
-
-```{r}
-library(ggeffects)
-
-dat1 <- ggpredict(hf_read7_all_nc_model_glmer_spline, "X_t")
-
-p1 <- ggplot(dat1, aes(x, predicted)) + 
-  geom_line() +
-  geom_point()
-
-p2 <- ggemmeans(hf_read7_all_nc_model_glmer_spline, "X_t [all]")
-
-p2p <- plot(p2, residuals = TRUE, residuals.line = TRUE) + ggplot2::ylim(-0.5,0.5)
-
-p2p
-```
-
-```{r}
-resids <- residualize_over_grid(grid = p2,
-                                model = hf_read7_all_nc_model_glmer_spline)
-
-resids_data <- data_new %>% 
-  cbind(resids$predicted) %>% 
-  select(id_time, resid = `resids$predicted`) %>% 
-  group_by(id_time) %>% 
-  summarise(med_resid = median(resid))
-  
-
-
-ps <- read7_acts_preds_splines %>%
-  cbind(p2$predicted) %>%
-  cbind(resids_data$med_resid) %>% 
-  select(id_time,
-         allcausereadmission_7,
-         act_rate,
-         pred_out_7d,
-         pred = `p2$predicted`,
-         med_resid = `resids_data$med_resid`) %>%
+# Plot the chart los
+los_acts_preds_log %>% select(id_time, X_z, los_tot, act_los, pred_out_los) %>% 
   ggplot2::ggplot(ggplot2::aes(x=id_time)) +
-  ggplot2::geom_line(ggplot2::aes(y=pred_out_7d), colour = "blue") +
-  ggplot2::geom_line(ggplot2::aes(y=pred), colour = "lightblue") +
-  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black") +
-  ggplot2::geom_point(ggplot2::aes(y=med_resid), colour = "grey50")
-
-ps
-```
-
-
-```{r}
-library(DHARMa)
-
-simulationOutput <- simulateResiduals(fittedModel = hf_read7_all_nc_model_glmer_spline,
-                                      plot = F)
-
-simulationOutput_nb <- simulateResiduals(fittedModel = hf_read7_all_nc_model_glmer_spline_nb,
-                                      plot = F)
-```
-
-
-```{r}
-inf1 <- influence(hf_read7_all_nc_model_glmer_spline,
-                  maxfun = 100,
-                  do.coef = FALSE)
-```
-
-
-
-
-
-```{r}
-spline_basis <- splines::bs(hf_any_data_oc_nc$X_t, knots = c(42), degree = 1L)
-
-spline_basis_df <- as_tibble(spline_basis) %>%
-  mutate(x = row_number())
-
-data_w_spl_b <- bind_cols(hf_any_data_oc_nc, spline_basis_df) %>% 
-  select(X_t, X_x, X_x_t, `1`, `2`, x) %>% 
-  pivot_longer(cols = c(`1`, `2`)) %>% 
-  mutate(value = as.numeric(value)) %>% 
-  rename(spline = name)
-
-consistency_check <- data_w_spl_b %>%
-  group_by(X_t, spline) %>% 
-  summarise(consistency = length(unique(value)) == 1L,
-            .groups = "drop") %>%
-  summarise(all(consistency))
-print(consistency_check)
-
-spline_basis_fns <- data_w_spl_b %>% 
-  group_by(X_t, spline) %>% 
-  summarise(spline_value = unique(value),
-            .groups = "drop")
-
-ggplot(data = spline_basis_fns,
-       aes(x = X_t, y = spline_value, colour = spline)) +
-  geom_line()
-```
-
-```{r}
-my_splines <- get_basis_functions_linear_one_knot_as_data_frame(1L, 42L, 67L) %>% 
-  pivot_longer(cols = -x) %>% 
-  rename(spline = name)
-
-spline_basis_fns <- spline_basis_fns %>% 
-  left_join(my_splines,
-            by = c("X_t" = "x", "spline" = "spline"))
-
-spline_check <- spline_basis_fns %>% 
-  summarise(spline_check = all.equal(spline_value, value))
-```
-
-```{r}
-data_with_spline_basis <- bind_cols(hf_any_data_oc_nc, spline_basis_df) %>% 
-  rename(s1 = `1`,
-         s2 = `2`) %>% 
-  mutate(s1 = as.numeric(utilities::rm.attr(s1)),
-         s2 = as.numeric(utilities::rm.attr(s2)))
-
-hf_read7_all_nc_model_glmer_spline2 <- glmer(allcausereadmission_7 ~ offset(log(total_HF)) +
-                                              s1 + s2 + 
-                                              sexM + non_white1 +
-                                              ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
-                                              month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
-                                              month_9 + month_10 + month_11 +
-                                              (1 | pseudoid),
-                                            data = data_with_spline_basis,
-                                            family = poisson(link = "log"),
-                                            control = glmerControl(optimizer="bobyqa")
-)
-
-summary(hf_read7_all_nc_model_glmer_spline2)
-```
-
-```{r plot-7read}
-# Create new dataset with averaged values of all covariates
-data_new <- data_with_spline_basis %>%
-  #group_by(X_x) %>%
-  mutate(sexM = mean(sexM),
-         non_white1 = mean(non_white1),
-         total_HF = mean(total_HF),
-         ln_age = mean(ln_age),
-         month_1 = mean(month_1), month_2 = mean(month_2), month_3 = mean(month_3),
-         month_4 = mean(month_4),month_5 = mean(month_5), month_6 = mean(month_6),
-         month_7 = mean(month_7), month_8 = mean(month_8), month_9 = mean(month_9),
-         month_10 = mean(month_10), month_11 = mean(month_11),
-         ward_2 = mean(ward_2), ward_3 = mean(ward_3), ward_4 = mean(ward_4),
-         ward_5 = mean(ward_5)) %>%
-  ungroup()
-
-# Run model predictions on this averaged data
-prediction_output_7d_splines2 <- predict(hf_read7_all_nc_model_glmer_spline2,
-                                         newdata = data_new %>%
-                                           select(total_HF,
-                                              s1, s2, 
-                                              sexM, non_white1,
-                                              ln_age, ward_2, ward_3, ward_4, ward_5, month_1, month_2,
-                                              month_3, month_4, month_5, month_6, month_7, month_8,
-                                              month_9, month_10, month_11,
-                                              pseudoid),
-                                         type = "response",
-                                         allow.new.levels = TRUE,
-                                         re.form=~0)
-
-# Add the predicted outcomes as a column to the averaged dataset,
-# and summarise this data by month.
-# Create a new column for the actual monthly readmission rate
-read7_acts_preds_splines2 <- data_new %>%
-  cbind(prediction_output_7d_splines2) %>%
-  group_by(id_time) %>%
-  summarise(allcausereadmission_7 = sum(allcausereadmission_7),
-            total_HF = n(),
-            pred_out_7d = mean(prediction_output_7d_splines2)) %>%
-  mutate(act_rate = allcausereadmission_7/total_HF)
-
-# Plot the chart
-read7_acts_preds_splines2 %>% select(id_time, allcausereadmission_7, act_rate, pred_out_7d) %>% 
-  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
-  ggplot2::geom_line(ggplot2::aes(y=pred_out_7d), colour = "blue") +
-  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
+  ggplot2::geom_line(ggplot2::aes(y=exp(pred_out_los)), colour = "blue") +
+  ggplot2::geom_point(ggplot2::aes(y=exp(act_los)), colour = "black")
 
 ```
-
-
-```{r}
-plot(effect("s1",
-            partial.residuals=TRUE,
-            hf_read7_all_nc_model_glmer_spline2))
-```
-
-```{r}
-plot(predictorEffect("s2", hf_read7_all_nc_model_glmer_spline2))
-```
-
-```{r}
-library(sjPlot)
-
-plot_model(hf_read7_all_nc_model_glmer_spline2, type = "pred", terms = "s2")
-```
-
-
-
-
-## 30-day all cause readmission rate, following discharge with HF as any diagnosis, no control
-
-```{r}
-hf_read30_all_nc_model_glmer_spline2 <- glmer(allcausereadmission_30 ~ offset(log(total_HF)) +
-                                              s1 + s2 + 
-                                              sexM + non_white1 +
-                                              ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
-                                              month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
-                                              month_9 + month_10 + month_11 +
-                                              (1 | pseudoid),
-                                            data = data_with_spline_basis,
-                                            family = poisson(link = "log"),
-                                            control = glmerControl(optimizer="bobyqa")
-)
-
-summary(hf_read30_all_nc_model_glmer_spline2)
-```
-
-
-```{r plot-30read}
-# Create new dataset with averaged values of all covariates
-
-# Run model predictions on this averaged data
-prediction_output_30d_splines2 <- predict(hf_read30_all_nc_model_glmer_spline2,
-                                         newdata = data_new %>%
-                                           select(total_HF,
-                                              s1, s2, 
-                                              sexM, non_white1,
-                                              ln_age, ward_2, ward_3, ward_4, ward_5, month_1, month_2,
-                                              month_3, month_4, month_5, month_6, month_7, month_8,
-                                              month_9, month_10, month_11,
-                                              pseudoid),
-                                         type = "response",
-                                         allow.new.levels = TRUE,
-                                         re.form=~0)
-
-# Add the predicted outcomes as a column to the averaged dataset,
-# and summarise this data by month.
-# Create a new column for the actual monthly readmission rate
-read30_acts_preds_splines2 <- data_new %>%
-  cbind(prediction_output_30d_splines2) %>%
-  group_by(id_time) %>%
-  summarise(allcausereadmission_30 = sum(allcausereadmission_30),
-            total_HF = n(),
-            pred_out_30d = mean(prediction_output_30d_splines2)) %>%
-  mutate(act_rate = allcausereadmission_30/total_HF)
-
-# Plot the chart
-read30_acts_preds_splines2 %>% select(id_time, allcausereadmission_30, act_rate, pred_out_30d) %>% 
-  ggplot2::ggplot(ggplot2::aes(x=id_time)) +
-  ggplot2::geom_line(ggplot2::aes(y=pred_out_30d), colour = "blue") +
-  ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
-
-```
-
-
-
-
-
