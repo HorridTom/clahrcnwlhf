@@ -58,6 +58,29 @@ get_basis_functions_for_linear_spline_with_one_knot <- function(spline_basis) {
 }
 
 
+get_basis_functions_linear_one_knot_as_data_frame <- function(x_min,
+                                                              x_knot,
+                                                              x_max) {
+  stopifnot(is.integer(x_min))
+  stopifnot(is.integer(x_max))
+
+  spline_basis <- tibble::tibble(x = c(x_min:x_max))
+
+  spline_basis <- spline_basis %>%
+    dplyr::mutate(`1` = case_when(x < x_min ~ NA_real_,
+                                 x >= x_min & x <= x_knot ~ (1/(x_knot - x_min))*x - (x_min/(x_knot - x_min)),
+                                 x > x_knot & x <= x_max ~ -(1/(x_max - x_knot))*x + (x_max/(x_max - x_knot)),
+                                 x > x_max ~ NA_real_
+                                 ),
+                  `2` = case_when(x < x_min ~ NA_real_,
+                                 x >= x_min & x <= x_knot ~ 0,
+                                 x > x_knot & x <= x_max ~ (1/(x_max - x_knot))*x - (x_knot/(x_max - x_knot))
+                                 )
+                  )
+
+  return(spline_basis)
+}
+
 expand_one_knot_spline_linear_predictor <- function(beta1,
                                                     beta2,
                                                     alpha,
@@ -101,3 +124,5 @@ get_linear_combination_for_difference_in_log_rr <- function(spline_basis) {
   return(K)
 
 }
+
+
