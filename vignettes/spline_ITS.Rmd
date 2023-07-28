@@ -3,23 +3,24 @@ title: "Spline Interrupted Time Series Analysis"
 author: "Tom Woodcock"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 Package repo commit: `r stringr::str_sub(system("git rev-parse HEAD", intern=TRUE), 1, 8)`
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  cache = TRUE,
+  cache = FALSE,
   collapse = TRUE,
   comment = "#>",
   echo = TRUE,
-  dev = "tiff",
-  dev.args = list(compression="lzw"),
+  dev = c("png", "tiff"),
+  dev.args = list(tiff = list(compression="lzw")),
   dpi = 300,
-  fig.path = "splines_ITS_Images/"
+  fig.path = "splines_ITS_Images/",
+  crop = NULL
 )
 ```
 
@@ -266,7 +267,7 @@ plot_its(hf_read90_all_nc_model_glmer_spline,
          all_preds = TRUE)
 ```
 
-# Mortality
+## Mortality
 
 ```{r mort-wm-oc, warning=TRUE, message=TRUE}
 hf_any_data_oc_wm <- hf_any_data_oc_nc %>%
@@ -300,7 +301,7 @@ plot_its(death_model_glm_wm_spline,
 ```
 
 
-### Loglos
+## Loglos
 ```{r los-log, warning=FALSE, message=FALSE}
 hf_any_data_oc_nc_ll <- hf_any_data_oc_nc %>%
   mutate(los_dd = log(los_dd))
@@ -328,6 +329,207 @@ knitr::kable(exp(fixef(hf_los_log_model_lmer_spline)), col.names = c("exp_coeffs
 ```{r plot-los-splines}
 plot_its(hf_los_log_model_lmer_spline,
          hf_any_data_oc_nc %>%
+           mutate(los_dd = log(los_dd)),
+         add_term = FALSE,
+         all_preds = TRUE,
+         los_model = TRUE)
+```
+
+# Ealing - Control
+
+## 7-day all cause readmission rate, following discharge with HF as any diagnosis,  control
+```{r data_prep-c, warning=FALSE, message=FALSE}
+
+
+# Create a dataset of all spells with HF diagnosis in any position, just for NPH,
+# encode sex and non_white as dummy variables,
+# set the count of number of spells to 1 for each row
+hf_any_data_oc_c <- hf_its_data %>% filter(wardsite == "EH", HF_any == 1) %>%
+  mutate(sexM = if_else(sex=="M",1,0),
+                non_white1 = if_else(non_white=="1",1,0)#,
+                #total_HF = 1
+         )
+
+hf_any_data_oc_c <- hf_any_data_oc_c %>% 
+  mutate(across(c(X_t, X_x, X_x_t, X_z, X_z_t, X_z_x, X_z_x_t,
+                  sexM, non_white1, ln_age, ward_2, ward_3, ward_4, ward_5,
+                  month_1, month_2, month_3, month_4, month_5, month_6, month_7,
+                  month_8, month_9, month_10, month_11),
+                ~ c(scale(.x, scale = FALSE)))) %>%
+  mutate(Xxt2 = X_x_t, Xzt2 = X_z_t, Xzx2 = X_z_x, Xzxt2 = X_z_x_t,
+         X_x_t = X_t * X_x,
+         X_z_t = X_t * X_z,
+         X_z_x = X_x * X_z,
+         X_z_x_t = X_t * X_x * X_z)
+
+
+
+```
+
+```{r}
+# Centering X_t shifts by 20.73428 + 28
+intervention_X_t <- 43 - (20.73428 + 28) + 0.5 # corresponds with original X_t = id_time = 42.5
+
+table(hf_any_data_oc_c$X_t >= intervention_X_t, hf_any_data_oc_c$X_x , useNA = "always")
+```
+
+```{r fit-spline-model-read7-c}
+hf_read7_all_c_model_glmer_spline <- glmer(allcausereadmission_7 ~ offset(log(total_HF)) +
+                                              splines2::bSpline(X_t,
+                                                          knots = c(-6.23428),
+                                                          degree = 1) + 
+                                              sexM + non_white1 +
+                                              ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                              month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                              month_9 + month_10 + month_11 +
+                                              (1 | pseudoid),
+                                            data = hf_any_data_oc_c,
+                                            family = poisson(link = "log"),
+                                            control = glmerControl(optimizer="bobyqa")
+)
+
+
+summary(hf_read7_all_c_model_glmer_spline)
+```
+
+```{r plot-7read-splines-c}
+plot_its(hf_read7_all_c_model_glmer_spline,
+         hf_any_data_oc_c,
+         all_preds = TRUE)
+```
+
+
+
+```{r}
+# simulationOutput <- simulateResiduals(fittedModel = hf_read7_all_nc_model_glmer_spline,
+#                                       plot = F)
+
+```
+
+
+
+## 30-day all cause readmission rate, following discharge with HF as any diagnosis, control
+
+```{r fit-spline-model-30-c}
+
+hf_read30_all_c_model_glmer_spline <- glmer(allcausereadmission_30 ~ offset(log(total_HF)) +
+                                              splines2::bSpline(X_t,
+                                                          knots = c(-6.23428),
+                                                          degree = 1) + 
+                                              sexM + non_white1 +
+                                              ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                              month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                              month_9 + month_10 + month_11 +
+                                              (1 | pseudoid),
+                                            data = hf_any_data_oc_c %>% filter(X_t <= 67 - trim_30_day),
+                                            family = poisson(link = "log"),
+                                            control = glmerControl(optimizer="bobyqa")
+)
+
+
+summary(hf_read30_all_c_model_glmer_spline)
+```
+
+
+```{r plot-30read-splines-c}
+plot_its(hf_read30_all_c_model_glmer_spline,
+         hf_any_data_oc_c %>% filter(X_t <= 67 - trim_30_day),
+         add_term = TRUE,
+         all_preds = TRUE)
+```
+
+## 90-day all cause readmission rate, following discharge with HF as any diagnosis, control
+
+```{r fit-spline-model-90-c}
+
+hf_read90_all_c_model_glmer_spline <- glmer(allcausereadmission_90 ~ offset(log(total_HF)) +
+                                              splines2::bSpline(X_t,
+                                                          knots = c(-6.23428),
+                                                          degree = 1) + 
+                                              sexM + non_white1 +
+                                              ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                              month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                              month_9 + month_10 + month_11 +
+                                              (1 | pseudoid),
+                                            data = hf_any_data_oc_c %>% filter(X_t <= 67 - trim_90_day),
+                                            family = poisson(link = "log"),
+                                            control = glmerControl(optimizer="bobyqa")
+)
+
+
+summary(hf_read90_all_c_model_glmer_spline)
+```
+
+
+```{r plot-90read-splines-c}
+plot_its(hf_read90_all_c_model_glmer_spline,
+         hf_any_data_oc_c %>% filter(X_t <= 67 - trim_90_day),
+         add_term = TRUE,
+         all_preds = TRUE)
+```
+
+## Mortality
+
+```{r mort-wm-oc-c, warning=TRUE, message=TRUE}
+hf_any_data_oc_wm_c <- hf_any_data_oc_c %>%
+  mutate(ward_4 = if_else(ward_5 == max(ward_5), max(ward_4), ward_4))
+
+death_model_glm_wm_spline_c <- glm(as.integer(death) ~ offset(log(total_HF)) +
+                            splines2::bSpline(X_t,
+                                              knots = c(-6.23428),
+                                              degree = 1)
+                          +
+                            sexM + non_white1 + ln_age +
+                            ward_2 + ward_3 + ward_4 +
+                            month_1 + month_2 + month_3 + month_4 + month_5 + month_6 +
+                            month_7 + month_8 + month_9 + month_10 + month_11,
+                          hf_any_data_oc_wm_c,
+                          family = poisson(link = "log"))
+
+summary(death_model_glm_wm_spline_c)
+summary(death_model_glm_wm_spline_c)$dispersion
+overdisp_fun(death_model_glm_wm_spline_c)
+
+knitr::kable(Epi::ci.lin(death_model_glm_wm_spline_c, Exp=T))
+```
+
+
+```{r plot-death-splines-c}
+plot_its(death_model_glm_wm_spline_c,
+         hf_any_data_oc_c %>% filter(X_t <= 67 - trim_90_day),
+         add_term = FALSE,
+         all_preds = TRUE)
+```
+
+
+## Loglos
+```{r los-log-c, warning=FALSE, message=FALSE}
+hf_any_data_oc_c_ll <- hf_any_data_oc_c %>%
+  mutate(los_dd = log(los_dd))
+
+# Mixed-effects linear model: random effects for pseudoid
+hf_los_log_model_lmer_spline_c <- lmer(los_dd ~ splines2::bSpline(X_t,
+                                                                knots = c(-6.23428),
+                                                                degree = 1) +
+                                       sexM + non_white1 +
+                                       ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
+                                       month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
+                                       month_9 + month_10 + month_11 +
+                                       (1 | pseudoid),
+                                     hf_any_data_oc_c_ll)
+
+summary(hf_los_log_model_lmer_spline_c)
+
+
+# Display coefficients
+#knitr::kable(fixef(hf_los_log_model_lmer), col.names = c("coeffs"))
+knitr::kable(exp(fixef(hf_los_log_model_lmer_spline_c)), col.names = c("exp_coeffs"))
+```
+
+
+```{r plot-los-splines-c}
+plot_its(hf_los_log_model_lmer_spline_c,
+         hf_any_data_oc_c %>%
            mutate(los_dd = log(los_dd)),
          add_term = FALSE,
          all_preds = TRUE,
