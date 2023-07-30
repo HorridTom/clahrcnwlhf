@@ -136,6 +136,13 @@ bsfns <- get_basis_functions_for_linear_spline_with_one_knot(spline_basis)
 
 bsfns
 
+xt_vals <- timeseries_count_data %>% distinct(month_no) %>% arrange(month_no) %>% mutate(x = row_number()) %>% rename(X_t = month_no)
+
+
+bsfns2 <- get_spline_eqns(spline_basis, x_vals = xt_vals)
+
+all.equal(bsfns, bsfns2)
+
 # We can also get the y = alpha + beta * x form of the linear predictor in
 # each of the two regions (left and right of the knot)
 

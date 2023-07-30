@@ -1,5 +1,8 @@
 # Spline helper functions
 
+
+# This one only works for integer X... use get_spline_eqns below instead for
+# arbitrary X
 get_basis_functions_for_linear_spline_with_one_knot <- function(spline_basis) {
 
   knots <- attr(spline_basis, "knots")
@@ -112,9 +115,9 @@ expand_one_knot_spline_linear_predictor <- function(beta1,
 
 }
 
-get_linear_combination_for_difference_in_log_rr <- function(spline_basis) {
+get_linear_combination_for_difference_in_log_rr <- function(spline_basis, x_vals) {
 
-  basis_functions <- get_basis_functions_for_linear_spline_with_one_knot(spline_basis)
+  basis_functions <- get_spline_eqns(spline_basis, x_vals = x_vals)
 
   k1 = basis_functions[["1"]][["m2"]] - basis_functions[["1"]][["m1"]]
   k2 = basis_functions[["2"]][["m2"]] - basis_functions[["2"]][["m1"]]
@@ -124,5 +127,92 @@ get_linear_combination_for_difference_in_log_rr <- function(spline_basis) {
   return(K)
 
 }
+
+
+
+################################################################################
+
+get_mc <- function(x0, y0, x1, y1) {
+
+  m = (y1 - y0) / (x1 - x0)
+  c = y1 - m*x1
+
+  return(list(m = m, c = c))
+
+}
+
+get_spline_eqns <- function(spline_basis, x_vals) {
+
+  knot <- attr(spline_basis, "knots")
+  boundary_knots <- attr(spline_basis, "Boundary.knots")
+
+
+  spline_basis_df <- as_tibble(spline_basis) %>%
+    distinct() %>%
+    mutate(x = row_number()) %>%
+    pivot_longer(cols = -x) %>%
+    mutate(value = as.numeric(value)) %>%
+    left_join(x_vals, by = c("x" = "x"))
+
+  basis_fn_names <- spline_basis_df %>%
+    distinct(name) %>%
+    pull(name)
+
+  spline_basis_list <- list()
+
+  for(basis_fn_name in basis_fn_names) {
+    basis_fn_df <- spline_basis_df %>%
+      filter(name == basis_fn_name)
+
+    p01 <- basis_fn_df %>%
+      filter(X_t <= knot) %>%
+      slice_min(X_t)
+
+    x01 <- p01 %>% pull(X_t)
+    y01 <- p01 %>% pull(value)
+
+    p11 <- basis_fn_df %>%
+      filter(X_t <= knot) %>%
+      slice_max(X_t)
+
+    x11 <- p11 %>% pull(X_t)
+    y11 <- p11 %>% pull(value)
+
+    p02 <- basis_fn_df %>%
+      filter(X_t > knot) %>%
+      slice_min(X_t)
+
+    x02 <- p02 %>% pull(X_t)
+    y02 <- p02 %>% pull(value)
+
+    p12 <- basis_fn_df %>%
+      filter(X_t > knot) %>%
+      slice_max(X_t)
+
+    x12 <- p12 %>% pull(X_t)
+    y12 <- p12 %>% pull(value)
+
+    mc1 <- get_mc(x0 = x01, y0 = y01, x1 = x11, y1 = y11)
+    m1 <- mc1$m
+    c1 <- mc1$c
+
+    mc2 <- get_mc(x0 = x02, y0 = y02, x1 = x12, y1 = y12)
+    m2 <- mc2$m
+    c2 <- mc2$c
+
+    spline_basis_list <- append(spline_basis_list, list(list(m1 = m1,
+                                                             c1 = c1,
+                                                             m2 = m2,
+                                                             c2 = c2)))
+    names(spline_basis_list)[length(spline_basis_list)] <- as.character(basis_fn_name)
+
+  }
+
+
+
+  return(spline_basis_list)
+
+}
+
 
 
