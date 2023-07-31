@@ -31,6 +31,7 @@ library(lme4)
 library(tidyverse)
 library(lmerTest)
 library(effects)
+library(multcomp)
 ```
 
 ```{r source}
@@ -173,21 +174,6 @@ hf_read7_all_nc_model_glmer_spline <- glmer(allcausereadmission_7 ~ offset(log(t
 summary(hf_read7_all_nc_model_glmer_spline)
 ```
 
-```{r fit-glm-spline-model}
-# hf_read7_all_nc_model_glm_spline <- glm(allcausereadmission_7 ~ offset(log(total_HF)) +
-#                                               splines2::bSpline(X_t,
-#                                                           knots = c(3.56262),
-#                                                           degree = 1) + 
-#                                               sexM + non_white1 +
-#                                               ln_age + ward_2 + ward_3 + ward_4 + ward_5 + month_1 + month_2 +
-#                                               month_3 + month_4 + month_5 + month_6 + month_7 + month_8 +
-#                                               month_9 + month_10 + month_11,
-#                                             data = hf_any_data_oc_nc,
-#                                             family = poisson(link = "log"))
-# 
-# 
-# summary(hf_read7_all_nc_model_glm_spline)
-```
 
 ```{r plot-7read-splines}
 plot_its(hf_read7_all_nc_model_glmer_spline,
@@ -290,6 +276,59 @@ plot_its(hf_read30_all_nc_model_glmer_spline,
          all_preds = TRUE)
 ```
 
+```{r}
+spline_basis_read30 <- splines2::bSpline(hf_any_data_oc_nc$X_t,
+                                        knots = c(3.56262),
+                                        degree = 1)
+```
+
+```{r}
+xt_vals <- hf_any_data_oc_nc %>% distinct(X_t) %>% arrange(X_t) %>% mutate(x = row_number())
+
+bsfns <- get_spline_eqns(spline_basis_read30,
+                         x_vals = xt_vals)
+
+# We can also get the y = alpha + beta * x form of the linear predictor in
+# each of the two regions (left and right of the knot)
+
+coefs <-fixef(hf_read30_all_nc_model_glmer_spline)
+names(coefs) <- NULL
+
+alpha <- coefs[1]
+beta1 <- coefs[2]
+beta2 <- coefs[3]
+
+# Check from here.
+
+lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
+                                        beta2 = beta2,
+                                        alpha = alpha,
+                                        basis_functions = bsfns,
+                                        intercept = TRUE)
+
+lp
+```
+```{r}
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis_read30, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read30_all_nc_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+exp(glht_logslopediff_ci$confint)
+```
+
 ## 90-day all cause readmission rate, following discharge with HF as any diagnosis, no control
 
 ```{r fit-spline-model-90}
@@ -318,6 +357,59 @@ plot_its(hf_read90_all_nc_model_glmer_spline,
          hf_any_data_oc_nc %>% filter(X_t <= 67 - trim_90_day),
          add_term = TRUE,
          all_preds = TRUE)
+```
+
+```{r}
+spline_basis_read90 <- splines2::bSpline(hf_any_data_oc_nc$X_t,
+                                        knots = c(3.56262),
+                                        degree = 1)
+```
+
+```{r}
+xt_vals <- hf_any_data_oc_nc %>% distinct(X_t) %>% arrange(X_t) %>% mutate(x = row_number())
+
+bsfns <- get_spline_eqns(spline_basis_read90,
+                         x_vals = xt_vals)
+
+# We can also get the y = alpha + beta * x form of the linear predictor in
+# each of the two regions (left and right of the knot)
+
+coefs <-fixef(hf_read90_all_nc_model_glmer_spline)
+names(coefs) <- NULL
+
+alpha <- coefs[1]
+beta1 <- coefs[2]
+beta2 <- coefs[3]
+
+# Check from here.
+
+lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
+                                        beta2 = beta2,
+                                        alpha = alpha,
+                                        basis_functions = bsfns,
+                                        intercept = TRUE)
+
+lp
+```
+```{r}
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis_read90, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read90_all_nc_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+exp(glht_logslopediff_ci$confint)
 ```
 
 ## Mortality
@@ -353,6 +445,60 @@ plot_its(death_model_glm_wm_spline,
          all_preds = TRUE)
 ```
 
+```{r}
+spline_basis_death <- splines2::bSpline(hf_any_data_oc_wm$X_t,
+                                        knots = c(3.56262),
+                                        degree = 1)
+```
+
+```{r}
+xt_vals <- hf_any_data_oc_wm %>% distinct(X_t) %>% arrange(X_t) %>% mutate(x = row_number())
+
+bsfns <- get_spline_eqns(spline_basis_death,
+                         x_vals = xt_vals)
+
+# We can also get the y = alpha + beta * x form of the linear predictor in
+# each of the two regions (left and right of the knot)
+
+coefs <- coefficients(death_model_glm_wm_spline)
+names(coefs) <- NULL
+
+alpha <- coefs[1]
+beta1 <- coefs[2]
+beta2 <- coefs[3]
+
+# Check from here.
+
+lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
+                                        beta2 = beta2,
+                                        alpha = alpha,
+                                        basis_functions = bsfns,
+                                        intercept = TRUE)
+
+lp
+```
+```{r}
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis_death, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(death_model_glm_wm_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+exp(glht_logslopediff_ci$confint)
+```
+
+
 
 ## Loglos
 ```{r los-log, warning=FALSE, message=FALSE}
@@ -387,6 +533,75 @@ plot_its(hf_los_log_model_lmer_spline,
          all_preds = TRUE,
          los_model = TRUE)
 ```
+
+
+```{r}
+spline_basis_los <- splines2::bSpline(hf_any_data_oc_nc_ll$X_t,
+                                        knots = c(3.56262),
+                                        degree = 1)
+```
+
+```{r}
+xt_vals <- hf_any_data_oc_nc_ll %>% distinct(X_t) %>% arrange(X_t) %>% mutate(x = row_number())
+
+bsfns <- get_spline_eqns(spline_basis_los,
+                         x_vals = xt_vals)
+
+# We can also get the y = alpha + beta * x form of the linear predictor in
+# each of the two regions (left and right of the knot)
+
+coefs <-fixef(hf_los_log_model_lmer_spline)
+names(coefs) <- NULL
+
+alpha <- coefs[1]
+beta1 <- coefs[2]
+beta2 <- coefs[3]
+
+# Check from here.
+
+lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
+                                        beta2 = beta2,
+                                        alpha = alpha,
+                                        basis_functions = bsfns,
+                                        intercept = TRUE)
+
+lp
+```
+```{r}
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis_los, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_los_log_model_lmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+exp(glht_logslopediff_ci$confint)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Ealing - Control
 
@@ -451,6 +666,62 @@ plot_its(hf_read7_all_c_model_glmer_spline,
          all_preds = TRUE)
 ```
 
+```{r}
+spline_basis_read7c <- splines2::bSpline(hf_any_data_oc_c$X_t,
+                                        knots = c(-6.23428),
+                                        degree = 1)
+```
+
+```{r}
+xt_vals <- hf_any_data_oc_c %>% distinct(X_t) %>% arrange(X_t) %>% mutate(x = row_number())
+
+bsfns <- get_spline_eqns(spline_basis_read7c,
+                         x_vals = xt_vals)
+
+# We can also get the y = alpha + beta * x form of the linear predictor in
+# each of the two regions (left and right of the knot)
+
+coefs <-fixef(hf_read7_all_c_model_glmer_spline)
+names(coefs) <- NULL
+
+alpha <- coefs[1]
+beta1 <- coefs[2]
+beta2 <- coefs[3]
+
+# Check from here.
+
+lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
+                                        beta2 = beta2,
+                                        alpha = alpha,
+                                        basis_functions = bsfns,
+                                        intercept = TRUE)
+
+lp
+```
+```{r}
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis_read7c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+library(multcomp)
+
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read7_all_c_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+exp(glht_logslopediff_ci$confint)
+```
+
+
 
 
 ```{r}
@@ -491,6 +762,61 @@ plot_its(hf_read30_all_c_model_glmer_spline,
          all_preds = TRUE)
 ```
 
+```{r}
+spline_basis_read30c <- splines2::bSpline(hf_any_data_oc_c$X_t,
+                                        knots = c(-6.23428),
+                                        degree = 1)
+```
+
+```{r}
+xt_vals <- hf_any_data_oc_c %>% distinct(X_t) %>% arrange(X_t) %>% mutate(x = row_number())
+
+bsfns <- get_spline_eqns(spline_basis_read30c,
+                         x_vals = xt_vals)
+
+# We can also get the y = alpha + beta * x form of the linear predictor in
+# each of the two regions (left and right of the knot)
+
+coefs <-fixef(hf_read30_all_c_model_glmer_spline)
+names(coefs) <- NULL
+
+alpha <- coefs[1]
+beta1 <- coefs[2]
+beta2 <- coefs[3]
+
+# Check from here.
+
+lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
+                                        beta2 = beta2,
+                                        alpha = alpha,
+                                        basis_functions = bsfns,
+                                        intercept = TRUE)
+
+lp
+```
+```{r}
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis_read30c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+library(multcomp)
+
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read30_all_c_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+exp(glht_logslopediff_ci$confint)
+```
+
 ## 90-day all cause readmission rate, following discharge with HF as any diagnosis, control
 
 ```{r fit-spline-model-90-c}
@@ -519,6 +845,61 @@ plot_its(hf_read90_all_c_model_glmer_spline,
          hf_any_data_oc_c %>% filter(X_t <= 67 - trim_90_day),
          add_term = TRUE,
          all_preds = TRUE)
+```
+
+```{r}
+spline_basis_read90c <- splines2::bSpline(hf_any_data_oc_c$X_t,
+                                        knots = c(-6.23428),
+                                        degree = 1)
+```
+
+```{r}
+xt_vals <- hf_any_data_oc_c %>% distinct(X_t) %>% arrange(X_t) %>% mutate(x = row_number())
+
+bsfns <- get_spline_eqns(spline_basis_read90c,
+                         x_vals = xt_vals)
+
+# We can also get the y = alpha + beta * x form of the linear predictor in
+# each of the two regions (left and right of the knot)
+
+coefs <-fixef(hf_read90_all_c_model_glmer_spline)
+names(coefs) <- NULL
+
+alpha <- coefs[1]
+beta1 <- coefs[2]
+beta2 <- coefs[3]
+
+# Check from here.
+
+lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
+                                        beta2 = beta2,
+                                        alpha = alpha,
+                                        basis_functions = bsfns,
+                                        intercept = TRUE)
+
+lp
+```
+```{r}
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis_read90c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+library(multcomp)
+
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read90_all_c_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+exp(glht_logslopediff_ci$confint)
 ```
 
 ## Mortality
@@ -552,6 +933,59 @@ plot_its(death_model_glm_wm_spline_c,
          hf_any_data_oc_c %>% filter(X_t <= 67 - trim_90_day),
          add_term = FALSE,
          all_preds = TRUE)
+```
+
+```{r}
+spline_basis_death <- splines2::bSpline(hf_any_data_oc_wm_c$X_t,
+                                        knots = c(-6.23428),
+                                        degree = 1)
+```
+
+```{r}
+xt_vals <- hf_any_data_oc_wm_c %>% distinct(X_t) %>% arrange(X_t) %>% mutate(x = row_number())
+
+bsfns <- get_spline_eqns(spline_basis_death,
+                         x_vals = xt_vals)
+
+# We can also get the y = alpha + beta * x form of the linear predictor in
+# each of the two regions (left and right of the knot)
+
+coefs <- coefficients(death_model_glm_wm_spline_c)
+names(coefs) <- NULL
+
+alpha <- coefs[1]
+beta1 <- coefs[2]
+beta2 <- coefs[3]
+
+# Check from here.
+
+lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
+                                        beta2 = beta2,
+                                        alpha = alpha,
+                                        basis_functions = bsfns,
+                                        intercept = TRUE)
+
+lp
+```
+```{r}
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis_death, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(death_model_glm_wm_spline_c, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+exp(glht_logslopediff_ci$confint)
 ```
 
 
@@ -589,5 +1023,56 @@ plot_its(hf_los_log_model_lmer_spline_c,
          los_model = TRUE)
 ```
 
+```{r}
+spline_basis_los <- splines2::bSpline(hf_any_data_oc_c_ll$X_t,
+                                        knots = c(-6.23428),
+                                        degree = 1)
+```
 
+```{r}
+xt_vals <- hf_any_data_oc_c_ll %>% distinct(X_t) %>% arrange(X_t) %>% mutate(x = row_number())
+
+bsfns <- get_spline_eqns(spline_basis_los,
+                         x_vals = xt_vals)
+
+# We can also get the y = alpha + beta * x form of the linear predictor in
+# each of the two regions (left and right of the knot)
+
+coefs <-fixef(hf_los_log_model_lmer_spline_c)
+names(coefs) <- NULL
+
+alpha <- coefs[1]
+beta1 <- coefs[2]
+beta2 <- coefs[3]
+
+# Check from here.
+
+lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
+                                        beta2 = beta2,
+                                        alpha = alpha,
+                                        basis_functions = bsfns,
+                                        intercept = TRUE)
+
+lp
+```
+```{r}
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis_los, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_los_log_model_lmer_spline_c, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+exp(glht_logslopediff_ci$confint)
+```
 

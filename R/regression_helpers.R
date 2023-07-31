@@ -18,17 +18,17 @@ lmer_results_table <- function(model) {
   }
   coefs_rownames <- rownames(coefs)
   pretable <- tibble::as_tibble(coefs) %>%
-    mutate(coeff = coefs_rownames)
+    dplyr::mutate(coeff = coefs_rownames)
 
   confints_rownames <- rownames(confints)
   confints <- tibble::as_tibble(confints) %>%
-    mutate(coeff = confints_rownames)
+    dplyr::mutate(coeff = confints_rownames)
 
   results_table <- confints %>%
-    select(coeff, "2.5 %", "97.5 %") %>%
-    left_join(pretable, by = c("coeff" = "coeff")) %>%
-    select(coeff, Estimate, ci_low = "2.5 %", ci_high = "97.5 %", everything()) %>%
-    mutate(Estimate = exp(Estimate),
+    dplyr::select(coeff, "2.5 %", "97.5 %") %>%
+    dplyr::left_join(pretable, by = c("coeff" = "coeff")) %>%
+    dplyr::select(coeff, Estimate, ci_low = "2.5 %", ci_high = "97.5 %", everything()) %>%
+    dplyr::mutate(Estimate = exp(Estimate),
            ci_low = exp(ci_low),
            ci_high = exp(ci_high))
 
@@ -72,14 +72,15 @@ plot_its <- function(model,
                                                 distinct_periods = TRUE,
                                                 average_covariates = FALSE,
                                                 los_model = los_model)
+    #browser()
 
     acts_preds <- acts_preds_overall %>%
-      left_join(acts_preds_prepost %>%
-                  select(id_time,
+      dplyr::left_join(acts_preds_prepost %>%
+                  dplyr::select(id_time,
                          pred_rate_prepost = pred_rate),
                 by = c("id_time" = "id_time")) %>%
-      left_join(acts_preds_monthly %>%
-                  select(id_time,
+      dplyr::left_join(acts_preds_monthly %>%
+                  dplyr::select(id_time,
                          pred_rate_monthly = pred_rate),
                 by = c("id_time" = "id_time"))
   }
@@ -94,13 +95,13 @@ plot_its <- function(model,
   # Plot the chart
   if(!all_preds) {
     plt <- acts_preds %>%
-      select(id_time, act_rate, pred_rate) %>%
+      dplyr::select(id_time, act_rate, pred_rate) %>%
       ggplot2::ggplot(ggplot2::aes(x=id_time)) +
       ggplot2::geom_line(ggplot2::aes(y=pred_rate), colour = "blue") +
       ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
   } else {
     plt <- acts_preds %>%
-      select(id_time, act_rate, pred_rate, pred_rate_prepost, pred_rate_monthly) %>%
+      dplyr::select(id_time, act_rate, pred_rate, pred_rate_prepost, pred_rate_monthly) %>%
       ggplot2::ggplot(ggplot2::aes(x=id_time)) +
       ggplot2::geom_line(ggplot2::aes(y=pred_rate), colour = "cornflowerblue") +
       ggplot2::geom_line(ggplot2::aes(y=pred_rate_prepost), colour = "blue") +
