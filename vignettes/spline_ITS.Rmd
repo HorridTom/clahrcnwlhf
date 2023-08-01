@@ -1,6 +1,6 @@
 ---
 title: "Spline Interrupted Time Series Analysis"
-author: "Tom Woodcock"
+author: "-"
 date: "`r Sys.Date()`"
 output:
   pdf_document: default
@@ -85,11 +85,12 @@ hf_its_data <- hf_its_data %>% mutate(sex = factor(sex),
                                              non_white = factor(non_white))
 ```
 
-id_time = 43 or equivalently X_t = 43 is the first point in the intervention
-period, i.e. the first point where X_x = 1.
 
 ```{r sense-check, include=FALSE}
 hf_its_data <- hf_its_data %>% filter(wardsite != "CMH")
+
+# id_time = 43 or equivalently X_t = 43 is the first point in the intervention
+# period, i.e. the first point where X_x = 1.
 
 table(hf_its_data$id_time >= 43, hf_its_data$X_x , useNA = "always")
 
