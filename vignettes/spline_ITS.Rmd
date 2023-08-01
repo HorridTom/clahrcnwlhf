@@ -228,15 +228,6 @@ results <- results %>% mutate(outcome = "7d readmission", site = "Intervention",
 results
 ```
 
-```{r}
-# library(DHARMa)
-# 
-# simulationOutput <- simulateResiduals(fittedModel = hf_read7_all_nc_model_glmer_spline,
-#                                       plot = F)
-
-```
-
-
 
 ## 30-day all cause readmission rate, following discharge with HF as any diagnosis, no control
 
