@@ -1946,6 +1946,7 @@ acts_preds <- bind_rows(read7_acts_preds %>% mutate(outcome = "7d readmission (%
                                      "Length of stay (days)", "Mortality (%)"
                                      )))
 
+
 year_month <- seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "month")
 year_month <- tibble::tibble(year_month) %>% tibble::rowid_to_column(var = "id_time") 
 acts_preds <- acts_preds %>%
@@ -1971,9 +1972,7 @@ plt <- acts_preds %>%
   geom_vline(xintercept = intervention_month, linetype="dotted") +
   scale_x_date(breaks = seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "6 months"),
                labels = scales::date_format("%b %Y")) +
-  labs(title = "Figure 1: Interrupted Time Series Analysis of Heart Failure Admission Outcomes",
-       subtitle = "Time series with continuous time trends pre- and post-intervention",
-       x = "Time (months)", y = NULL)
+  labs(x = "Time (months)", y = NULL)
 
 plt
 ```
