@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
   cache = FALSE,
   collapse = TRUE,
   comment = "#>",
-  echo = TRUE,
+  echo = FALSE,
   dev = c("png", "tiff"),
   dev.args = list(tiff = list(compression="lzw")),
   dpi = 300,
@@ -29,7 +29,7 @@ conf.method <- "Wald" #"profile"
 ```
 
 
-```{r dependencies}
+```{r dependencies, include = FALSE}
 library(magrittr)
 library(pglm)
 library(lme4)
@@ -106,9 +106,9 @@ table(hf_its_data$id_time >= 43, hf_its_data$X_z_x_t , useNA = "always")
 ```
 
 
-# Northwick Park Outcomes
+# Intervention Site Outcome Analysis
 
-## 7-day all cause readmission rate, following discharge with HF as any diagnosis, no control
+## 7-day all cause readmission rate, no control
 ```{r data_prep, warning=FALSE, message=FALSE}
 
 
@@ -137,7 +137,7 @@ hf_any_data_oc_nc <- hf_any_data_oc_nc %>%
 
 ```
 
-```{r}
+```{r, include = FALSE}
 # Centering X_t shifts by -38.93738
 intervention_X_t <- 43 - 38.93738 - 0.5 # corresponds with original X_t = id_time = 42.5
 
@@ -313,7 +313,7 @@ results
 ```
 
 
-## 30-day all cause readmission rate, following discharge with HF as any diagnosis, no control
+## 30-day all cause readmission rate, no control
 
 ```{r fit-spline-model-30}
 
@@ -487,7 +487,7 @@ results
 ```
 
 
-## 90-day all cause readmission rate, following discharge with HF as any diagnosis, no control
+## 90-day all cause readmission rate, no control
 
 ```{r fit-spline-model-90}
 
@@ -1017,9 +1017,9 @@ results
 
 
 
-# Ealing - Control
+# Control Site Outcome Analysis
 
-## 7-day all cause readmission rate, following discharge with HF as any diagnosis,  control
+## 7-day all cause readmission rate, control
 ```{r data_prep-c, warning=FALSE, message=FALSE}
 
 
@@ -1048,7 +1048,7 @@ hf_any_data_oc_c <- hf_any_data_oc_c %>%
 
 ```
 
-```{r}
+```{r include = FALSE}
 # Centering X_t shifts by 20.73428 + 28
 intervention_X_t <- 43 - (20.73428 + 28) + 0.5 # corresponds with original X_t = id_time = 42.5
 
@@ -1225,7 +1225,7 @@ results
 ```
 
 
-## 30-day all cause readmission rate, following discharge with HF as any diagnosis, control
+## 30-day all cause readmission rate, control
 
 ```{r fit-spline-model-30-c}
 
@@ -1403,7 +1403,7 @@ results
 
 
 
-## 90-day all cause readmission rate, following discharge with HF as any diagnosis, control
+## 90-day all cause readmission rate, control
 
 ```{r fit-spline-model-90-c}
 
