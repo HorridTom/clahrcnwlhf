@@ -109,7 +109,7 @@ plot_its <- function(model,
       ggplot2::geom_point(ggplot2::aes(y=act_rate), colour = "black")
   }
 
-  return(plt)
+  return(list(plt = plt, acts_preds = acts_preds))
 }
 
 get_prediction_output <- function(model,
@@ -194,5 +194,15 @@ get_prediction_output <- function(model,
   }
   return(acts_preds)
 
+}
+
+
+overdisp_fun <- function(model) {
+  rdf <- df.residual(model)
+  rp <- residuals(model,type="pearson")
+  Pearson.chisq <- sum(rp^2)
+  prat <- Pearson.chisq/rdf
+  pval <- pchisq(Pearson.chisq, df=rdf, lower.tail=FALSE)
+  c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
 }
 
