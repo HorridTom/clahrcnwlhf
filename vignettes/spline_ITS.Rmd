@@ -166,7 +166,8 @@ broom.mixed::tidy(hf_read7_all_nc_model_glmer_spline,
                   conf.int=TRUE,
                   conf.method=conf.method,
                   exponentiate=TRUE,
-                  effects="fixed") %>% 
+                  effects="fixed") %>%
+  mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
   dplyr::select(-std.error, -statistic)
 ```
 
@@ -267,6 +268,7 @@ broom.mixed::tidy(hf_read30_all_nc_model_glmer_spline,
                   conf.method=conf.method,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
+  mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
   dplyr::select(-std.error, -statistic)
 ```
 
@@ -370,6 +372,7 @@ broom.mixed::tidy(hf_read90_all_nc_model_glmer_spline,
                   conf.method=conf.method,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
+  mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
   dplyr::select(-std.error, -statistic)
 ```
 
@@ -573,6 +576,7 @@ broom.mixed::tidy(hf_los_log_model_lmer_spline,
                   conf.method=conf.method,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
+  mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
   dplyr::select(-std.error, -statistic)
 ```
 
@@ -730,6 +734,7 @@ broom.mixed::tidy(hf_read7_all_c_model_glmer_spline,
                   conf.method=conf.method,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
+  mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
   dplyr::select(-std.error, -statistic)
 ```
 
@@ -844,6 +849,7 @@ broom.mixed::tidy(hf_read30_all_c_model_glmer_spline,
                   conf.method=conf.method,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
+  mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
   dplyr::select(-std.error, -statistic)
 ```
 
@@ -949,6 +955,7 @@ broom.mixed::tidy(hf_read90_all_c_model_glmer_spline,
                   conf.method=conf.method,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
+  mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
   dplyr::select(-std.error, -statistic)
 ```
 
@@ -1153,6 +1160,7 @@ broom.mixed::tidy(hf_los_log_model_lmer_spline_c,
                   conf.method=conf.method,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
+  mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
   dplyr::select(-std.error, -statistic)
 ```
 
