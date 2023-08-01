@@ -168,7 +168,8 @@ broom.mixed::tidy(hf_read7_all_nc_model_glmer_spline,
                   exponentiate=TRUE,
                   effects="fixed") %>%
   mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
-  dplyr::select(-std.error, -statistic)
+  dplyr::select(-std.error, -statistic) %>% 
+  knitr::kable()
 ```
 
 
@@ -182,6 +183,7 @@ read7_acts_preds <- read7_outputs$acts_preds
 read7_outputs$plt
 ```
 
+### Pre-post slope comparison
 ```{r}
 spline_basis_read7 <- splines2::bSpline(hf_any_data_oc_nc$X_t,
                                         knots = c(3.56262),
@@ -236,7 +238,76 @@ confint_read7_i <- exp(glht_logslopediff_ci$confint)
 
 pval_read7_i <- summary(glht_logslopediff)$test$pvalues[1]
 results <- as_tibble(confint_read7_i)
-results <- results %>% mutate(outcome = "7d readmission", site = "Intervention", pvalue = pval_read7_i)
+results <- results %>% mutate(outcome = "7d readmission",
+                              site = "Intervention",
+                              hypothesis = "prepost",
+                              pvalue = pval_read7_i)
+
+results
+```
+
+### Pre-slope
+```{r}
+K <- get_linear_combination_for_preslope(spline_basis_read7, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read7_all_nc_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read7_i_pre <- exp(glht_logslopediff_ci$confint)
+
+pval_read7_i_pre <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read7_i_pre))
+
+results[nrow(results), "outcome"] <- "7d readmission"
+results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "pre"
+results[nrow(results), "pvalue"] <- pval_read7_i_pre
+
+results
+```
+
+### Post-slope
+```{r}
+K <- get_linear_combination_for_postslope(spline_basis_read7, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read7_all_nc_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read7_i_post <- exp(glht_logslopediff_ci$confint)
+
+pval_read7_i_post <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read7_i_post))
+
+results[nrow(results), "outcome"] <- "7d readmission"
+results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "post"
+results[nrow(results), "pvalue"] <- pval_read7_i_post
 
 results
 ```
@@ -269,7 +340,8 @@ broom.mixed::tidy(hf_read30_all_nc_model_glmer_spline,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
   mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
-  dplyr::select(-std.error, -statistic)
+  dplyr::select(-std.error, -statistic) %>% 
+  knitr::kable()
 ```
 
 
@@ -284,6 +356,7 @@ read30_acts_preds <- read30_outputs$acts_preds
 read30_outputs$plt
 ```
 
+### Pre-post slope comparison
 ```{r}
 spline_basis_read30 <- splines2::bSpline(hf_any_data_oc_nc$X_t,
                                         knots = c(3.56262),
@@ -341,10 +414,78 @@ results <- results %>% bind_rows(as_tibble(confint_read30_i))
 
 results[nrow(results), "outcome"] <- "30d readmission"
 results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "prepost"
 results[nrow(results), "pvalue"] <- pval_read30_i
 
 results
 ```
+
+### Pre-slope
+```{r}
+K <- get_linear_combination_for_preslope(spline_basis_read30, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read30_all_nc_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read30_i_pre <- exp(glht_logslopediff_ci$confint)
+
+pval_read30_i_pre <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read30_i_pre))
+
+results[nrow(results), "outcome"] <- "30d readmission"
+results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "pre"
+results[nrow(results), "pvalue"] <- pval_read30_i_pre
+
+results
+```
+
+### Post-slope
+```{r}
+K <- get_linear_combination_for_postslope(spline_basis_read30, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read30_all_nc_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read30_i_post <- exp(glht_logslopediff_ci$confint)
+
+pval_read30_i_post <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read30_i_post))
+
+results[nrow(results), "outcome"] <- "30d readmission"
+results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "post"
+results[nrow(results), "pvalue"] <- pval_read30_i_post
+
+results
+```
+
 
 ## 90-day all cause readmission rate, following discharge with HF as any diagnosis, no control
 
@@ -373,7 +514,8 @@ broom.mixed::tidy(hf_read90_all_nc_model_glmer_spline,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
   mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
-  dplyr::select(-std.error, -statistic)
+  dplyr::select(-std.error, -statistic) %>% 
+  knitr::kable()
 ```
 
 
@@ -389,6 +531,7 @@ read90_acts_preds <- read90_outputs$acts_preds
 read90_outputs$plt
 ```
 
+### Pre-post slope comparison
 ```{r}
 spline_basis_read90 <- splines2::bSpline(hf_any_data_oc_nc$X_t,
                                         knots = c(3.56262),
@@ -446,10 +589,78 @@ results <- results %>% bind_rows(as_tibble(confint_read90_i))
 
 results[nrow(results), "outcome"] <- "90d readmission"
 results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "prepost"
 results[nrow(results), "pvalue"] <- pval_read90_i
 
 results
 ```
+
+### Pre-slope
+```{r}
+K <- get_linear_combination_for_preslope(spline_basis_read90, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read90_all_nc_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read90_i_pre <- exp(glht_logslopediff_ci$confint)
+
+pval_read90_i_pre <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read90_i_pre))
+
+results[nrow(results), "outcome"] <- "90d readmission"
+results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "pre"
+results[nrow(results), "pvalue"] <- pval_read90_i_pre
+
+results
+```
+
+### Post-slope
+```{r}
+K <- get_linear_combination_for_postslope(spline_basis_read90, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read90_all_nc_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read90_i_post <- exp(glht_logslopediff_ci$confint)
+
+pval_read90_i_post <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read90_i_post))
+
+results[nrow(results), "outcome"] <- "90d readmission"
+results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "post"
+results[nrow(results), "pvalue"] <- pval_read90_i_post
+
+results
+```
+
 
 ## Mortality
 
@@ -489,6 +700,7 @@ death_acts_preds <- death_outputs$acts_preds
 death_outputs$plt
 ```
 
+### Pre-post slope comparison
 ```{r}
 spline_basis_death <- splines2::bSpline(hf_any_data_oc_wm$X_t,
                                         knots = c(3.56262),
@@ -546,11 +758,77 @@ results <- results %>% bind_rows(as_tibble(confint_death_i))
 
 results[nrow(results), "outcome"] <- "Mortality"
 results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "prepost"
 results[nrow(results), "pvalue"] <- pval_death_i
 
 results
 ```
 
+### Pre-slope
+```{r}
+K <- get_linear_combination_for_preslope(spline_basis_death, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(death_model_glm_wm_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_death_i_pre <- exp(glht_logslopediff_ci$confint)
+
+pval_death_i_pre <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_death_i_pre))
+
+results[nrow(results), "outcome"] <- "Mortality"
+results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "pre"
+results[nrow(results), "pvalue"] <- pval_death_i_pre
+
+results
+```
+
+### Post-slope
+```{r}
+K <- get_linear_combination_for_postslope(spline_basis_death, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(death_model_glm_wm_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_death_i_post <- exp(glht_logslopediff_ci$confint)
+
+pval_death_i_post <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_death_i_post))
+
+results[nrow(results), "outcome"] <- "Mortality"
+results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "post"
+results[nrow(results), "pvalue"] <- pval_death_i_post
+
+results
+```
 
 
 ## Loglos
@@ -577,7 +855,8 @@ broom.mixed::tidy(hf_los_log_model_lmer_spline,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
   mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
-  dplyr::select(-std.error, -statistic)
+  dplyr::select(-std.error, -statistic) %>% 
+  knitr::kable()
 ```
 
 
@@ -595,7 +874,7 @@ los_acts_preds <- los_outputs$acts_preds
 los_outputs$plt
 ```
 
-
+### Pre-post slope comparison
 ```{r}
 spline_basis_los <- splines2::bSpline(hf_any_data_oc_nc_ll$X_t,
                                         knots = c(3.56262),
@@ -653,12 +932,77 @@ results <- results %>% bind_rows(as_tibble(confint_los_i))
 
 results[nrow(results), "outcome"] <- "Length of stay"
 results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "prepost"
 results[nrow(results), "pvalue"] <- pval_los_i
 
 results
 ```
 
+### Pre-slope
+```{r}
+K <- get_linear_combination_for_preslope(spline_basis_los, xt_vals)
 
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_los_log_model_lmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_los_i_pre <- exp(glht_logslopediff_ci$confint)
+
+pval_los_i_pre <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_los_i_pre))
+
+results[nrow(results), "outcome"] <- "Length of stay"
+results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "pre"
+results[nrow(results), "pvalue"] <- pval_los_i_pre
+
+results
+```
+
+### Post-slope
+```{r}
+K <- get_linear_combination_for_postslope(spline_basis_los, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_los_log_model_lmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_los_i_post <- exp(glht_logslopediff_ci$confint)
+
+pval_los_i_post <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_los_i_post))
+
+results[nrow(results), "outcome"] <- "Length of stay"
+results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "hypothesis"] <- "post"
+results[nrow(results), "pvalue"] <- pval_los_i_post
+
+results
+```
 
 
 
@@ -735,7 +1079,8 @@ broom.mixed::tidy(hf_read7_all_c_model_glmer_spline,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
   mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
-  dplyr::select(-std.error, -statistic)
+  dplyr::select(-std.error, -statistic) %>% 
+  knitr::kable()
 ```
 
 ```{r plot-7read-splines-c}
@@ -748,6 +1093,7 @@ read7_c_acts_preds <- read7_c_outputs$acts_preds
 read7_c_outputs$plt
 ```
 
+### Pre-post slope comparison
 ```{r}
 spline_basis_read7c <- splines2::bSpline(hf_any_data_oc_c$X_t,
                                         knots = c(-6.23428),
@@ -807,20 +1153,76 @@ results <- results %>% bind_rows(as_tibble(confint_read7_c))
 
 results[nrow(results), "outcome"] <- "7d readmission"
 results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "prepost"
 results[nrow(results), "pvalue"] <- pval_read7_c
 
 results
 ```
-
-
-
-
+### Pre-slope
 ```{r}
-# simulationOutput <- simulateResiduals(fittedModel = hf_read7_all_nc_model_glmer_spline,
-#                                       plot = F)
+K <- get_linear_combination_for_preslope(spline_basis_read7c, xt_vals)
 
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
 ```
 
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read7_all_c_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read7_c_pre <- exp(glht_logslopediff_ci$confint)
+
+pval_read7_c_pre <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read7_c_pre))
+
+results[nrow(results), "outcome"] <- "7d readmission"
+results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "pre"
+results[nrow(results), "pvalue"] <- pval_read7_c_pre
+
+results
+```
+
+### Post-slope
+```{r}
+K <- get_linear_combination_for_postslope(spline_basis_read7c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read7_all_c_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read7_c_post <- exp(glht_logslopediff_ci$confint)
+
+pval_read7_c_post <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read7_c_post))
+
+results[nrow(results), "outcome"] <- "7d readmission"
+results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "post"
+results[nrow(results), "pvalue"] <- pval_read7_c_post
+
+results
+```
 
 
 ## 30-day all cause readmission rate, following discharge with HF as any diagnosis, control
@@ -850,7 +1252,8 @@ broom.mixed::tidy(hf_read30_all_c_model_glmer_spline,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
   mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
-  dplyr::select(-std.error, -statistic)
+  dplyr::select(-std.error, -statistic) %>% 
+  knitr::kable()
 ```
 
 
@@ -865,6 +1268,7 @@ read30_c_acts_preds <- read30_c_outputs$acts_preds
 read30_c_outputs$plt
 ```
 
+### Pre-post slope comparison
 ```{r}
 spline_basis_read30c <- splines2::bSpline(hf_any_data_oc_c$X_t,
                                         knots = c(-6.23428),
@@ -924,10 +1328,80 @@ results <- results %>% bind_rows(as_tibble(confint_read30_c))
 
 results[nrow(results), "outcome"] <- "30d readmission"
 results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "prepost"
 results[nrow(results), "pvalue"] <- pval_read30_c
 
 results
 ```
+
+### Pre-slope
+```{r}
+K <- get_linear_combination_for_preslope(spline_basis_read30c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read30_all_c_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read30_c_pre <- exp(glht_logslopediff_ci$confint)
+
+pval_read30_c_pre <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read30_c_pre))
+
+results[nrow(results), "outcome"] <- "30d readmission"
+results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "pre"
+results[nrow(results), "pvalue"] <- pval_read30_c_pre
+
+results
+```
+
+### Post-slope
+```{r}
+K <- get_linear_combination_for_postslope(spline_basis_read30c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read30_all_c_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read30_c_post <- exp(glht_logslopediff_ci$confint)
+
+pval_read30_c_post <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read30_c_post))
+
+results[nrow(results), "outcome"] <- "30d readmission"
+results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "post"
+results[nrow(results), "pvalue"] <- pval_read30_c_post
+
+results
+```
+
+
+
 
 ## 90-day all cause readmission rate, following discharge with HF as any diagnosis, control
 
@@ -956,7 +1430,8 @@ broom.mixed::tidy(hf_read90_all_c_model_glmer_spline,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
   mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
-  dplyr::select(-std.error, -statistic)
+  dplyr::select(-std.error, -statistic) %>% 
+  knitr::kable()
 ```
 
 
@@ -971,6 +1446,7 @@ read90_c_acts_preds <- read90_c_outputs$acts_preds
 read90_c_outputs$plt
 ```
 
+### Pre-post slope comparison
 ```{r}
 spline_basis_read90c <- splines2::bSpline(hf_any_data_oc_c$X_t,
                                         knots = c(-6.23428),
@@ -1030,10 +1506,80 @@ results <- results %>% bind_rows(as_tibble(confint_read90_c))
 
 results[nrow(results), "outcome"] <- "90d readmission"
 results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "prepost"
 results[nrow(results), "pvalue"] <- pval_read90_c
 
 results
 ```
+
+### Pre-slope
+```{r}
+K <- get_linear_combination_for_preslope(spline_basis_read90c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read90_all_c_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read90_c_pre <- exp(glht_logslopediff_ci$confint)
+
+pval_read90_c_pre <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read90_c_pre))
+
+results[nrow(results), "outcome"] <- "90d readmission"
+results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "pre"
+results[nrow(results), "pvalue"] <- pval_read90_c_pre
+
+results
+```
+
+### Post-slope
+```{r}
+K <- get_linear_combination_for_postslope(spline_basis_read90c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_read90_all_c_model_glmer_spline, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_read90_c_post <- exp(glht_logslopediff_ci$confint)
+
+pval_read90_c_post <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_read90_c_post))
+
+results[nrow(results), "outcome"] <- "90d readmission"
+results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "post"
+results[nrow(results), "pvalue"] <- pval_read90_c_post
+
+results
+```
+
+
+
 
 ## Mortality
 
@@ -1073,8 +1619,9 @@ death_c_acts_preds <- death_c_outputs$acts_preds
 death_c_outputs$plt
 ```
 
+### Pre-post slope comparison
 ```{r}
-spline_basis_death <- splines2::bSpline(hf_any_data_oc_wm_c$X_t,
+spline_basis_death_c <- splines2::bSpline(hf_any_data_oc_wm_c$X_t,
                                         knots = c(-6.23428),
                                         degree = 1)
 ```
@@ -1082,7 +1629,7 @@ spline_basis_death <- splines2::bSpline(hf_any_data_oc_wm_c$X_t,
 ```{r}
 xt_vals <- hf_any_data_oc_wm_c %>% distinct(X_t) %>% arrange(X_t) %>% mutate(x = row_number())
 
-bsfns <- get_spline_eqns(spline_basis_death,
+bsfns <- get_spline_eqns(spline_basis_death_c,
                          x_vals = xt_vals)
 
 # We can also get the y = alpha + beta * x form of the linear predictor in
@@ -1106,7 +1653,7 @@ lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
 lp
 ```
 ```{r}
-K <- get_linear_combination_for_difference_in_log_rr(spline_basis_death, xt_vals)
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis_death_c, xt_vals)
 
 K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
 
@@ -1129,12 +1676,79 @@ pval_death_c <- summary(glht_logslopediff)$test$pvalues[1]
 results <- results %>% bind_rows(as_tibble(confint_death_c))
 
 results[nrow(results), "outcome"] <- "Mortality"
-results[nrow(results), "site"] <- "Intervention"
+results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "prepost"
 results[nrow(results), "pvalue"] <- pval_death_c
 
 results
 ```
 
+
+### Pre-slope
+```{r}
+K <- get_linear_combination_for_preslope(spline_basis_death_c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(death_model_glm_wm_spline_c, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_death_c_pre <- exp(glht_logslopediff_ci$confint)
+
+pval_death_c_pre <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_death_c_pre))
+
+results[nrow(results), "outcome"] <- "Mortality"
+results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "pre"
+results[nrow(results), "pvalue"] <- pval_death_c_pre
+
+results
+```
+
+### Post-slope
+```{r}
+K <- get_linear_combination_for_postslope(spline_basis_death_c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(death_model_glm_wm_spline_c, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_death_c_post <- exp(glht_logslopediff_ci$confint)
+
+pval_death_c_post <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_death_c_post))
+
+results[nrow(results), "outcome"] <- "Mortality"
+results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "post"
+results[nrow(results), "pvalue"] <- pval_death_c_post
+
+results
+```
 
 ## Loglos
 ```{r los-log-c, warning=FALSE, message=FALSE}
@@ -1161,7 +1775,8 @@ broom.mixed::tidy(hf_los_log_model_lmer_spline_c,
                   exponentiate=TRUE,
                   effects="fixed") %>% 
   mutate(term = if_else(str_detect(term, "splines2"), paste0("Spline", str_sub(term, str_length(term))), term)) %>% 
-  dplyr::select(-std.error, -statistic)
+  dplyr::select(-std.error, -statistic) %>% 
+  knitr::kable()
 ```
 
 
@@ -1179,8 +1794,9 @@ los_c_acts_preds <- los_c_outputs$acts_preds
 los_c_outputs$plt
 ```
 
+### Pre-post slope comparison
 ```{r}
-spline_basis_los <- splines2::bSpline(hf_any_data_oc_c_ll$X_t,
+spline_basis_los_c <- splines2::bSpline(hf_any_data_oc_c_ll$X_t,
                                         knots = c(-6.23428),
                                         degree = 1)
 ```
@@ -1188,7 +1804,7 @@ spline_basis_los <- splines2::bSpline(hf_any_data_oc_c_ll$X_t,
 ```{r}
 xt_vals <- hf_any_data_oc_c_ll %>% distinct(X_t) %>% arrange(X_t) %>% mutate(x = row_number())
 
-bsfns <- get_spline_eqns(spline_basis_los,
+bsfns <- get_spline_eqns(spline_basis_los_c,
                          x_vals = xt_vals)
 
 # We can also get the y = alpha + beta * x form of the linear predictor in
@@ -1212,7 +1828,7 @@ lp <- expand_one_knot_spline_linear_predictor(beta1 = beta1,
 lp
 ```
 ```{r}
-K <- get_linear_combination_for_difference_in_log_rr(spline_basis_los, xt_vals)
+K <- get_linear_combination_for_difference_in_log_rr(spline_basis_los_c, xt_vals)
 
 K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
 
@@ -1236,10 +1852,78 @@ results <- results %>% bind_rows(as_tibble(confint_los_c))
 
 results[nrow(results), "outcome"] <- "Length of stay"
 results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "prepost"
 results[nrow(results), "pvalue"] <- pval_los_c
 
 results
 ```
+
+### Pre-slope
+```{r}
+K <- get_linear_combination_for_preslope(spline_basis_los_c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_los_log_model_lmer_spline_c, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_los_c_pre <- exp(glht_logslopediff_ci$confint)
+
+pval_los_c_pre <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_los_c_pre))
+
+results[nrow(results), "outcome"] <- "Length of stay"
+results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "pre"
+results[nrow(results), "pvalue"] <- pval_los_c_pre
+
+results
+```
+
+### Post-slope
+```{r}
+K <- get_linear_combination_for_postslope(spline_basis_los_c, xt_vals)
+
+K <- ramify::resize(K, nrow = 1L, ncol = length(coefs))
+
+K[,4:length(coefs)] <- 0
+
+K
+```
+
+```{r}
+### set up general linear hypothesis
+glht_logslopediff <- glht(hf_los_log_model_lmer_spline_c, linfct = K)
+summary(glht_logslopediff)
+
+glht_logslopediff_ci <- confint(glht_logslopediff)
+glht_logslopediff_ci
+
+confint_los_c_post <- exp(glht_logslopediff_ci$confint)
+
+pval_los_c_post <- summary(glht_logslopediff)$test$pvalues[1]
+
+results <- results %>% bind_rows(as_tibble(confint_los_c_post))
+
+results[nrow(results), "outcome"] <- "Length of stay"
+results[nrow(results), "site"] <- "Control"
+results[nrow(results), "hypothesis"] <- "post"
+results[nrow(results), "pvalue"] <- pval_los_c_post
+
+results
+```
+
 
 # Combined results
 
@@ -1295,7 +1979,7 @@ plt
 
 ```{r}
 results %>%
-  dplyr::select(outcome, site, Estimate, lwr, upr, pvalue) %>% 
+  dplyr::select(outcome, hypothesis, site, Estimate, lwr, upr, pvalue) %>% 
   knitr::kable()
 ```
 

@@ -128,6 +128,32 @@ get_linear_combination_for_difference_in_log_rr <- function(spline_basis, x_vals
 
 }
 
+get_linear_combination_for_preslope <- function(spline_basis, x_vals) {
+
+  basis_functions <- get_spline_eqns(spline_basis, x_vals = x_vals)
+
+  k1 = basis_functions[["1"]][["m1"]]
+  k2 = basis_functions[["2"]][["m1"]]
+
+  K <- matrix(c(0, k1, k2), nrow = 1L, ncol = 3L)
+
+  return(K)
+
+}
+
+get_linear_combination_for_postslope <- function(spline_basis, x_vals) {
+
+  basis_functions <- get_spline_eqns(spline_basis, x_vals = x_vals)
+
+  k1 = basis_functions[["1"]][["m2"]]
+  k2 = basis_functions[["2"]][["m2"]]
+
+  K <- matrix(c(0, k1, k2), nrow = 1L, ncol = 3L)
+
+  return(K)
+
+}
+
 
 
 ################################################################################
