@@ -3,9 +3,9 @@ title: "Spline Interrupted Time Series Analysis"
 author: "Tom Woodcock"
 date: "`r Sys.Date()`"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 ---
 
 Package repo commit: `r stringr::str_sub(system("git rev-parse HEAD", intern=TRUE), 1, 8)`
@@ -1942,8 +1942,9 @@ acts_preds <- bind_rows(read7_acts_preds %>% mutate(outcome = "7d readmission (%
                 ~ if_else(outcome == "Length of stay (days)", .x, .x * 100))) %>%
   mutate(outcome = factor(outcome,
                           levels = c("7d readmission (%)", "30d readmission (%)",
-                                     "90d readmission (%)", "Mortality (%)",
-                                     "Length of stay (days)")))
+                                     "90d readmission (%)",
+                                     "Length of stay (days)", "Mortality (%)"
+                                     )))
 
 year_month <- seq(as.Date("2012-01-01"), as.Date("2017-07-01"), by = "month")
 year_month <- tibble::tibble(year_month) %>% tibble::rowid_to_column(var = "id_time") 
