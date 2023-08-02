@@ -1138,8 +1138,6 @@ K
 ```
 
 ```{r, include = FALSE}
-library(multcomp)
-
 ### set up general linear hypothesis
 glht_logslopediff <- glht(hf_read7_all_c_model_glmer_spline, linfct = K)
 summary(glht_logslopediff)
